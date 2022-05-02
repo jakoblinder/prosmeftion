@@ -1,0 +1,117 @@
+flavormatrix:
+    yu:
+      description: "Up-type flavormatrix -> Coupling between quark dubletts and RH down-type quakrs.."
+      tex: y_{u} | y_{u}^{\dagger}
+    yd:
+      description: "Down-type flavormatrix -> Coupling between quark dubletts and RH up-type quakrs."
+      tex: y_{d} | y_{d}^{\dagger}
+    ye:
+      description: "Electon-type flavormatrix -> Coupling between lepton dubletts and RH-electrons."
+      tex: y_{e} | y_{e}^{\dagger}
+
+constant:
+    d:
+      description: "Generalised dimension d."
+      tex: d
+      FORM: d
+      massdim: 0
+    eps:
+      description: "Epsilontensor of dimensional regularisation."
+      tex: \varepsilon
+      FORM: eps
+      massdim: 0
+    lambdah:
+      description: "Constant of |H|^4 term."
+      tex: \lambda_{h}
+      FORM: lambdah
+      massdim: 0
+    At:
+      description: "Constant of |H|^2*phi term."
+      tex: A_{t}
+      FORM: At
+      massdim: 1
+      tex_dimless: a_{t}
+    g1:
+      description: "U(1) gauge coupling."
+      tex: g_{1}
+      FORM: g1
+      massdim: 0
+    g2:
+      description: "SU(2) gauge coupling."
+      tex: g_{2}
+      FORM: g2
+      massdim: 0
+    g3:
+      description: "SU(3) gauge coupling."
+      tex: g_{3}
+      FORM: g3
+      massdim: 0
+    "mu":
+      description: "Constant of phi^3 term."
+      tex: \mu
+      FORM: mu
+      massdim: 1
+      tex_dimless: \hat{\mu}
+    lambdaphi:
+      description: "Constant of phi^4 term."
+      tex: \lambda_{\varphi}
+      FORM: lambdaphi
+      massdim: 0
+    kappa:
+      description: "Constant of |H|^2*phi^2 term."
+      tex: \kappa
+      FORM: kappa
+      massdim: 0
+    Ms:
+      description: "Mass of the real scalar field, i.e. expansionparameter of the EFT."
+      tex: M_{s}
+      FORM: Ms
+      massdim: 1
+    Mu:
+      description: "Tachyonic mass of the Higgsfield."
+      tex: \mu_{h}
+      FORM: Mu
+      massdim: 1
+      tex_dimless: \hat{\mu}_{h}
+    I:
+      description: "Imaginary unit i or just a 1?"
+      tex: \mathrm{i}
+      # i_
+      FORM: "1"
+      massdim: 0
+    "\\[Mu]":
+      description: "Mass scale parameter."
+      tex: \mu
+      FORM: muM
+      massdim: 1
+      tex_dimless: \hat{\mu}_{M}
+abbreviation:
+    lg:
+      description: "[2L[Ms,muM]]"
+      tex: \ln{\frac{M_{s}^{2}}{\mu_{M}^{2}}}
+      FORM: "[2L[Ms,muM]]"
+tensor:
+    "su2eps":
+      description: "Epsilontensor of SU2."
+      tex: \varepsilon
+      FORM: "[su2eps]"
+    "su3eps":
+      description: "Epsilontensor of SU3."
+      tex: \varepsilon
+      FORM: "[su3eps]"
+    "sl2Ceps":
+      description: "Epsilontensor of SL2C."
+      tex: \varepsilon
+      FORM: "[sl2Ceps]"
+    "su2dK":
+      description: "Kronecker-delta of SU2."
+      tex: \delta
+      FORM: "[su2dK]"
+    "su3dK":
+      description: "Kronecker-delta of SU3."
+      tex: \delta
+      FORM: "[su3dK]"
+    "sl2CdK":
+      description: "Kronecker-delta of SL2C."
+      tex: \delta
+      FORM: "[sl2CdK]"

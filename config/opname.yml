@@ -1,0 +1,29 @@
+coefficients:
+    yu: yu
+    yd: yd
+    ye: ye
+    conj[yu]: "[yu+]"
+    conj[yd]: "[yd+]"
+    conj[ye]: "[ye+]"
+    su2eps: "[su2eps]"
+    su3eps: "[su3eps]"
+    TT: T
+    gamma: gamma
+bosonfields:
+    H: H
+    conj[H]: "[H+]"
+    F: B
+    V: W
+    G  : G
+fermionfields:
+    cov: D
+    e: e
+    u: u
+    b: b
+    l: l
+    q: q
+    bar[e]: "[ebar]"
+    bar[u]: "[ubar]"
+    bar[b]: "[bbar]"
+    bar[l]: "[lbar]"
+    bar[q]: "[qbar]"

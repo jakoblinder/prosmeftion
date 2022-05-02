@@ -1,0 +1,44 @@
+lor:
+  dimension: 4
+  description: "4d Lorentz index."
+  tex_indices: \mu...\sigma
+Lsl:
+  dimension: 2
+  description: "Subscript and undotted SL2C-Index."
+  tex_indices: \alpha
+Usl:
+  dimension: 2
+  description: "Superscripted and undotted SL2C-Index."
+  tex_indices: \alpha
+Lsldot:
+  dimension: 2
+  description: "Subscript and dotted SL2C-Index."
+  tex_indices: \dot{\alpha}
+Usldot:
+  dimension: 2
+  description: "Superscripted and dotted SL2C-Index."
+  tex_indices: \dot{\alpha}
+spin:
+  dimension: 2
+  description: "4 dimensional Spin index, which is summed over 2 Weyl spinors."
+  tex_indices: U...Z
+gauge:
+  dimension: 2
+  description: "Fundamental index of SU2."
+  tex_indices: i...t
+gaugeadjoint:
+  dimension: 3
+  description: "Adjoint index of SU2."
+  tex_indices: I...T
+colf:
+  dimension: 3
+  description: "Fundamental index of SU3."
+  tex_indices: a...h
+cola:
+  dimension: 8
+  description: "Adjoint index of SU3."
+  tex_indices: A...H
+flav:
+  dimension: n
+  description: "Flavor index."
+  tex_indices: u...z

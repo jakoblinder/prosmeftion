@@ -1,0 +1,27 @@
+version: 1
+formatters:
+  file_formatter:
+    format: '%(asctime)s | %(name)-25s | %(levelname)-8s | %(message)s'
+  console_formatter:
+    format: '%(levelname)s | %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO  # Should be set afterwards to user inut
+    formatter: console_formatter
+    stream: ext://sys.stdout
+  file:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: file_formatter
+    filename: projection.log
+    mode: w
+loggers:
+  autoeft:
+    level: DEBUG
+    handlers: [file,console]
+    propagate: no
+
+root:
+  level: DEBUG
+  handlers: [console]

@@ -113,25 +113,24 @@ class Term_s(Coefficient):
 
         """
         #TODO: Translation before in FORM?
-        translate = {opname["H"]: "H",
-                     opname["conj[H]"]: "H+",
-                     opnameSL2C["[e_C]"]: "eC",
-                     opnameSL2C["[u_C]"]: "uC",
+        translate = {f"{opname['F']}L": "BL",
+                     f"{opname['G']}L": "GL",
+                     f"{opname['V']}L": "WL",
                      opnameSL2C["[d_C]"]: "dC",
+                     opnameSL2C["[e_C]"]: "eC",
                      opnameSL2C["L"]: "L",
                      opnameSL2C["Q"]: "Q",
-                     opnameSL2C["[e_C+]"]: "eC+",
-                     opnameSL2C["[u_C+]"]: "uC+",
+                     opnameSL2C["[u_C]"]: "uC",
+                     opname["H"]: "H",
+                     opname["conj[H]"]: "H+",
                      opnameSL2C["[d_C+]"]: "dC+",
+                     opnameSL2C["[e_C+]"]: "eC+",
                      opnameSL2C["[L+]"]: "L+",
                      opnameSL2C["[Q+]"]: "Q+",
-                     opnameSL2C["[Q+]"]: "Q+",
-                     f"{opname['F']}L": "BL",
-                     f"{opname['V']}L": "WL",
-                     f"{opname['G']}L": "GL",
+                     opnameSL2C["[u_C+]"]: "uC+",
                      f"{opname['F']}R": "BL+",
-                     f"{opname['V']}R": "VL+",
-                     f"{opname['G']}R": "GL+"}
+                     f"{opname['G']}R": "GL+",
+                     f"{opname['V']}R": "WL+"}
         fieldcount = {key: 0 for key in translate.values()}
         n_D = 0
         for field in self.fields:

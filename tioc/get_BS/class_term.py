@@ -2015,7 +2015,7 @@ class Term(Operator, Coefficient):
                 elif fields[j].helicity == fields[j + 1].helicity:
                     if fields[j].name.lower() > fields[j + 1].name.lower():
                         fields[j], fields[j + 1] = fields[j + 1], fields[j]
-        logger.debug(f"Fields are ordered like: {' '.join([f.form_name for f in fields])}")
+        logger.debug(f"Fields are ordered by helicity like: {' '.join([f.form_name for f in fields])}")
         return fields
 
     @staticmethod

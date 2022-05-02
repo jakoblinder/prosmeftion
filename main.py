@@ -51,6 +51,18 @@ def main():
     if args.tex:
         write_texfile(terms)
 
+    logger.info("Sort fields by type, indicated by a tuple filled with integers. They specify the "
+                "number of fields in the single summand in the following order: BL GL WL [d_C] [e_C] L Q [u_C] H [H+] [d_C+] ["
+                "e_C+] [L+] [Q+] [u_C+] BR GR WR")
+    single_terms = {}  # Ordered terms (by "type") with just a single term in it.
+    for term in terms:
+        for summand in term.terms:
+            try:
+                single_terms[tuple(summand.fieldcounter.values())].append(summand)
+            except KeyError:
+                single_terms[tuple(summand.fieldcounter.values())] = [summand]
+
+    print("Wurst")
     # terms = converttoSL2C("exampleOutputBS.m", header = 22, pprint=False)
     # terms = converttoSL2C("Test.m")
     # for term in terms:

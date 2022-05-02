@@ -10,6 +10,9 @@ elif Path.cwd().name == "smeft-invariants":
     PROJECTION_PATH = Path.cwd() / "projection"
 
 CONFIG_PATH = PROJECTION_PATH / "config"
+FORM_PATH = PROJECTION_PATH / "form_files"
+INPUT_PATH = PROJECTION_PATH / "BS"
+LATEX_PATH = PROJECTION_PATH / "Latex"
 
 def configurations(filename):
     filename = Path(filename)

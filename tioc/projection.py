@@ -18,11 +18,8 @@ from yaml import safe_load, YAMLError
 from tioc.get_BS.class_term import Term
 from tioc.get_BS.class_term import Coefficient
 from tioc.get_FORM.form_read_in import Term_form
-from . import coeffvalues, opname_sorted, opname, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values, PROJECTION_PATH, CONFIG_PATH
-
-FORM_PATH = PROJECTION_PATH / "form"
-INPUT_PATH = PROJECTION_PATH / "BS"
-LATEX_PATH = PROJECTION_PATH / "Latex"
+from . import coeffvalues, opname_sorted, opname, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values
+from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH
 
 logger_autoeft = logging.getLogger("autoeft")
 logger = logging.getLogger("autoeft.projection")
@@ -810,3 +807,24 @@ def write_texfile(terms):
         file_path.rename(PROJECTION_PATH / "terms.pdf")
 
 
+# TODO: Implement progress bar: https://stackoverflow.com/questions/3160699/python-progress-bar
+# import sys
+#
+# def progressbar(it, prefix="", size=60, file=sys.stdout):
+#     count = len(it)
+#     def show(j):
+#         x = int(size*j/count)
+#         file.write("%s[%s%s] %i/%i\r" % (prefix, "#"*x, "."*(size-x), j, count))
+#         file.flush()
+#     show(0)
+#     for i, item in enumerate(it):
+#         yield item
+#         show(i+1)
+#     file.write("\n")
+#     file.flush()
+# Usage:
+#
+# import time
+#
+# for i in progressbar(range(15), "Computing: ", 40):
+#     time.sleep(0.1) # any code you need

@@ -5,8 +5,7 @@ import subprocess
 
 from pathlib import Path
 
-from tioc import coeffname, abbreviation, coeffvalues, escape_regex, PROJECTION_PATH
-FORM_PATH = PROJECTION_PATH / "form"
+from tioc import coeffname, abbreviation, coeffvalues, escape_regex, PROJECTION_PATH, FORM_PATH
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild("coefficient")
 

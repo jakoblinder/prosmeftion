@@ -9,7 +9,7 @@ from datetime import datetime
 
 import tioc.get_FORM.class_index
 
-from tioc.projection import CONFIG_PATH, converttoSL2C, write_texfile  # , main
+from tioc.projection import CONFIG_PATH, converttoSL2C, write_texfile, get_type  # , main
 from tioc.get_BS.class_term import Term
 
 # configure logger
@@ -51,25 +51,9 @@ def main():
     if args.tex:
         write_texfile(terms)
 
-    logger.info("Sort fields by type, indicated by a tuple filled with integers. They specify the "
-                "number of fields in the single summand in the following order: BL GL WL [d_C] [e_C] L Q [u_C] H [H+] [d_C+] ["
-                "e_C+] [L+] [Q+] [u_C+] BR GR WR")
-    single_terms = {}  # Ordered terms (by "type") with just a single term in it.
-    for term in terms:
-        for summand in term.terms:
-            try:
-                single_terms[tuple(summand.fieldcounter.values())].append(summand)
-            except KeyError:
-                single_terms[tuple(summand.fieldcounter.values())] = [summand]
+    single_terms = get_type(terms)
 
     print("Wurst")
-    # terms = converttoSL2C("exampleOutputBS.m", header = 22, pprint=False)
-    # terms = converttoSL2C("Test.m")
-    # for term in terms:
-    #     for summand in term.terms:
-    #         for field in summand.fields:
-    #             print(f"{field.expression}: {field.numID}")
-    # write_texfile(terms)
 
 # for i in Term.extractOrder():
 #     print(f"Name: {i.name:2s} - Form: {i.form_name:6s} - Helicity: {i.helicity:.1f} - Fermion: {i.fermion}")

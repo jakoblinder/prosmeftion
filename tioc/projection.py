@@ -10,6 +10,9 @@ import sys
 import re
 import logging
 import logging.config
+import timeit
+import multiprocessing as mp
+import numpy as np
 
 from itertools import chain
 from pathlib import Path
@@ -700,6 +703,40 @@ def print_tex(Term, coeff=False):
     # else:
     #     return "\t\item $ 0 $\n"
 
+def get_termobject(args):
+    """
+    Create Term object from given coefficient and contracted operator.
+    Parameters
+    ----------
+    args
+        args[0], args[1], args[2] = coeff, coperator, id
+    Returns
+    -------
+
+    """
+    coeff, coperator, id = args[0], args[1], args[2]
+    return Term(coeff, coperator, id)
+
+def convertviaform(term):
+    """
+    Convert Term via FORM and return converted object.
+    Parameters
+    ----------
+    term
+
+    Returns
+    -------
+
+    """
+    # Create FORM files:
+    filename = term.name  # f"term{i:d}"
+    form(term, filename)
+    formoutput = run_form(filename)
+    formoutput_formatted = print_form(filename,
+                                      original=f"{term.cops_original:s}",
+                                      converted=formoutput)
+    return formoutput_formatted, Term_form(formoutput, term.coeff, term.name)
+
 def converttoSL2C(inputfile, header = 0, pprint=True):
     """
     Output Terms of BSUOLEA are read in and formatted in SL2C Notation via FORM.
@@ -727,9 +764,13 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
     coefficient, coperator = findOpandCoeff(expression)
 
     # Create the Term objects and extract on the way all Operators:
-    terms = []
-    for i in range(len(coefficient)):
-        terms.append(Term(coefficient[i], coperator[i],f"term{i:d}"))
+    names = [f"term{i:d}" for i in range(len(coefficient))]
+    args = list(map(list, zip(*[coefficient, coperator, names])))  # transpose list
+
+    logger.info("Read in all terms")
+    with mp.Pool(20) as pool:  # mp.Pool(20) gives 20 parallel processes
+        terms = pool.map(get_termobject, args)
+
     del coefficient, coperator, expression
     writefile(PROJECTION_PATH / "terms.txt", terms)
 
@@ -750,21 +791,11 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
         termrange = [0, len(terms) - 1]
 
     logger.info("Run FORM")
-    form_terms = []
 
-    ops = []
-    for i in range(termrange[0], termrange[1] + 1):
-        # Create FORM files:
-        filename = terms[i].name  # f"term{i:d}"
-        form(terms[i], filename)
-        formoutput = run_form(filename)
-        formoutput_formatted = print_form(filename,
-                                          original=f"{terms[i].cops_original:s}",
-                                          converted=formoutput)
-        # print(formoutput_formatted)
-        ops.append(formoutput_formatted)
-        # print(f"Term {i:d}:")
-        form_terms.append(Term_form(formoutput, terms[i].coeff, terms[i].name))
+    with mp.Pool(20) as pool:
+        terms_after_form = list(map(list, zip(*pool.map(convertviaform, terms))))
+    ops = terms_after_form[0]
+    form_terms = terms_after_form[1]
 
     # write a file containing all formatted operators written as a term to check the format:
     writefile(PROJECTION_PATH / "operators_formatted.txt", ops)

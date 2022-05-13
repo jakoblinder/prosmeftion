@@ -6,17 +6,36 @@ from pathlib import Path
 from fractions import Fraction
 from typing import Dict, List, Tuple
 from copy import copy
+from abc import ABC, abstractmethod
 
 from tioc import PROJECTION_PATH
 from .class_index import Indices
 from .class_form_operator import Operator
 from tioc.get_BS.class_coefficient import Coefficient
-from .. import opname, opnameSL2C
+from .. import opname, opnameSL2C, model, field_config
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
-class Term_s(Coefficient):
+class Term_s_Model(ABC):
+    @abstractmethod
+    def __init__(self):
+        """Load in fields, tensors and the coefficient."""
+
+    @abstractmethod
+    def __repr__(self):
+        """Specify the format the general string representation and for printing with repr()."""
+
+    def __str__(self):
+        """Specify the format for printing with str() or print() statement function: Here the same as the string representation repr() itself."""
+        return self.__repr__()
+
+    def __format__(self, key):
+        """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
+        return self.__repr__()
+
+
+class Term_s(Coefficient,Term_s_Model):
     """
     Single term consisting of an overall coefficient and a product of operators.
     """
@@ -26,34 +45,36 @@ class Term_s(Coefficient):
     fieldcounter: Dict[str, int]
 
     def __init__(self, fields, tensors, coeff):
+        # specify fields
         fields_tmp = []
         for i, field in enumerate(fields):
             fields_tmp.append(Operator(field, type="field", numID=i+1))
         self.fields = tuple(fields_tmp)
         self.fieldcounter, self.n_D = self.get_fieldcounts()
+        # specify tensors
         tensors_tmp = []
         for tensor in tensors:
             tensors_tmp.append(Operator(tensor, type="tensor"))
         self.tensors = tuple(tensors_tmp)
         # Gauge fields contain special projection index of the form idxF2I1, which is transmitted to the contracted tensors:
         self.gaugeIndicesforProjection_tensors()
+        # specify coefficient
         self.coeff = coeff
-        #TODO: Get Name of SU2_W out of model file
-        self.gaugeTensorsSUN = {"SU2_W": self.get_SUN_tensors(2), "SU3_C": self.get_SUN_tensors(3)}
 
-    def __str__(self):
-        """Specify the format for printing with str() or print() statement function. """
-        tensor = "*".join(map(str,self.tensors))
-        contractedOp = "*".join(map(str,self.fields))
-        return f"{tensor:s}*{contractedOp:s}"  # {str(self.coeff)}*
-        # return f"{self.cops:s}"  # {str(self.coeff)}*
+        def get_SUN_name(N):
+            """Get Name of SU2_W out of model file."""
+            for group_name, group_properties in model.sun_groups.items():
+                if group_properties.N == N:
+                    return group_name
+
+        self.gaugeTensorsSUN = {get_SUN_name(2): self.get_SUN_tensors(2), get_SUN_name(3): self.get_SUN_tensors(3)}
 
     def __repr__(self):
-        return self.__str__()
-
-    def __format__(self, key):
-        """Specify the format for "format" function in print statement: Here the same as the print statement itself."""
-        return self.__str__()
+        """Specify the format the general string representation and for printing with repr()."""
+        tensor = "*".join(map(str, self.tensors))
+        contractedOp = "*".join(map(str, self.fields))
+        return f"{tensor:s}*{contractedOp:s}"  # {str(self.coeff)}*
+        # return f"{self.cops:s}"  # {str(self.coeff)}*
 
     def get_projectionIndex_from_Field(self, indexID):
         """
@@ -112,34 +133,20 @@ class Term_s(Coefficient):
         -------
 
         """
-        #TODO: Translation before in FORM?
-        translate = {f"{opname['F']}L": "BL",
-                     f"{opname['G']}L": "GL",
-                     f"{opname['V']}L": "WL",
-                     opnameSL2C["[d_C]"]: "dC",
-                     opnameSL2C["[e_C]"]: "eC",
-                     opnameSL2C["L"]: "L",
-                     opnameSL2C["Q"]: "Q",
-                     opnameSL2C["[u_C]"]: "uC",
-                     opname["H"]: "H",
-                     opname["conj[H]"]: "H+",
-                     opnameSL2C["[d_C+]"]: "dC+",
-                     opnameSL2C["[e_C+]"]: "eC+",
-                     opnameSL2C["[L+]"]: "L+",
-                     opnameSL2C["[Q+]"]: "Q+",
-                     opnameSL2C["[u_C+]"]: "uC+",
-                     f"{opname['F']}R": "BL+",
-                     f"{opname['G']}R": "GL+",
-                     f"{opname['V']}R": "WL+"}
-        fieldcount = {key: 0 for key in translate.values()}
+        fieldcount = {key.name: 0 for key in model.fields.values()}
         n_D = 0
         for field in self.fields:
-            for sfield in translate.keys():
-                if field.name == sfield:
-                    fieldcount[translate[sfield]] += 1
+            if field.name == None:
+                # Catches terms which are zero.
+                break
+            fieldcount[field.autoeft_name] += 1
             n_D += field.n_D # number of derivatives in a term
         return fieldcount, n_D
 
+    @property
+    def fieldcounter_stripped(self):
+        fc_s = {field: count for field, count in self.fieldcounter.items() if count != 0}
+        return fc_s
 class Term_form(Term_s):
     """
     A term from the form output can consist of many summand. The term ist therefore split in Term_s objects

@@ -52,8 +52,8 @@ def main():
         write_texfile(terms)
 
     single_terms = get_type(terms)
-
-    print("Wurst")
+    print(len(list(single_terms.keys())[0]))
+    return single_terms
 
 # for i in Term.extractOrder():
 #     print(f"Name: {i.name:2s} - Form: {i.form_name:6s} - Helicity: {i.helicity:.1f} - Fermion: {i.fermion}")

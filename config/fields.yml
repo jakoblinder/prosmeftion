@@ -3,26 +3,32 @@ GL:
   description: "Left handed fieldstrengthtensor of SU3."
   helicity: -1
   tex: G_{\mathrm{L}}
+  autoeft: GL
 GR:
   description: "Right handed fieldstrengthtensor of SU3."
   helicity: +1
   tex: G_{\mathrm{R}}
+  autoeft: GL+
 WL:
   description: "Left handed fieldstrengthtensor of SU2."
   helicity: -1
   tex: W_{\mathrm{L}}
+  autoeft: WL
 WR:
   description: "Right handed fieldstrengthtensor of SU2."
   helicity: +1
   tex: W_{\mathrm{R}}
+  autoeft: WL+
 BL:
   description: "Left handed fieldstrengthtensor of U1."
   helicity: -1
   tex: B_{\mathrm{L}}
+  autoeft: BL
 BR:
   description: "Right handed fieldstrengthtensor of U1."
   helicity: +1
   tex: B_{\mathrm{R}}
+  autoeft: BL+
 
 # fermions
 L:
@@ -30,32 +36,38 @@ L:
   ac: True
   helicity: -1/2 | +1/2
   tex: L | L^{\dagger}
+  autoeft: L | L+
 eC:
   description: "Right handed leptons."
   ac: True
   helicity: -1/2 | +1/2
   tex: e_{\mathbb{C}} | e_{\mathbb{C}}^{\dagger}
+  autoeft: eC | eC+ 
 Q:
   description: "Quark dublett of SU2."
   ac: True
   helicity: -1/2 | +1/2
   tex: Q | Q^{\dagger}
+  autoeft: Q | Q+
 uC:
   description: "Right up-type quarks."
   ac: True
   helicity: -1/2 | +1/2
   tex: u_{\mathbb{C}} | u_{\mathbb{C}}^{\dagger}
+  autoeft: uC | uC+
 dC:
   description: "Right down-type quarks."
   ac: True
   helicity: -1/2 | +1/2
   tex: d_{\mathbb{C}} | d_{\mathbb{C}}^{\dagger}
+  autoeft: dC | dC+
 
 # scalars
 H:
   description: "Higgsdublett of SU2."
   helicity: 0
   tex: H | H^{\dagger}
+  autoeft: H | H+
 D:
   description: "Covariant derivative."
   tex: D

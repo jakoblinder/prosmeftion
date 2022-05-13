@@ -4,11 +4,13 @@ import sys
 from yaml import safe_load
 from typing import Dict, List, Tuple
 
-from tioc import CONFIG_PATH, opname_sorted, opname, opvalues, opSL2Cvalues, escape_regex, field_config, coeff_config
+from tioc import CONFIG_PATH, opname_sorted, opname, opvalues, opnameSL2C, opSL2Cvalues, escape_regex, field_config, \
+    coeff_config, model
 from .class_index import Index
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild("form_operator")
+
 
 class Operator():
     """
@@ -64,12 +66,12 @@ class Operator():
         Search for suNeps (Epsilontensor of SUN) and suNdK (Kronecker-Delta of SUN) and sl2C tensors and identify indices:
             [su2eps](gauge6153,gauge5345), [su2dK](gauge6153,gauge5345), ...
     """
-    expression : str
-    indices : List[Index]
-    tex : str
-    fermion : bool
-    name : str
-    description : str
+    expression: str
+    indices: List[Index]
+    tex: str
+    fermion: bool
+    name: str
+    description: str
 
     def __init__(self, expression, **kwargs):
         self.expression = expression
@@ -81,7 +83,8 @@ class Operator():
         self.description = None
 
         if kwargs["type"] == "field":
-            self.numID = kwargs["numID"]  # Denotes the number of the field, beginning at 1. Tensors don't have such a numID.
+            self.numID = kwargs[
+                "numID"]  # Denotes the number of the field, beginning at 1. Tensors don't have such a numID.
             self.identifyHiggs()
             self.identifyFieldstrengthtensors()
             self.identifySpinors()
@@ -95,8 +98,10 @@ class Operator():
     def __str__(self):
         """Specify the format for printing with str() or print() statement function. """
         return f"{self.expression:s}"
+
     def __repr__(self):
         return self.__str__()
+
     def __format__(self, key):
         """Specify the format for "format" function in print statement: Here the same as the print statement itself."""
         return self.__str__()
@@ -124,6 +129,33 @@ class Operator():
                 self.tex = field_config["H"]["tex"][0]
             elif name == "[H+]":
                 self.tex = field_config["H"]["tex"][1]
+
+    @property
+    def autoeft_name(self):
+        # define dictionary first with key and item swapped to ensure correct ordering.
+        if self.name == None:
+            return
+        translate = {field: None for field in model.fields.values()}
+        translate["BL"]    = f"{opname['F']}L"
+        translate["GL"]    = f"{opname['G']}L"
+        translate["WL"]    = f"{opname['V']}L"
+        translate["dC"]    = opnameSL2C["[d_C]"]
+        translate["eC"]    = opnameSL2C["[e_C]"]
+        translate["L"]     = opnameSL2C["L"]
+        translate["Q"]     = opnameSL2C["Q"]
+        translate["uC"] = opnameSL2C["[u_C]"]
+        translate["H"]     = opname["H"]
+        translate["H+"]    = opname["conj[H]"]
+        translate["dC+"]   = opnameSL2C["[d_C+]"]
+        translate["eC+"]   = opnameSL2C["[e_C+]"]
+        translate["L+"]    = opnameSL2C["[L+]"]
+        translate["Q+"]    = opnameSL2C["[Q+]"]
+        translate["uC+"]   = opnameSL2C["[u_C+]"]
+        translate["BL+"]   = f"{opname['F']}R"
+        translate["GL+"]   = f"{opname['G']}R"
+        translate["WL+"]   = f"{opname['V']}R"
+        translate = {item: key for key, item in translate.items()}
+        return translate[self.name]
 
     def identifyFieldstrengthtensors(self):
         """
@@ -172,7 +204,7 @@ class Operator():
         -------
 
         """
-        pattern = r"(?P<name>(" + f"{'|'.join(map(escape_regex,opSL2Cvalues))}" + r"))\((?P<Indices>[a-zA-Z\d,]+)\)"
+        pattern = r"(?P<name>(" + f"{'|'.join(map(escape_regex, opSL2Cvalues))}" + r"))\((?P<Indices>[a-zA-Z\d,]+)\)"
         match = re.match(pattern, self.expression)
         if match:
             self.fermion = True
@@ -183,34 +215,34 @@ class Operator():
             self.indices = tuple(self.indices)
             # print(f"{name}{indices}")
             spinorName = "unidentified"
-            if name == "L":
+            if name == opnameSL2C["L"]:
                 self.tex = field_config["L"]["tex"][0]
                 spinorName = "of SU2 Lepton Dublett"
-            elif name == "[L+]":
+            elif name == opnameSL2C["[L+]"]:
                 self.tex = field_config["L"]["tex"][1]
                 spinorName = "of conjugated SU2 Lepton Dublett"
-            elif name == "Q":
+            elif name == opnameSL2C["Q"]:
                 self.tex = field_config["Q"]["tex"][0]
                 spinorName = "of SU2 Quark Dublett"
-            elif name == "[Q+]":
+            elif name == opnameSL2C["[Q+]"]:
                 self.tex = field_config["Q"]["tex"][1]
                 spinorName = "of conjugated SU2 Quark Dublett"
-            elif name == "[e_C]":
+            elif name == opnameSL2C["[e_C]"]:
                 self.tex = field_config["eC"]["tex"][0]
                 spinorName = "of conjugated right-handed lepton"
-            elif name == "[e_C+]":
+            elif name == opnameSL2C["[e_C+]"]:
                 self.tex = field_config["eC"]["tex"][1]
                 spinorName = "of right-handed lepton"
-            elif name == "[u_C]":
+            elif name == opnameSL2C["[u_C]"]:
                 self.tex = field_config["uC"]["tex"][0]
                 spinorName = "of conjugated right-handed up-type quark"
-            elif name == "[u_C+]":
+            elif name == opnameSL2C["[u_C+]"]:
                 self.tex = field_config["uC"]["tex"][1]
                 spinorName = "of right-handed up-type quark"
-            elif name == "[d_C]":
+            elif name == opnameSL2C["[d_C]"]:
                 self.tex = field_config["dC"]["tex"][0]
                 spinorName = "of conjugated right-handed down-type quark"
-            elif name == "[d_C+]":
+            elif name == opnameSL2C["[d_C+]"]:
                 self.tex = field_config["dC"]["tex"][1]
                 spinorName = "of right-handed down-type quark"
             self.description = "Spinor " + spinorName
@@ -266,7 +298,8 @@ class Operator():
         """
         tensors = [tensor["FORM"] for tensor in coeff_config["tensor"].values()]
         pattern = r"(?P<name>(" + f"{'|'.join(map(escape_regex, tensors))}" + "))\((?P<Indices>[a-zA-Z\d,]+)\)"
-        match = re.match(pattern, self.expression)  # Use "match", because the su2eps should be all in the expression of the operator.
+        match = re.match(pattern,
+                         self.expression)  # Use "match", because the su2eps should be all in the expression of the operator.
         if match:
             self.fermion = False
             name = match.group("name")

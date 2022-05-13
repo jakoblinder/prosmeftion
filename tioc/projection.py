@@ -12,7 +12,6 @@ import logging
 import logging.config
 import timeit
 import multiprocessing as mp
-import numpy as np
 
 from itertools import chain
 from pathlib import Path
@@ -21,8 +20,8 @@ from yaml import safe_load, YAMLError
 from tioc.get_BS.class_term import Term
 from tioc.get_BS.class_term import Coefficient
 from tioc.get_FORM.form_read_in import Term_form
-from . import coeffvalues, opname_sorted, opname, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values
-from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH
+from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values, model
+from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
 
 logger_autoeft = logging.getLogger("autoeft")
 logger = logging.getLogger("autoeft.projection")
@@ -358,13 +357,6 @@ def form(term, filename, cout=False, nDer=4):
         formexpression += "#call substituteSpinors\n"
         formexpression += "\n"
 
-    # Substitute hermitian conjugated Higgsfield with Higgsfield and SU2 epsilon tensors:
-    # FIXME:  Bei Besprechung vom 3.2.2022 entschieden, dass folgende Ersetzung eventuell nicht nötig ist (s. z.B.
-    #  Term 98 und SM Yukawa Lagrangian), wenn auch die Art des Higgsfeldes mit BS geklärt werden sollte. So könnte
-    #  ein konjugiertes Higgsfeld auch als Feld mit oberen Index in der anti-fundamentalen Darstellung der SU2
-    #  verstanden werden, welches für unsere Zwecke in die fundamentale Darstellung unter Zusatz des Epsilontensors
-    #  geschrieben werden soll.
-
     higgsReplacebyEps = term.form_higgsReplacebyEps()
     if higgsReplacebyEps:
         formexpression += higgsReplacebyEps
@@ -468,7 +460,8 @@ def form(term, filename, cout=False, nDer=4):
     commutingOps = list(opname_sorted["bosonfields"].values())  # opvalues[9:14]
     noncommutingOps = list(opname_sorted["fermionfields"].values())  # opvalues[14:]
     ops = ", ".join(commutingOps + noncommutingOps) + ", " + "{f:s}L, {f:s}R, {v:s}L, {v:s}R, {g:s}L, {g:s}R".format(f=opname["F"], v=opname["V"], g=opname["G"])
-    formexpression += "Bracket " + ops + ", [e_C], [u_C], [d_C], L, Q, [e_C+], [u_C+], [d_C+], [L+], [Q+]" + ";\n"
+    formexpression += "Bracket " + ops + f", {opnameSL2C['[d_C]']}, {opnameSL2C['[e_C]']}, {opnameSL2C['L']}, {opnameSL2C['Q']}, {opnameSL2C['[u_C]']}" \
+                                         f", {opnameSL2C['[d_C+]']}, {opnameSL2C['[e_C+]']}, {opnameSL2C['[L+]']}, {opnameSL2C['[Q+]']}, {opnameSL2C['[u_C+]']};\n"
     # formexpression += "Bracket sigma, sigmabar, [su2eps], [su2dK], [sl2Ceps], [sl2CdK];\n"
     formexpression += "Format 255;\n"  # Printing width is set to the maximum width to avoid linebreaks.
     formexpression += "Print +ss;\n"
@@ -477,7 +470,6 @@ def form(term, filename, cout=False, nDer=4):
     # Write the main FORM file:
     with open(TERM_PATH / f"{filename}.frm", "w") as file:
         file.write(formexpression)
-
 
 def form_declarations(nAuxIndices=100):
     """
@@ -768,7 +760,7 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
     args = list(map(list, zip(*[coefficient, coperator, names])))  # transpose list
 
     logger.info("Read in all terms")
-    with mp.Pool(20) as pool:  # mp.Pool(20) gives 20 parallel processes
+    with mp.Pool() as pool:  # mp.Pool(20) gives 20 parallel processes
         terms = pool.map(get_termobject, args)
 
     del coefficient, coperator, expression
@@ -783,17 +775,12 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
         writefile(PROJECTION_PATH / f"check_operators/term{i:d}.txt", v.operators)
 
     # Write formfiles:
-    # termrange = [56, 57]
-    termrange = True
-    if termrange == []:
-        termrange = [0, -1]
-    elif termrange == True:
-        termrange = [0, len(terms) - 1]
 
     logger.info("Run FORM")
 
-    with mp.Pool(20) as pool:
-        terms_after_form = list(map(list, zip(*pool.map(convertviaform, terms))))
+    # with mp.Pool() as pool:
+    #     terms_after_form = list(map(list, zip(*pool.map(convertviaform, terms))))
+    terms_after_form = list(map(list, zip(*map(convertviaform, terms))))
     ops = terms_after_form[0]
     form_terms = terms_after_form[1]
 
@@ -849,8 +836,8 @@ def get_type(terms):
         Sorted terms.
     """
     logger.info("Sort fields by type, indicated by a tuple filled with integers. They specify the "
-                "number of fields in the single summand in the following order: BL GL WL [d_C] [e_C] L Q [u_C] H [H+] [d_C+] ["
-                "e_C+] [L+] [Q+] [u_C+] BR GR WR")
+                "number of fields in the single summand in the following order: "
+                f"{' '.join([field.name for field in model.fields.values()])}")
     single_terms = {}  # Ordered terms (by "type") with just a single term in it.
     for term in terms:
         for summand in term.terms:
@@ -865,6 +852,15 @@ def get_type(terms):
                 single_terms[tuple(typ)] = {summand.n_D: [summand]}
 
     return single_terms
+
+def get_basis():
+    """
+    Return basis generated by autoeft.
+    Returns
+    -------
+    """
+    pass
+
 
 # TODO: Implement progress bar: https://stackoverflow.com/questions/3160699/python-progress-bar
 # import sys

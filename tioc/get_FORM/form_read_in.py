@@ -1,23 +1,27 @@
+import logging.config
 import re
 import sys
-import logging.config
-
-from pathlib import Path
-from fractions import Fraction
-from typing import Dict, List, Tuple
-from copy import copy
 from abc import ABC, abstractmethod
+from copy import copy
+from fractions import Fraction
+from typing import Dict, List
 
-from tioc import PROJECTION_PATH
-from .class_index import Indices
-from .class_form_operator import Operator
 from tioc.get_BS.class_coefficient import Coefficient
-from .. import opname, opnameSL2C, model, field_config
+
+from .class_form_operator import Operator
+from .class_index import Indices
+from .. import model
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
+
 class Term_s_Model(ABC):
+    """Bas class for single term consisting of an overall coefficient and a product of operators."""
+    fields: List[str]
+    tensors: List[str]
+    coeff: Coefficient
+
     @abstractmethod
     def __init__(self):
         """Load in fields, tensors and the coefficient."""
@@ -35,20 +39,15 @@ class Term_s_Model(ABC):
         return self.__repr__()
 
 
-class Term_s(Coefficient,Term_s_Model):
-    """
-    Single term consisting of an overall coefficient and a product of operators.
-    """
-    fields: List[str]
-    tensors: List[str]
-    coeff: Coefficient
+class Term_s(Coefficient, Term_s_Model):
+    """Single term consisting of an overall coefficient and a product of operators."""
     fieldcounter: Dict[str, int]
 
-    def __init__(self, fields, tensors, coeff):
+    def __init__(self, fields: str, tensors: str, coeff: Coefficient):
         # specify fields
         fields_tmp = []
         for i, field in enumerate(fields):
-            fields_tmp.append(Operator(field, type="field", numID=i+1))
+            fields_tmp.append(Operator(field, type="field", numID=i + 1))
         self.fields = tuple(fields_tmp)
         self.fieldcounter, self.n_D = self.get_fieldcounts()
         # specify tensors
@@ -140,39 +139,59 @@ class Term_s(Coefficient,Term_s_Model):
                 # Catches terms which are zero.
                 break
             fieldcount[field.autoeft_name] += 1
-            n_D += field.n_D # number of derivatives in a term
+            n_D += field.n_D  # number of derivatives in a term
         return fieldcount, n_D
 
     @property
     def fieldcounter_stripped(self):
         fc_s = {field: count for field, count in self.fieldcounter.items() if count != 0}
         return fc_s
-class Term_form(Term_s):
+
+class Term_Model(ABC):
+    """Bas class for single term consisting of an overall coefficient and a product of operators."""
+    terms: List[Term_s]
+
+    @abstractmethod
+    def __init__(self):
+        """Load in fields, tensors and the coefficient."""
+
+    def __repr__(self):
+        """Specify the format the general string representation and for printing with repr()."""
+        return f"{self.terms}"
+
+    def __str__(self):
+        """Specify the format for printing with str() or print() statement function: Here the same as the string representation repr() itself."""
+        return self.__repr__()
+
+    def __format__(self, key):
+        """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
+        return self.__repr__()
+
+
+class Term_form(Term_s, Term_Model):
     """
     A term from the form output can consist of many summand. The term ist therefore split in Term_s objects
     consisting of only one summand.
     """
     cops: str
     coeff: Coefficient
-    def __init__(self, cops, coeff, name):
-        self.cops = cops
+    name: str
+    terms: List[Term_s]
+    indices: Indices
+    def __init__(self, cops: str, coeff: Coefficient, name: str):
+        # self.cops = cops
         self.coeff = coeff
         self.name = name
         self.terms = []
-        for term in self.get_terms():
+        for term in self.get_terms(cops):
             self.terms.append(Term_s(term["cops"], term["tensors"], term["coeff"]))
         self.indices = self.get_indices()
 
-    def __str__(self):
-        """Specify the format for printing with str() or print() statement function. """
-        return f"{self.terms}"  # {str(self.coeff)}*
     def __repr__(self):
-        return self.__str__()
-    def __format__(self, key):
-        """Specify the format for "format" function in print statement: Here the same as the print statement itself."""
-        return self.__str__()
+        """Specify the format the general string representation and for printing with repr()."""
+        return f"{self.terms}"  # {str(self.coeff)}*
 
-    def get_terms(self):
+    def get_terms(self, f_cops):
         """
         The terms of the form output are extracted and written in individual Term_form objects. Since Terms may consist
         of multiple summand, each summand is stored as an Term_s object and the coefficients are separated for each
@@ -184,9 +203,8 @@ class Term_form(Term_s):
         -------
 
         """
-        # print(self.cops)
-        zero = re.match(r"0", self.cops)
-        match = re.finditer(r"\n", self.cops)
+        zero = re.match(r"0", f_cops)
+        match = re.finditer(r"\n", f_cops)
         terms = []
         term = {"cops": [""], "tensors": [""], "coeff": ""}
         if zero:
@@ -197,17 +215,17 @@ class Term_form(Term_s):
             operators = []
             for i, m in enumerate(matches):
                 if i > 0:
-                    cop = self.cops[matches[i - 1].end():m.start()]
+                    cop = f_cops[matches[i - 1].end():m.start()]
                 else:
                     # Append first operator as the FIRST element in the list.
-                    cop = self.cops[:m.start()]
+                    cop = f_cops[:m.start()]
                 cop_match = re.match(r"\*", cop)
                 if cop_match and len(cop) > 1:
                     cop = cop[1:]
-                if cop: # Removes empty lines
+                if cop:  # Removes empty lines
                     operators.append(cop)
             # Append also last operator:
-            cop = self.cops[matches[-1].end():]
+            cop = f_cops[matches[-1].end():]
             cop_match = re.match(r"\*", cop)
             if cop_match and len(cop) > 1:
                 cop = cop[1:]
@@ -216,12 +234,12 @@ class Term_form(Term_s):
             coefficients = []  # Indices where the coefficients are
             start_coeff = None
             end_coeff = 0
-            while end_coeff != len(operators)-1:
+            while end_coeff != len(operators) - 1:
                 for i in range(end_coeff, len(operators)):
                     match = re.search(r".+\*\(", operators[i])
                     if match:
                         operators[i] = operators[i][:-2]
-                        start_coeff = i+1
+                        start_coeff = i + 1
                         break
                 for i in range(start_coeff, len(operators)):
                     if operators[i] == ")":
@@ -229,12 +247,12 @@ class Term_form(Term_s):
                         break
                 coefficients.append((start_coeff, end_coeff))
 
-            for i,c in enumerate(coefficients):
+            for i, c in enumerate(coefficients):
                 start_coeff, end_coeff = c
                 if i == 0:
                     fields = operators[:start_coeff]
                 else:
-                    fields = operators[coefficients[i-1][1]+1:start_coeff]
+                    fields = operators[coefficients[i - 1][1] + 1:start_coeff]
                 coeff_ops = operators[start_coeff:end_coeff]
                 del start_coeff, end_coeff
 
@@ -253,19 +271,19 @@ class Term_form(Term_s):
                         if coeff_ops[i] == "+" or coeff_ops[i] == "-":
                             start_coeff_range = i
                             break
-                    for i in range(start_coeff_range+1, len(coeff_ops)):
+                    for i in range(start_coeff_range + 1, len(coeff_ops)):
                         if coeff_ops[i] == "+" or coeff_ops[i] == "-":
                             end_coeff_range = i - 1
                             break
-                        elif i == len(coeff_ops)-1:
-                            end_coeff_range = len(coeff_ops)-1
+                        elif i == len(coeff_ops) - 1:
+                            end_coeff_range = len(coeff_ops) - 1
                             break
                     coeff_range.append((start_coeff_range, end_coeff_range))
 
                 coeff_range_ops = []
                 for i, c in enumerate(coeff_range):
                     start_coeff, end_coeff = c
-                    coeff_range_ops.append(coeff_ops[start_coeff:end_coeff+1])
+                    coeff_range_ops.append(coeff_ops[start_coeff:end_coeff + 1])
 
                 for tensors in coeff_range_ops:
                     for i, coeff in enumerate(tensors):
@@ -286,10 +304,12 @@ class Term_form(Term_s):
                                 factor = f"({overall_sign})"
                                 tensors.pop(0)
                                 break
-                    numerical_coefficient = copy(self.coeff) # Necessary to make a copy, to avoid multiple multiplications of factor
+                    numerical_coefficient = copy(
+                        self.coeff)  # Necessary to make a copy, to avoid multiple multiplications of factor
                     numerical_coefficient *= factor
                     numerical_coefficient.update_coefficient()
-                    terms.append({"cops": fields, "tensors":tensors, "coeff": numerical_coefficient})  # numerical_coefficient
+                    terms.append(
+                        {"cops": fields, "tensors": tensors, "coeff": numerical_coefficient})  # numerical_coefficient
 
         return terms
 
@@ -297,7 +317,7 @@ class Term_form(Term_s):
         """
         Extract all indices occurring in a term, i.e. all indices in the coefficient tensors which may be contracted and
         all indices in the field tensors which may not be contracted. The indices are extracted as Index object and it is
-        ensured that each index occurs at most ones, before they are store all together in an indices object which assigns
+        ensured that each index occurs at most ones, before they are stored all together in an indices object which assigns
         them automatically unique LaTex indices. These indices are then reassigned to all the indices of the fields.
         Returns
         -------
@@ -324,7 +344,8 @@ class Term_form(Term_s):
                 logger.error(error)
                 logger.debug(f"The corresponding expression is: {sumand}")
                 raise AssertionError(error)
-            indices_check_tensor.append(Indices(indices_tensor_tmp))  # Append the indices of the coefficient tensors, because there could be more tensor indices then field indices.
+            indices_check_tensor.append(Indices(
+                indices_tensor_tmp))  # Append the indices of the coefficient tensors, because there could be more tensor indices then field indices.
             indices_check_field.append(Indices(indices_field_tmp))
 
         if len(indices_check_tensor) == 0 or len(indices_check_field) == 0:

@@ -240,8 +240,8 @@ H(Lslgauge352262,Usldotgauge352262,Lslgauge352261,Usldotgauge352261,gauge35226)
 *[H+](gauge35226a)*(
 -
 1/2
-*[su2eps](gauge35226,gauge35226a)
 *[su2eps](gauge35053,gauge35053a)
+*[su2eps](gauge35226,gauge35226a)
 *[sl2Ceps](Uslgauge352261,Uslgauge352262)
 *[sl2Ceps](Lsldotgauge352261,Lsldotgauge352262)
 )
@@ -270,8 +270,8 @@ H(gauge35053)
 *[H+](gauge35053a)*(
 -
 1/2
-*[su2eps](gauge35225,gauge35225a)
 *[su2eps](gauge35053,gauge35053a)
+*[su2eps](gauge35225,gauge35225a)
 *[sl2Ceps](Uslgauge352255,Uslgauge352256)
 *[sl2Ceps](Lsldotgauge352255,Lsldotgauge352256)
 )
@@ -285,8 +285,8 @@ H(gauge35225)
 *[H+](gauge35053a)*(
 -
 1/2
-*[su2eps](gauge35225,gauge35225a)
 *[su2eps](gauge35053,gauge35053a)
+*[su2eps](gauge35225,gauge35225a)
 *[sl2Ceps](Uslgauge352255,Uslgauge352256)
 *[sl2Ceps](Lsldotgauge352255,Lsldotgauge352256)
 )
@@ -330,10 +330,10 @@ H(Lslgauge377181,Usldotgauge377181,gauge37718)
 *[H+](gauge37718a)*(
 -
 1/2
-*[su2eps](gauge37760,gauge37760a)
 *[su2eps](gauge37718,gauge37718a)
-*[sl2Ceps](Uslgauge377605,Uslgauge377181)
-*[sl2Ceps](Lsldotgauge377605,Lsldotgauge377181)
+*[su2eps](gauge37760,gauge37760a)
+*[sl2Ceps](Uslgauge377181,Uslgauge377605)
+*[sl2Ceps](Lsldotgauge377181,Lsldotgauge377605)
 )
 ===============================
 21: term21: D(lor1,H(gauge4877))*D(lor1,H(gauge4742))*[H+](gauge4742)*[H+](gauge4877)
@@ -429,18 +429,18 @@ is converted into:
 H(Lslgauge79731,Usldotgauge79731,gauge7973)
 *[H+](Lslgauge80195,Usldotgauge80195,gauge8019a)
 *WR(gaugeA10,gaugeA12,Usldot10,Usldot11)*(
-+
+-
 1/16
-*[sl2Ceps](Uslgauge80195,Uslgauge79731)
-*[sl2Ceps](Lsldot10,Lsldotgauge80195)
-*[sl2Ceps](Lsldot11,Lsldotgauge79731)
-*[su2dK](gauge7973,gaugeA10)
-*[su2dK](gaugeA12,gauge8019a)
-+
-1/16
-*[sl2Ceps](Uslgauge80195,Uslgauge79731)
+*[sl2Ceps](Uslgauge79731,Uslgauge80195)
 *[sl2Ceps](Lsldot10,Lsldotgauge79731)
 *[sl2Ceps](Lsldot11,Lsldotgauge80195)
+*[su2dK](gauge7973,gaugeA10)
+*[su2dK](gaugeA12,gauge8019a)
+-
+1/16
+*[sl2Ceps](Uslgauge79731,Uslgauge80195)
+*[sl2Ceps](Lsldot10,Lsldotgauge80195)
+*[sl2Ceps](Lsldot11,Lsldotgauge79731)
 *[su2dK](gauge7973,gaugeA10)
 *[su2dK](gaugeA12,gauge8019a)
 )
@@ -449,18 +449,18 @@ H(Lslgauge79731,Usldotgauge79731,gauge7973)
 WL(gaugeA10,gaugeA12,Lsl10,Lsl11)
 *H(Lslgauge79731,Usldotgauge79731,gauge7973)
 *[H+](Lslgauge80195,Usldotgauge80195,gauge8019a)*(
--
-1/16
-*[sl2Ceps](Usl10,Uslgauge80195)
-*[sl2Ceps](Usl11,Uslgauge79731)
-*[sl2Ceps](Lsldotgauge80195,Lsldotgauge79731)
-*[su2dK](gauge7973,gaugeA10)
-*[su2dK](gaugeA12,gauge8019a)
--
++
 1/16
 *[sl2Ceps](Usl10,Uslgauge79731)
 *[sl2Ceps](Usl11,Uslgauge80195)
-*[sl2Ceps](Lsldotgauge80195,Lsldotgauge79731)
+*[sl2Ceps](Lsldotgauge79731,Lsldotgauge80195)
+*[su2dK](gauge7973,gaugeA10)
+*[su2dK](gaugeA12,gauge8019a)
++
+1/16
+*[sl2Ceps](Usl10,Uslgauge80195)
+*[sl2Ceps](Usl11,Uslgauge79731)
+*[sl2Ceps](Lsldotgauge79731,Lsldotgauge80195)
 *[su2dK](gauge7973,gaugeA10)
 *[su2dK](gaugeA12,gauge8019a)
 )
@@ -473,8 +473,8 @@ H(gauge1090)
 *[H+](gauge1090a)
 *[H+](gauge721a)*(
 +
-[su2eps](gauge721,gauge721a)
-*[su2eps](gauge1090,gauge1090a)
+[su2eps](gauge1090,gauge1090a)
+*[su2eps](gauge721,gauge721a)
 )
 ===============================
 27: term27: H(gauge8055)*B(lor1,lor2)*B(lor1,lor2)*[H+](gauge8055)
@@ -563,9 +563,9 @@ H(gauge1090)
 *[H+](gauge721a)
 *[H+](gauge91150a)*(
 +
-[su2eps](gauge721,gauge721a)
+[su2eps](gauge1090,gauge1090a)
+*[su2eps](gauge721,gauge721a)
 *[su2eps](gauge91150,gauge91150a)
-*[su2eps](gauge1090,gauge1090a)
 )
 ===============================
 30: term30: H(gauge1188)*H(gauge1367)*H(gauge1390)*[H+](gauge1367)*[H+](gauge1188)*[H+](gauge1390)
@@ -578,8 +578,8 @@ H(gauge1188)
 *[H+](gauge1188a)
 *[H+](gauge1390a)*(
 +
-[su2eps](gauge1188,gauge1188a)
-*[su2eps](gauge1390,gauge1390a)
+[su2eps](gauge1390,gauge1390a)
+*[su2eps](gauge1188,gauge1188a)
 *[su2eps](gauge1367,gauge1367a)
 )
 ===============================
@@ -593,9 +593,9 @@ H(gauge1413)
 *[H+](gauge1708a)
 *[H+](gauge1957a)*(
 +
-[su2eps](gauge1708,gauge1708a)
-*[su2eps](gauge1413,gauge1413a)
+[su2eps](gauge1413,gauge1413a)
 *[su2eps](gauge1957,gauge1957a)
+*[su2eps](gauge1708,gauge1708a)
 )
 ===============================
 32: term32: H(gauge1442)*H(gauge1687)*H(gauge1960)*[H+](gauge1687)*[H+](gauge1960)*[H+](gauge1442)
@@ -624,8 +624,8 @@ H(gauge1684)
 *[H+](gauge1957a)*(
 +
 [su2eps](gauge1413,gauge1413a)
-*[su2eps](gauge1684,gauge1684a)
 *[su2eps](gauge1957,gauge1957a)
+*[su2eps](gauge1684,gauge1684a)
 )
 ===============================
 34: term34: H(gauge8059)*T(gaugeadj8082,gauge8109,gauge8059)*T(gaugeadj8138,gauge8144,gauge8109)*W(gaugeadj8082,lor1,lor2)*W(gaugeadj8138,lor1,lor2)*[H+](gauge8144)
@@ -635,16 +635,16 @@ H(gauge8059)
 *[H+](gauge8144a)
 *WR(gaugeA10,gaugeA12,Usldot10,Usldot11)
 *WR(gaugeA13,gaugeA15,Usldot13,Usldot14)*(
--
++
 1/16
-*[su2eps](gaugeA13,gaugeA12)
+*[su2eps](gaugeA12,gaugeA13)
 *[sl2Ceps](Lsldot10,Lsldot13)
 *[sl2Ceps](Lsldot11,Lsldot14)
 *[su2dK](gauge8059,gaugeA10)
 *[su2dK](gaugeA15,gauge8144a)
--
++
 1/16
-*[su2eps](gaugeA13,gaugeA12)
+*[su2eps](gaugeA12,gaugeA13)
 *[sl2Ceps](Lsldot10,Lsldot14)
 *[sl2Ceps](Lsldot11,Lsldot13)
 *[su2dK](gauge8059,gaugeA10)
@@ -656,16 +656,16 @@ WL(gaugeA10,gaugeA12,Lsl10,Lsl11)
 *WL(gaugeA13,gaugeA15,Lsl13,Lsl14)
 *H(gauge8059)
 *[H+](gauge8144a)*(
--
++
 1/16
-*[su2eps](gaugeA13,gaugeA12)
+*[su2eps](gaugeA12,gaugeA13)
 *[sl2Ceps](Usl10,Usl13)
 *[sl2Ceps](Usl11,Usl14)
 *[su2dK](gauge8059,gaugeA10)
 *[su2dK](gaugeA15,gauge8144a)
--
++
 1/16
-*[su2eps](gaugeA13,gaugeA12)
+*[su2eps](gaugeA12,gaugeA13)
 *[sl2Ceps](Usl10,Usl14)
 *[sl2Ceps](Usl11,Usl13)
 *[su2dK](gauge8059,gaugeA10)
@@ -679,16 +679,16 @@ H(gauge8142)
 *[H+](gauge8055a)
 *WR(gaugeA10,gaugeA12,Usldot10,Usldot11)
 *WR(gaugeA13,gaugeA15,Usldot13,Usldot14)*(
-+
+-
 1/16
-*[su2eps](gaugeA15,gaugeA10)
+*[su2eps](gaugeA10,gaugeA15)
 *[sl2Ceps](Lsldot10,Lsldot13)
 *[sl2Ceps](Lsldot11,Lsldot14)
 *[su2dK](gauge8142,gaugeA13)
 *[su2dK](gaugeA12,gauge8055a)
-+
+-
 1/16
-*[su2eps](gaugeA15,gaugeA10)
+*[su2eps](gaugeA10,gaugeA15)
 *[sl2Ceps](Lsldot10,Lsldot14)
 *[sl2Ceps](Lsldot11,Lsldot13)
 *[su2dK](gauge8142,gaugeA13)
@@ -700,16 +700,16 @@ WL(gaugeA10,gaugeA12,Lsl10,Lsl11)
 *WL(gaugeA13,gaugeA15,Lsl13,Lsl14)
 *H(gauge8142)
 *[H+](gauge8055a)*(
-+
+-
 1/16
-*[su2eps](gaugeA15,gaugeA10)
+*[su2eps](gaugeA10,gaugeA15)
 *[sl2Ceps](Usl10,Usl13)
 *[sl2Ceps](Usl11,Usl14)
 *[su2dK](gauge8142,gaugeA13)
 *[su2dK](gaugeA12,gauge8055a)
-+
+-
 1/16
-*[su2eps](gaugeA15,gaugeA10)
+*[su2eps](gaugeA10,gaugeA15)
 *[sl2Ceps](Usl10,Usl14)
 *[sl2Ceps](Usl11,Usl13)
 *[su2dK](gauge8142,gaugeA13)
@@ -727,35 +727,35 @@ is converted into:
 38: term38: D(lor1,H(gauge5353))*gamma(lor1,spin5953,spin5952)*[lbar](spin5953,gauge5353,flav5598)*l(spin5952,gauge6153,flav5951)*ye(flav5598,flav5676)*[H+](gauge6153)*[ye+](flav5676,flav5951)
 is converted into:
 +
-L(Lslspin59522,gauge6153,flav5951)
+L(Lslspin595212,gauge6153,flav5951)
 *H(Lslgauge53531,Usldotgauge53531,gauge5353)
 *[H+](gauge6153a)
-*[L+](Usldotspin595311,gauge5353a,flav5598)*(
+*[L+](Usldotspin59531,gauge5353a,flav5598)*(
 +
 ye(flav5598,flav5676)
 *[ye+](flav5676,flav5951)
 *[su2eps](gauge6153,gauge6153a)
 *[su2eps](gauge5353,gauge5353a)
-*[sl2Ceps](Uslgauge53531,Uslspin59522)
-*[sl2Ceps](Lsldotgauge53531,Lsldotspin595311)
+*[sl2Ceps](Uslgauge53531,Uslspin595212)
+*[sl2Ceps](Lsldotgauge53531,Lsldotspin59531)
 )
 ===============================
 39: term39: D(lor1,H(gauge5360))*gamma(lor1,spin5999,spin5998)*[qbar](spin5999,gauge5360,colf5715,flav5600)*q(spin5998,gauge6153,colf5715,flav5997)*yd(flav5600,flav5716)*[H+](gauge6153)*[yd+](flav5716,flav5997)
 is converted into:
 +
-Q(Lslspin599812,gauge6153,colf5715,flav5997)
+Q(Lslspin59982,gauge6153,colf5715,flav5997)
 *H(Lslgauge53601,Usldotgauge53601,gauge5360)
 *[H+](gauge6153a)
-*[Q+](Usldotspin59991,gauge5360a,colf5715a,colf5715b,flav5600)*(
+*[Q+](Usldotspin599911,gauge5360a,colf5715a,colf5715b,flav5600)*(
 +
 1/2
 *yd(flav5600,flav5716)
 *[yd+](flav5716,flav5997)
-*[su2eps](gauge6153,gauge6153a)
 *[su2eps](gauge5360,gauge5360a)
+*[su2eps](gauge6153,gauge6153a)
 *[su3eps](colf5715,colf5715a,colf5715b)
-*[sl2Ceps](Uslgauge53601,Uslspin599812)
-*[sl2Ceps](Lsldotgauge53601,Lsldotspin59991)
+*[sl2Ceps](Uslgauge53601,Uslspin59982)
+*[sl2Ceps](Lsldotgauge53601,Lsldotspin599911)
 )
 ===============================
 40: term40: D(lor1,H(gauge6153))*gamma(lor1,spin5609,spin5610)*e(spin5610,flav5608)*[ebar](spin5609,flav6113)*ye(flav5877,flav5608)*[H+](gauge6153)*[ye+](flav6113,flav5877)
@@ -776,18 +776,18 @@ ye(flav5877,flav5608)
 41: term41: D(lor1,H(gauge6153))*gamma(lor1,spin5612,spin5613)*b(spin5613,colf5915,flav5611)*[bbar](spin5612,colf5915,flav6133)*yd(flav5916,flav5611)*[H+](gauge6153)*[yd+](flav6133,flav5916)
 is converted into:
 +
-[d_C](Lslspin56121,colf5915a,colf5915b,flav6133)
+[d_C](Lslspin561211,colf5915a,colf5915b,flav6133)
 *H(Lslgauge61531,Usldotgauge61531,gauge6153)
 *[H+](gauge6153a)
-*[d_C+](Usldotspin561312,colf5915,flav5611)*(
+*[d_C+](Usldotspin56132,colf5915,flav5611)*(
 +
 1/2
 *yd(flav5916,flav5611)
 *[yd+](flav6133,flav5916)
 *[su2eps](gauge6153,gauge6153a)
 *[su3eps](colf5915,colf5915a,colf5915b)
-*[sl2Ceps](Uslgauge61531,Uslspin56121)
-*[sl2Ceps](Lsldotgauge61531,Lsldotspin561312)
+*[sl2Ceps](Uslgauge61531,Uslspin561211)
+*[sl2Ceps](Lsldotgauge61531,Lsldotspin56132)
 )
 ===============================
 42: term42: D(lor1,H(gauge6153))*gamma(lor1,spin6052,spin6051)*[ubar](spin6052,colf5783,flav5602)*u(spin6051,colf5783,flav6050)*yu(flav5784,flav6050)*[H+](gauge6153)*[yu+](flav5602,flav5784)
@@ -810,17 +810,17 @@ is converted into:
 43: term43: D(lor1,[H+](gauge5329))*gamma(lor1,spin5590,spin5591)*H(gauge6151)*l(spin5591,gauge5329,flav5589)*[lbar](spin5590,gauge6151,flav6076)*ye(flav6076,flav5826)*[ye+](flav5826,flav5589)
 is converted into:
 +
-L(Lslspin55912,gauge5329,flav5589)
+L(Lslspin559112,gauge5329,flav5589)
 *H(gauge6151)
 *[H+](Lslgauge53295,Usldotgauge53295,gauge5329a)
-*[L+](Usldotspin559011,gauge6151a,flav6076)*(
+*[L+](Usldotspin55901,gauge6151a,flav6076)*(
 -
 ye(flav6076,flav5826)
 *[ye+](flav5826,flav5589)
 *[su2eps](gauge6151,gauge6151a)
 *[su2eps](gauge5329,gauge5329a)
-*[sl2Ceps](Uslgauge53295,Uslspin55912)
-*[sl2Ceps](Lsldotgauge53295,Lsldotspin559011)
+*[sl2Ceps](Uslgauge53295,Uslspin559112)
+*[sl2Ceps](Lsldotgauge53295,Lsldotspin55901)
 )
 ===============================
 44: term44: D(lor1,[H+](gauge5336))*gamma(lor1,spin5593,spin5594)*H(gauge6151)*q(spin5594,gauge5336,colf5868,flav5592)*[qbar](spin5593,gauge6151,colf5868,flav6108)*yd(flav6108,flav5869)*[yd+](flav5869,flav5592)
@@ -844,18 +844,18 @@ Q(Lslspin55942,gauge5336,colf5868,flav5592)
 45: term45: D(lor1,[H+](gauge6151))*gamma(lor1,spin5596,spin5597)*H(gauge6151)*u(spin5597,colf5905,flav5595)*[ubar](spin5596,colf5905,flav6129)*yu(flav5906,flav5595)*[yu+](flav6129,flav5906)
 is converted into:
 +
-[u_C](Lslspin55961,colf5905a,colf5905b,flav6129)
+[u_C](Lslspin559611,colf5905a,colf5905b,flav6129)
 *H(gauge6151)
 *[H+](Lslgauge61515,Usldotgauge61515,gauge6151a)
-*[u_C+](Usldotspin559712,colf5905,flav5595)*(
+*[u_C+](Usldotspin55972,colf5905,flav5595)*(
 +
 1/2
 *yu(flav5906,flav5595)
 *[yu+](flav6129,flav5906)
 *[su2eps](gauge6151,gauge6151a)
 *[su3eps](colf5905,colf5905a,colf5905b)
-*[sl2Ceps](Uslgauge61515,Uslspin55961)
-*[sl2Ceps](Lsldotgauge61515,Lsldotspin559712)
+*[sl2Ceps](Uslgauge61515,Uslspin559611)
+*[sl2Ceps](Lsldotgauge61515,Lsldotspin55972)
 )
 ===============================
 46: term46: D(lor1,[H+](gauge6151))*gamma(lor1,spin6024,spin6023)*H(gauge6151)*[ebar](spin6024,flav5585)*e(spin6023,flav6022)*ye(flav5744,flav6022)*[ye+](flav5585,flav5744)
@@ -893,17 +893,17 @@ is converted into:
 48: term48: gamma(lor1,spin6475,spin6476)*H(gauge7053)*D(lor1,l(spin6476,gauge6191,flav6474))*[lbar](spin6475,gauge7053,flav6978)*ye(flav6978,flav6722)*[H+](gauge6191)*[ye+](flav6722,flav6474)
 is converted into:
 +
-L(Lslspin64761,Usldotspin64761,Lslspin64762,gauge6191,flav6474)
+L(Lslspin64761,Usldotspin64761,Lslspin647612,gauge6191,flav6474)
 *H(gauge7053)
 *[H+](gauge6191a)
-*[L+](Usldotspin647511,gauge7053a,flav6978)*(
--
+*[L+](Usldotspin64751,gauge7053a,flav6978)*(
++
 ye(flav6978,flav6722)
 *[ye+](flav6722,flav6474)
-*[su2eps](gauge6191,gauge6191a)
 *[su2eps](gauge7053,gauge7053a)
-*[sl2Ceps](Uslspin64761,Uslspin64762)
-*[sl2Ceps](Lsldotspin64761,Lsldotspin647511)
+*[su2eps](gauge6191,gauge6191a)
+*[sl2Ceps](Uslspin64761,Uslspin647612)
+*[sl2Ceps](Lsldotspin64751,Lsldotspin64761)
 )
 ===============================
 49: term49: gamma(lor1,spin6478,spin6479)*H(gauge7053)*D(lor1,q(spin6479,gauge6198,colf6766,flav6477))*[qbar](spin6478,gauge7053,colf6766,flav7010)*yd(flav7010,flav6767)*[H+](gauge6198)*[yd+](flav6767,flav6477)
@@ -917,8 +917,8 @@ Q(Lslspin64791,Usldotspin64791,Lslspin647912,gauge6198,colf6766,flav6477)
 1/2
 *yd(flav7010,flav6767)
 *[yd+](flav6767,flav6477)
-*[su2eps](gauge6198,gauge6198a)
 *[su2eps](gauge7053,gauge7053a)
+*[su2eps](gauge6198,gauge6198a)
 *[su3eps](colf6766,colf6766a,colf6766b)
 *[sl2Ceps](Uslspin64791,Uslspin647912)
 *[sl2Ceps](Lsldotspin64781,Lsldotspin64791)
@@ -944,58 +944,58 @@ is converted into:
 51: term51: gamma(lor1,spin6494,spin6495)*H(gauge6248)*D(lor1,e(spin6495,flav6493))*[ebar](spin6494,flav7015)*ye(flav6775,flav6493)*[H+](gauge6248)*[ye+](flav7015,flav6775)
 is converted into:
 +
-[e_C](Lslspin649411,flav7015)
+[e_C](Lslspin64941,flav7015)
 *H(gauge6248)
 *[H+](gauge6248a)
-*[e_C+](Lslspin64951,Usldotspin64951,Usldotspin64952,flav6493)*(
-+
+*[e_C+](Lslspin64951,Usldotspin64951,Usldotspin649512,flav6493)*(
+-
 ye(flav6775,flav6493)
 *[ye+](flav7015,flav6775)
 *[su2eps](gauge6248,gauge6248a)
-*[sl2Ceps](Uslspin64951,Uslspin649411)
-*[sl2Ceps](Lsldotspin64951,Lsldotspin64952)
+*[sl2Ceps](Uslspin64941,Uslspin64951)
+*[sl2Ceps](Lsldotspin64951,Lsldotspin649512)
 )
 ===============================
 52: term52: gamma(lor1,spin6497,spin6498)*H(gauge6257)*D(lor1,b(spin6498,colf6814,flav6496))*[bbar](spin6497,colf6814,flav7035)*yd(flav6815,flav6496)*[H+](gauge6257)*[yd+](flav7035,flav6815)
 is converted into:
 +
-[d_C](Lslspin649711,colf6814a,colf6814b,flav7035)
+[d_C](Lslspin64971,colf6814a,colf6814b,flav7035)
 *H(gauge6257)
 *[H+](gauge6257a)
-*[d_C+](Lslspin64981,Usldotspin64981,Usldotspin64982,colf6814,flav6496)*(
-+
+*[d_C+](Lslspin64981,Usldotspin64981,Usldotspin649812,colf6814,flav6496)*(
+-
 1/2
 *yd(flav6815,flav6496)
 *[yd+](flav7035,flav6815)
 *[su2eps](gauge6257,gauge6257a)
 *[su3eps](colf6814,colf6814a,colf6814b)
-*[sl2Ceps](Uslspin64981,Uslspin649711)
-*[sl2Ceps](Lsldotspin64981,Lsldotspin64982)
+*[sl2Ceps](Uslspin64971,Uslspin64981)
+*[sl2Ceps](Lsldotspin64981,Lsldotspin649812)
 )
 ===============================
 53: term53: gamma(lor1,spin6855,spin6854)*H(gauge6215)*D(lor1,[lbar](spin6855,gauge6215,flav6483))*l(spin6854,gauge7055,flav6853)*ye(flav6483,flav6561)*[H+](gauge7055)*[ye+](flav6561,flav6853)
 is converted into:
 +
-L(Lslspin685412,gauge7055,flav6853)
+L(Lslspin68542,gauge7055,flav6853)
 *H(gauge6215)
 *[H+](gauge7055a)
-*[L+](Lslspin68555,Usldotspin68555,Usldotspin68551,gauge6215a,flav6483)*(
+*[L+](Lslspin68555,Usldotspin68555,Usldotspin685511,gauge6215a,flav6483)*(
 -
 ye(flav6483,flav6561)
 *[ye+](flav6561,flav6853)
 *[su2eps](gauge6215,gauge6215a)
 *[su2eps](gauge7055,gauge7055a)
-*[sl2Ceps](Uslspin68555,Uslspin685412)
-*[sl2Ceps](Lsldotspin68551,Lsldotspin68555)
+*[sl2Ceps](Uslspin68542,Uslspin68555)
+*[sl2Ceps](Lsldotspin68555,Lsldotspin685511)
 )
 ===============================
 54: term54: gamma(lor1,spin6901,spin6900)*H(gauge6222)*D(lor1,[qbar](spin6901,gauge6222,colf6609,flav6485))*q(spin6900,gauge7055,colf6609,flav6899)*yd(flav6485,flav6610)*[H+](gauge7055)*[yd+](flav6610,flav6899)
 is converted into:
 +
-Q(Lslspin690012,gauge7055,colf6609,flav6899)
+Q(Lslspin69002,gauge7055,colf6609,flav6899)
 *H(gauge6222)
 *[H+](gauge7055a)
-*[Q+](Lslspin69015,Usldotspin69015,Usldotspin69011,gauge6222a,colf6609a,colf6609b,flav6485)*(
+*[Q+](Lslspin69015,Usldotspin69015,Usldotspin690111,gauge6222a,colf6609a,colf6609b,flav6485)*(
 -
 1/2
 *yd(flav6485,flav6610)
@@ -1003,8 +1003,8 @@ Q(Lslspin690012,gauge7055,colf6609,flav6899)
 *[su2eps](gauge6222,gauge6222a)
 *[su2eps](gauge7055,gauge7055a)
 *[su3eps](colf6609,colf6609a,colf6609b)
-*[sl2Ceps](Uslspin69015,Uslspin690012)
-*[sl2Ceps](Lsldotspin69011,Lsldotspin69015)
+*[sl2Ceps](Uslspin69002,Uslspin69015)
+*[sl2Ceps](Lsldotspin69015,Lsldotspin690111)
 )
 ===============================
 55: term55: gamma(lor1,spin6926,spin6925)*H(gauge6174)*D(lor1,[ebar](spin6926,flav6470))*e(spin6925,flav6924)*ye(flav6637,flav6924)*[H+](gauge6174)*[ye+](flav6470,flav6637)
@@ -1025,18 +1025,18 @@ ye(flav6637,flav6924)
 56: term56: gamma(lor1,spin6948,spin6947)*H(gauge6183)*D(lor1,[bbar](spin6948,colf6664,flav6472))*b(spin6947,colf6664,flav6946)*yd(flav6665,flav6946)*[H+](gauge6183)*[yd+](flav6472,flav6665)
 is converted into:
 +
-[d_C](Lslspin69485,Usldotspin69485,Lslspin694811,colf6664a,colf6664b,flav6472)
+[d_C](Lslspin69485,Usldotspin69485,Lslspin69481,colf6664a,colf6664b,flav6472)
 *H(gauge6183)
 *[H+](gauge6183a)
-*[d_C+](Usldotspin69472,colf6664,flav6946)*(
+*[d_C+](Usldotspin694712,colf6664,flav6946)*(
 +
 1/2
 *yd(flav6665,flav6946)
 *[yd+](flav6472,flav6665)
 *[su2eps](gauge6183,gauge6183a)
 *[su3eps](colf6664,colf6664a,colf6664b)
-*[sl2Ceps](Uslspin69485,Uslspin694811)
-*[sl2Ceps](Lsldotspin69472,Lsldotspin69485)
+*[sl2Ceps](Uslspin69481,Uslspin69485)
+*[sl2Ceps](Lsldotspin69485,Lsldotspin694712)
 )
 ===============================
 57: term57: gamma(lor1,spin6954,spin6953)*H(gauge6231)*D(lor1,[ubar](spin6954,colf6674,flav6487))*u(spin6953,colf6674,flav6952)*yu(flav6675,flav6952)*[H+](gauge6231)*[yu+](flav6487,flav6675)
@@ -1066,8 +1066,8 @@ L(Lslspin736212,gauge7093,flav7360)
 +
 ye(flav7863,flav7607)
 *[ye+](flav7607,flav7360)
-*[su2eps](gauge7093,gauge7093a)
 *[su2eps](gauge7938,gauge7938a)
+*[su2eps](gauge7093,gauge7093a)
 *[sl2Ceps](Uslspin73615,Uslspin736212)
 *[sl2Ceps](Lsldotspin73611,Lsldotspin73615)
 )
@@ -1083,8 +1083,8 @@ Q(Lslspin736512,gauge7100,colf7649,flav7363)
 1/2
 *yd(flav7895,flav7650)
 *[yd+](flav7650,flav7363)
-*[su2eps](gauge7100,gauge7100a)
 *[su2eps](gauge7938,gauge7938a)
+*[su2eps](gauge7100,gauge7100a)
 *[su3eps](colf7649,colf7649a,colf7649b)
 *[sl2Ceps](Uslspin73645,Uslspin736512)
 *[sl2Ceps](Lsldotspin73641,Lsldotspin73645)
@@ -1093,18 +1093,18 @@ Q(Lslspin736512,gauge7100,colf7649,flav7363)
 60: term60: gamma(lor1,spin7367,spin7368)*H(gauge7109)*u(spin7368,colf7685,flav7366)*D(lor1,[ubar](spin7367,colf7685,flav7916))*yu(flav7686,flav7366)*[H+](gauge7109)*[yu+](flav7916,flav7686)
 is converted into:
 +
-[u_C](Lslspin73675,Usldotspin73675,Lslspin73671,colf7685a,colf7685b,flav7916)
+[u_C](Lslspin73675,Usldotspin73675,Lslspin736711,colf7685a,colf7685b,flav7916)
 *H(gauge7109)
 *[H+](gauge7109a)
-*[u_C+](Usldotspin736812,colf7685,flav7366)*(
+*[u_C+](Usldotspin73682,colf7685,flav7366)*(
 -
 1/2
 *yu(flav7686,flav7366)
 *[yu+](flav7916,flav7686)
 *[su2eps](gauge7109,gauge7109a)
 *[su3eps](colf7685,colf7685a,colf7685b)
-*[sl2Ceps](Uslspin73671,Uslspin73675)
-*[sl2Ceps](Lsldotspin73675,Lsldotspin736812)
+*[sl2Ceps](Uslspin73675,Uslspin736711)
+*[sl2Ceps](Lsldotspin73682,Lsldotspin73675)
 )
 ===============================
 61: term61: gamma(lor1,spin7380,spin7381)*H(gauge7150)*e(spin7381,flav7379)*D(lor1,[ebar](spin7380,flav7900))*ye(flav7658,flav7379)*[H+](gauge7150)*[ye+](flav7900,flav7658)
@@ -1142,17 +1142,17 @@ is converted into:
 63: term63: gamma(lor1,spin7740,spin7739)*H(gauge7117)*[lbar](spin7740,gauge7117,flav7369)*D(lor1,l(spin7739,gauge7940,flav7738))*ye(flav7369,flav7447)*[H+](gauge7940)*[ye+](flav7447,flav7738)
 is converted into:
 +
-L(Lslspin77391,Usldotspin77391,Lslspin77392,gauge7940,flav7738)
+L(Lslspin77391,Usldotspin77391,Lslspin773912,gauge7940,flav7738)
 *H(gauge7117)
 *[H+](gauge7940a)
-*[L+](Usldotspin774011,gauge7117a,flav7369)*(
-+
+*[L+](Usldotspin77401,gauge7117a,flav7369)*(
+-
 ye(flav7369,flav7447)
 *[ye+](flav7447,flav7738)
-*[su2eps](gauge7940,gauge7940a)
 *[su2eps](gauge7117,gauge7117a)
-*[sl2Ceps](Uslspin77391,Uslspin77392)
-*[sl2Ceps](Lsldotspin77391,Lsldotspin774011)
+*[su2eps](gauge7940,gauge7940a)
+*[sl2Ceps](Uslspin77391,Uslspin773912)
+*[sl2Ceps](Lsldotspin77401,Lsldotspin77391)
 )
 ===============================
 64: term64: gamma(lor1,spin7786,spin7785)*H(gauge7124)*[qbar](spin7786,gauge7124,colf7492,flav7371)*D(lor1,q(spin7785,gauge7940,colf7492,flav7784))*yd(flav7371,flav7493)*[H+](gauge7940)*[yd+](flav7493,flav7784)
@@ -1191,35 +1191,35 @@ ye(flav7520,flav7809)
 66: term66: gamma(lor1,spin7833,spin7832)*H(gauge7085)*[bbar](spin7833,colf7549,flav7358)*D(lor1,b(spin7832,colf7549,flav7831))*yd(flav7550,flav7831)*[H+](gauge7085)*[yd+](flav7358,flav7550)
 is converted into:
 +
-[d_C](Lslspin78331,colf7549a,colf7549b,flav7358)
+[d_C](Lslspin783311,colf7549a,colf7549b,flav7358)
 *H(gauge7085)
 *[H+](gauge7085a)
-*[d_C+](Lslspin78321,Usldotspin78321,Usldotspin783212,colf7549,flav7831)*(
-+
+*[d_C+](Lslspin78321,Usldotspin78321,Usldotspin78322,colf7549,flav7831)*(
+-
 1/2
 *yd(flav7550,flav7831)
 *[yd+](flav7358,flav7550)
 *[su2eps](gauge7085,gauge7085a)
 *[su3eps](colf7549,colf7549a,colf7549b)
-*[sl2Ceps](Uslspin78331,Uslspin78321)
-*[sl2Ceps](Lsldotspin78321,Lsldotspin783212)
+*[sl2Ceps](Uslspin78321,Uslspin783311)
+*[sl2Ceps](Lsldotspin78321,Lsldotspin78322)
 )
 ===============================
 67: term67: gamma(lor1,spin7839,spin7838)*H(gauge7133)*[ubar](spin7839,colf7559,flav7373)*D(lor1,u(spin7838,colf7559,flav7837))*yu(flav7560,flav7837)*[H+](gauge7133)*[yu+](flav7373,flav7560)
 is converted into:
 +
-[u_C](Lslspin783911,colf7559a,colf7559b,flav7373)
+[u_C](Lslspin78391,colf7559a,colf7559b,flav7373)
 *H(gauge7133)
 *[H+](gauge7133a)
-*[u_C+](Lslspin78381,Usldotspin78381,Usldotspin78382,colf7559,flav7837)*(
--
+*[u_C+](Lslspin78381,Usldotspin78381,Usldotspin783812,colf7559,flav7837)*(
++
 1/2
 *yu(flav7560,flav7837)
 *[yu+](flav7373,flav7560)
 *[su2eps](gauge7133,gauge7133a)
 *[su3eps](colf7559,colf7559a,colf7559b)
-*[sl2Ceps](Uslspin78381,Uslspin783911)
-*[sl2Ceps](Lsldotspin78381,Lsldotspin78382)
+*[sl2Ceps](Uslspin78391,Uslspin78381)
+*[sl2Ceps](Lsldotspin78381,Lsldotspin783812)
 )
 ===============================
 68: term68: D(lor1,H(gauge5369))*gamma(lor1,spin6046,spin6045)*H(gauge6151)*[ubar](spin6046,colf5773,flav5602)*b(spin6045,colf5773,flav6044)*[su2eps](gauge6151,gauge5369)*yd(flav5774,flav6044)*[yu+](flav5602,flav5774)
@@ -1242,18 +1242,18 @@ is converted into:
 69: term69: D(lor1,H(gauge5395))*gamma(lor1,spin5612,spin5613)*H(gauge6151)*b(spin5613,colf5905,flav5611)*[ubar](spin5612,colf5905,flav6129)*[su2eps](gauge5395,gauge6151)*yd(flav5906,flav5611)*[yu+](flav6129,flav5906)
 is converted into:
 +
-[u_C](Lslspin56121,colf5905a,colf5905b,flav6129)
+[u_C](Lslspin561211,colf5905a,colf5905b,flav6129)
 *H(Lslgauge53951,Usldotgauge53951,gauge5395)
 *H(gauge6151)
-*[d_C+](Usldotspin561312,colf5905,flav5611)*(
+*[d_C+](Usldotspin56132,colf5905,flav5611)*(
 -
 1/2
 *yd(flav5906,flav5611)
 *[yu+](flav6129,flav5906)
 *[su2eps](gauge6151,gauge5395)
 *[su3eps](colf5905,colf5905a,colf5905b)
-*[sl2Ceps](Uslgauge53951,Uslspin56121)
-*[sl2Ceps](Lsldotgauge53951,Lsldotspin561312)
+*[sl2Ceps](Uslgauge53951,Uslspin561211)
+*[sl2Ceps](Lsldotgauge53951,Lsldotspin56132)
 )
 ===============================
 70: term70: D(lor1,[H+](gauge5321))*gamma(lor1,spin6052,spin6051)*[bbar](spin6052,colf5783,flav5587)*u(spin6051,colf5783,flav6050)*[su2eps](gauge5321,gauge6153)*yu(flav5784,flav6050)*[H+](gauge6153)*[yd+](flav5587,flav5784)
@@ -1263,11 +1263,11 @@ is converted into:
 *[H+](Lslgauge53215,Usldotgauge53215,gauge5321a)
 *[H+](gauge6153a)
 *[u_C+](Usldotspin605112,colf5783,flav6050)*(
--
++
 1/2
 *yu(flav5784,flav6050)
 *[yd+](flav5587,flav5784)
-*[su2eps](gauge6153a,gauge5321a)
+*[su2eps](gauge5321a,gauge6153a)
 *[su3eps](colf5783,colf5783a,colf5783b)
 *[sl2Ceps](Uslgauge53215,Uslspin60521)
 *[sl2Ceps](Lsldotgauge53215,Lsldotspin605112)
@@ -1276,18 +1276,18 @@ is converted into:
 71: term71: D(lor1,[H+](gauge5345))*gamma(lor1,spin5596,spin5597)*u(spin5597,colf5915,flav5595)*[bbar](spin5596,colf5915,flav6133)*[su2eps](gauge6153,gauge5345)*yu(flav5916,flav5595)*[H+](gauge6153)*[yd+](flav6133,flav5916)
 is converted into:
 +
-[d_C](Lslspin55961,colf5915a,colf5915b,flav6133)
+[d_C](Lslspin559611,colf5915a,colf5915b,flav6133)
 *[H+](Lslgauge53455,Usldotgauge53455,gauge5345a)
 *[H+](gauge6153a)
-*[u_C+](Usldotspin559712,colf5915,flav5595)*(
-+
+*[u_C+](Usldotspin55972,colf5915,flav5595)*(
+-
 1/2
 *yu(flav5916,flav5595)
 *[yd+](flav6133,flav5916)
-*[su2eps](gauge5345a,gauge6153a)
+*[su2eps](gauge6153a,gauge5345a)
 *[su3eps](colf5915,colf5915a,colf5915b)
-*[sl2Ceps](Uslgauge53455,Uslspin55961)
-*[sl2Ceps](Lsldotgauge53455,Lsldotspin559712)
+*[sl2Ceps](Uslgauge53455,Uslspin559611)
+*[sl2Ceps](Lsldotgauge53455,Lsldotspin55972)
 )
 ===============================
 72: term72: gamma(lor1,spin6481,spin6482)*D(lor1,u(spin6482,colf6814,flav6480))*[bbar](spin6481,colf6814,flav7035)*[su2eps](gauge7055,gauge6207)*yu(flav6815,flav6480)*[H+](gauge6207)*[H+](gauge7055)*[yd+](flav7035,flav6815)
@@ -1297,11 +1297,11 @@ is converted into:
 *[H+](gauge6207a)
 *[H+](gauge7055a)
 *[u_C+](Lslspin64821,Usldotspin64821,Usldotspin64822,colf6814,flav6480)*(
--
++
 1/2
 *yu(flav6815,flav6480)
 *[yd+](flav7035,flav6815)
-*[su2eps](gauge7055a,gauge6207a)
+*[su2eps](gauge6207a,gauge7055a)
 *[su3eps](colf6814,colf6814a,colf6814b)
 *[sl2Ceps](Uslspin64821,Uslspin648111)
 *[sl2Ceps](Lsldotspin64821,Lsldotspin64822)
@@ -1310,35 +1310,35 @@ is converted into:
 73: term73: gamma(lor1,spin6497,spin6498)*H(gauge6257)*H(gauge7053)*D(lor1,b(spin6498,colf6804,flav6496))*[ubar](spin6497,colf6804,flav7031)*[su2eps](gauge6257,gauge7053)*yd(flav6805,flav6496)*[yu+](flav7031,flav6805)
 is converted into:
 +
-[u_C](Lslspin649711,colf6804a,colf6804b,flav7031)
+[u_C](Lslspin64971,colf6804a,colf6804b,flav7031)
 *H(gauge6257)
 *H(gauge7053)
-*[d_C+](Lslspin64981,Usldotspin64981,Usldotspin64982,colf6804,flav6496)*(
+*[d_C+](Lslspin64981,Usldotspin64981,Usldotspin649812,colf6804,flav6496)*(
 +
 1/2
 *yd(flav6805,flav6496)
 *[yu+](flav7031,flav6805)
-*[su2eps](gauge6257,gauge7053)
+*[su2eps](gauge7053,gauge6257)
 *[su3eps](colf6804,colf6804a,colf6804b)
-*[sl2Ceps](Uslspin64981,Uslspin649711)
-*[sl2Ceps](Lsldotspin64981,Lsldotspin64982)
+*[sl2Ceps](Uslspin64971,Uslspin64981)
+*[sl2Ceps](Lsldotspin64981,Lsldotspin649812)
 )
 ===============================
 74: term74: gamma(lor1,spin6948,spin6947)*H(gauge6231)*H(gauge7053)*D(lor1,[ubar](spin6948,colf6664,flav6487))*b(spin6947,colf6664,flav6946)*[su2eps](gauge7053,gauge6231)*yd(flav6665,flav6946)*[yu+](flav6487,flav6665)
 is converted into:
 +
-[u_C](Lslspin69485,Usldotspin69485,Lslspin694811,colf6664a,colf6664b,flav6487)
+[u_C](Lslspin69485,Usldotspin69485,Lslspin69481,colf6664a,colf6664b,flav6487)
 *H(gauge6231)
 *H(gauge7053)
-*[d_C+](Usldotspin69472,colf6664,flav6946)*(
-+
+*[d_C+](Usldotspin694712,colf6664,flav6946)*(
+-
 1/2
 *yd(flav6665,flav6946)
 *[yu+](flav6487,flav6665)
-*[su2eps](gauge7053,gauge6231)
+*[su2eps](gauge6231,gauge7053)
 *[su3eps](colf6664,colf6664a,colf6664b)
-*[sl2Ceps](Uslspin69485,Uslspin694811)
-*[sl2Ceps](Lsldotspin69472,Lsldotspin69485)
+*[sl2Ceps](Uslspin69481,Uslspin69485)
+*[sl2Ceps](Lsldotspin69485,Lsldotspin694712)
 )
 ===============================
 75: term75: gamma(lor1,spin6954,spin6953)*D(lor1,[bbar](spin6954,colf6674,flav6472))*u(spin6953,colf6674,flav6952)*[su2eps](gauge6183,gauge7055)*yu(flav6675,flav6952)*[H+](gauge6183)*[H+](gauge7055)*[yd+](flav6472,flav6675)
@@ -1361,18 +1361,18 @@ is converted into:
 76: term76: gamma(lor1,spin7367,spin7368)*u(spin7368,colf7695,flav7366)*D(lor1,[bbar](spin7367,colf7695,flav7920))*[su2eps](gauge7940,gauge7109)*yu(flav7696,flav7366)*[H+](gauge7109)*[H+](gauge7940)*[yd+](flav7920,flav7696)
 is converted into:
 +
-[d_C](Lslspin73675,Usldotspin73675,Lslspin73671,colf7695a,colf7695b,flav7920)
+[d_C](Lslspin73675,Usldotspin73675,Lslspin736711,colf7695a,colf7695b,flav7920)
 *[H+](gauge7109a)
 *[H+](gauge7940a)
-*[u_C+](Usldotspin736812,colf7695,flav7366)*(
+*[u_C+](Usldotspin73682,colf7695,flav7366)*(
 +
 1/2
 *yu(flav7696,flav7366)
 *[yd+](flav7920,flav7696)
 *[su2eps](gauge7940a,gauge7109a)
 *[su3eps](colf7695,colf7695a,colf7695b)
-*[sl2Ceps](Uslspin73671,Uslspin73675)
-*[sl2Ceps](Lsldotspin73675,Lsldotspin736812)
+*[sl2Ceps](Uslspin73675,Uslspin736711)
+*[sl2Ceps](Lsldotspin73682,Lsldotspin73675)
 )
 ===============================
 77: term77: gamma(lor1,spin7383,spin7384)*H(gauge7159)*H(gauge7938)*b(spin7384,colf7685,flav7382)*D(lor1,[ubar](spin7383,colf7685,flav7916))*[su2eps](gauge7159,gauge7938)*yd(flav7686,flav7382)*[yu+](flav7916,flav7686)
@@ -1382,11 +1382,11 @@ is converted into:
 *H(gauge7159)
 *H(gauge7938)
 *[d_C+](Usldotspin738412,colf7685,flav7382)*(
-+
+-
 1/2
 *yd(flav7686,flav7382)
 *[yu+](flav7916,flav7686)
-*[su2eps](gauge7938,gauge7159)
+*[su2eps](gauge7159,gauge7938)
 *[su3eps](colf7685,colf7685a,colf7685b)
 *[sl2Ceps](Uslspin73831,Uslspin73835)
 *[sl2Ceps](Lsldotspin73835,Lsldotspin738412)
@@ -1395,35 +1395,35 @@ is converted into:
 78: term78: gamma(lor1,spin7833,spin7832)*H(gauge7133)*H(gauge7938)*[ubar](spin7833,colf7549,flav7373)*D(lor1,b(spin7832,colf7549,flav7831))*[su2eps](gauge7938,gauge7133)*yd(flav7550,flav7831)*[yu+](flav7373,flav7550)
 is converted into:
 +
-[u_C](Lslspin78331,colf7549a,colf7549b,flav7373)
+[u_C](Lslspin783311,colf7549a,colf7549b,flav7373)
 *H(gauge7133)
 *H(gauge7938)
-*[d_C+](Lslspin78321,Usldotspin78321,Usldotspin783212,colf7549,flav7831)*(
-+
+*[d_C+](Lslspin78321,Usldotspin78321,Usldotspin78322,colf7549,flav7831)*(
+-
 1/2
 *yd(flav7550,flav7831)
 *[yu+](flav7373,flav7550)
 *[su2eps](gauge7938,gauge7133)
 *[su3eps](colf7549,colf7549a,colf7549b)
-*[sl2Ceps](Uslspin78331,Uslspin78321)
-*[sl2Ceps](Lsldotspin78321,Lsldotspin783212)
+*[sl2Ceps](Uslspin78321,Uslspin783311)
+*[sl2Ceps](Lsldotspin78321,Lsldotspin78322)
 )
 ===============================
 79: term79: gamma(lor1,spin7839,spin7838)*[bbar](spin7839,colf7559,flav7358)*D(lor1,u(spin7838,colf7559,flav7837))*[su2eps](gauge7085,gauge7940)*yu(flav7560,flav7837)*[H+](gauge7085)*[H+](gauge7940)*[yd+](flav7358,flav7560)
 is converted into:
 +
-[d_C](Lslspin783911,colf7559a,colf7559b,flav7358)
+[d_C](Lslspin78391,colf7559a,colf7559b,flav7358)
 *[H+](gauge7085a)
 *[H+](gauge7940a)
-*[u_C+](Lslspin78381,Usldotspin78381,Usldotspin78382,colf7559,flav7837)*(
+*[u_C+](Lslspin78381,Usldotspin78381,Usldotspin783812,colf7559,flav7837)*(
 +
 1/2
 *yu(flav7560,flav7837)
 *[yd+](flav7358,flav7560)
-*[su2eps](gauge7085a,gauge7940a)
+*[su2eps](gauge7940a,gauge7085a)
 *[su3eps](colf7559,colf7559a,colf7559b)
-*[sl2Ceps](Uslspin78381,Uslspin783911)
-*[sl2Ceps](Lsldotspin78381,Lsldotspin78382)
+*[sl2Ceps](Uslspin78391,Uslspin78381)
+*[sl2Ceps](Lsldotspin78381,Lsldotspin783812)
 )
 ===============================
 80: term80: H(gauge2355)*[ebar](spin2766,flav2765)*l(spin2766,gauge3850,flav3648)*ye(flav2917,flav3140)*[H+](gauge2355)*[H+](gauge3850)*[ye+](flav2765,flav2917)*[ye+](flav3140,flav3648)
@@ -1438,8 +1438,8 @@ is converted into:
 ye(flav2917,flav3140)
 *[ye+](flav3140,flav3648)
 *[ye+](flav2765,flav2917)
-*[su2eps](gauge3850,gauge3850a)
 *[su2eps](gauge2355,gauge2355a)
+*[su2eps](gauge3850,gauge3850a)
 *[sl2Ceps](Uslspin27661,Uslspin27662)
 )
 ===============================
@@ -1471,8 +1471,8 @@ H(gauge2396)
 *[e_C+](Usldotspin27791,flav3719)
 *[L+](Usldotspin27792,gauge2396a,flav2778)*(
 -
-ye(flav2778,flav2867)
-*ye(flav3240,flav3719)
+ye(flav3240,flav3719)
+*ye(flav2778,flav2867)
 *[ye+](flav2867,flav3240)
 *[su2eps](gauge3848,gauge3848a)
 *[su2eps](gauge2396,gauge2396a)
@@ -1489,8 +1489,8 @@ H(gauge2403)
 *[Q+](Usldotspin27812,gauge2403a,colf2905a,colf2905b,flav2780)*(
 -
 1/2
-*yd(flav3292,flav3741)
 *yd(flav2780,flav2907)
+*yd(flav3292,flav3741)
 *[yd+](flav2907,flav3292)
 *[su2eps](gauge3848,gauge3848a)
 *[su2eps](gauge2403,gauge2403a)
@@ -1507,11 +1507,11 @@ H(gauge2429)
 *[e_C+](Usldotspin37741,flav2788)
 *[L+](Usldotspin37742,gauge3848a,flav3773)*(
 +
-ye(flav3041,flav2788)
-*ye(flav3773,flav3361)
+ye(flav3773,flav3361)
+*ye(flav3041,flav2788)
 *[ye+](flav3361,flav3041)
-*[su2eps](gauge3848,gauge3848a)
 *[su2eps](gauge2429,gauge2429a)
+*[su2eps](gauge3848,gauge3848a)
 *[sl2Ceps](Lsldotspin37741,Lsldotspin37742)
 )
 ===============================
@@ -1528,8 +1528,8 @@ H(gauge2438)
 *yd(flav3805,flav3451)
 *yd(flav3081,flav2791)
 *[yd+](flav3451,flav3081)
-*[su2eps](gauge3848,gauge3848a)
 *[su2eps](gauge2438,gauge2438a)
+*[su2eps](gauge3848,gauge3848a)
 *[su3eps](colf3079,colf3079a,colf3079b)
 *[sl2Ceps](Lsldotspin38061,Lsldotspin38062)
 )
@@ -1573,19 +1573,19 @@ is converted into:
 88: term88: D(lor1,H(gauge5378))*gamma(lor1,spin5606,spin5607)*q(spin5607,gauge5605,colf5839,flav5604)*[qbar](spin5606,gauge6091,colf5839,flav6089)*[su2eps](gauge5605,gauge5378)*[su2eps](gauge6091,gauge6153)*yu(flav6089,flav5840)*[H+](gauge6153)*[yu+](flav5840,flav5604)
 is converted into:
 +
-Q(Lslspin560712,gauge5605,colf5839,flav5604)
+Q(Lslspin56072,gauge5605,colf5839,flav5604)
 *H(Lslgauge53781,Usldotgauge53781,gauge5378)
 *[H+](gauge6153a)
-*[Q+](Usldotspin56061,gauge6091a,colf5839a,colf5839b,flav6089)*(
--
+*[Q+](Usldotspin560611,gauge6091a,colf5839a,colf5839b,flav6089)*(
++
 1/2
 *yu(flav6089,flav5840)
 *[yu+](flav5840,flav5604)
-*[su2eps](gauge5605,gauge5378)
+*[su2eps](gauge5378,gauge5605)
 *[su2eps](gauge6153a,gauge6091a)
 *[su3eps](colf5839,colf5839a,colf5839b)
-*[sl2Ceps](Uslgauge53781,Uslspin560712)
-*[sl2Ceps](Lsldotgauge53781,Lsldotspin56061)
+*[sl2Ceps](Uslgauge53781,Uslspin56072)
+*[sl2Ceps](Lsldotgauge53781,Lsldotspin560611)
 )
 ===============================
 89: term89: D(lor1,[H+](gauge5304))*gamma(lor1,spin5973,spin5972)*H(gauge6151)*[qbar](spin5973,gauge5584,colf5689,flav5582)*q(spin5972,gauge5971,colf5689,flav5970)*[su2eps](gauge5584,gauge5304)*[su2eps](gauge5971,gauge6151)*yu(flav5582,flav5690)*[yu+](flav5690,flav5970)
@@ -1595,11 +1595,11 @@ Q(Lslspin597212,gauge5971,colf5689,flav5970)
 *H(gauge6151)
 *[H+](Lslgauge53045,Usldotgauge53045,gauge5304a)
 *[Q+](Usldotspin59731,gauge5584a,colf5689a,colf5689b,flav5582)*(
-+
+-
 1/2
 *yu(flav5582,flav5690)
 *[yu+](flav5690,flav5970)
-*[su2eps](gauge5971,gauge6151)
+*[su2eps](gauge6151,gauge5971)
 *[su2eps](gauge5304a,gauge5584a)
 *[su3eps](colf5689,colf5689a,colf5689b)
 *[sl2Ceps](Uslgauge53045,Uslspin597212)
@@ -1609,55 +1609,55 @@ Q(Lslspin597212,gauge5971,colf5689,flav5970)
 90: term90: gamma(lor1,spin6491,spin6492)*H(gauge6240)*D(lor1,q(spin6492,gauge6490,colf6736,flav6489))*[qbar](spin6491,gauge6993,colf6736,flav6991)*[su2eps](gauge6490,gauge6240)*[su2eps](gauge6993,gauge7055)*yu(flav6991,flav6737)*[H+](gauge7055)*[yu+](flav6737,flav6489)
 is converted into:
 +
-Q(Lslspin64921,Usldotspin64921,Lslspin649212,gauge6490,colf6736,flav6489)
+Q(Lslspin64921,Usldotspin64921,Lslspin64922,gauge6490,colf6736,flav6489)
 *H(gauge6240)
 *[H+](gauge7055a)
-*[Q+](Usldotspin64911,gauge6993a,colf6736a,colf6736b,flav6991)*(
-+
+*[Q+](Usldotspin649111,gauge6993a,colf6736a,colf6736b,flav6991)*(
+-
 1/2
 *yu(flav6991,flav6737)
 *[yu+](flav6737,flav6489)
-*[su2eps](gauge6490,gauge6240)
-*[su2eps](gauge7055a,gauge6993a)
+*[su2eps](gauge6240,gauge6490)
+*[su2eps](gauge6993a,gauge7055a)
 *[su3eps](colf6736,colf6736a,colf6736b)
-*[sl2Ceps](Uslspin64921,Uslspin649212)
-*[sl2Ceps](Lsldotspin64911,Lsldotspin64921)
+*[sl2Ceps](Uslspin64921,Uslspin64922)
+*[sl2Ceps](Lsldotspin64921,Lsldotspin649111)
 )
 ===============================
 91: term91: gamma(lor1,spin6875,spin6874)*H(gauge7053)*D(lor1,[qbar](spin6875,gauge6469,colf6579,flav6467))*q(spin6874,gauge6873,colf6579,flav6872)*[su2eps](gauge6469,gauge6166)*[su2eps](gauge6873,gauge7053)*yu(flav6467,flav6580)*[H+](gauge6166)*[yu+](flav6580,flav6872)
 is converted into:
 +
-Q(Lslspin68742,gauge6873,colf6579,flav6872)
+Q(Lslspin687412,gauge6873,colf6579,flav6872)
 *H(gauge7053)
 *[H+](gauge6166a)
-*[Q+](Lslspin68755,Usldotspin68755,Usldotspin687511,gauge6469a,colf6579a,colf6579b,flav6467)*(
--
+*[Q+](Lslspin68755,Usldotspin68755,Usldotspin68751,gauge6469a,colf6579a,colf6579b,flav6467)*(
++
 1/2
 *yu(flav6467,flav6580)
 *[yu+](flav6580,flav6872)
-*[su2eps](gauge6873,gauge7053)
+*[su2eps](gauge7053,gauge6873)
 *[su2eps](gauge6166a,gauge6469a)
 *[su3eps](colf6579,colf6579a,colf6579b)
-*[sl2Ceps](Uslspin68742,Uslspin68755)
-*[sl2Ceps](Lsldotspin68755,Lsldotspin687511)
+*[sl2Ceps](Uslspin68755,Uslspin687412)
+*[sl2Ceps](Lsldotspin68751,Lsldotspin68755)
 )
 ===============================
 92: term92: gamma(lor1,spin7377,spin7378)*H(gauge7142)*q(spin7378,gauge7376,colf7620,flav7375)*D(lor1,[qbar](spin7377,gauge7878,colf7620,flav7876))*[su2eps](gauge7376,gauge7142)*[su2eps](gauge7878,gauge7940)*yu(flav7876,flav7621)*[H+](gauge7940)*[yu+](flav7621,flav7375)
 is converted into:
 +
-Q(Lslspin737812,gauge7376,colf7620,flav7375)
+Q(Lslspin73782,gauge7376,colf7620,flav7375)
 *H(gauge7142)
 *[H+](gauge7940a)
-*[Q+](Lslspin73775,Usldotspin73775,Usldotspin73771,gauge7878a,colf7620a,colf7620b,flav7876)*(
+*[Q+](Lslspin73775,Usldotspin73775,Usldotspin737711,gauge7878a,colf7620a,colf7620b,flav7876)*(
 +
 1/2
 *yu(flav7876,flav7621)
 *[yu+](flav7621,flav7375)
-*[su2eps](gauge7142,gauge7376)
-*[su2eps](gauge7878a,gauge7940a)
+*[su2eps](gauge7376,gauge7142)
+*[su2eps](gauge7940a,gauge7878a)
 *[su3eps](colf7620,colf7620a,colf7620b)
-*[sl2Ceps](Uslspin73775,Uslspin737812)
-*[sl2Ceps](Lsldotspin73771,Lsldotspin73775)
+*[sl2Ceps](Uslspin73782,Uslspin73775)
+*[sl2Ceps](Lsldotspin73775,Lsldotspin737711)
 )
 ===============================
 93: term93: gamma(lor1,spin7760,spin7759)*H(gauge7938)*[qbar](spin7760,gauge7355,colf7464,flav7353)*D(lor1,q(spin7759,gauge7758,colf7464,flav7757))*[su2eps](gauge7355,gauge7068)*[su2eps](gauge7758,gauge7938)*yu(flav7353,flav7465)*[H+](gauge7068)*[yu+](flav7465,flav7757)
@@ -1671,8 +1671,8 @@ Q(Lslspin77591,Usldotspin77591,Lslspin775912,gauge7758,colf7464,flav7757)
 1/2
 *yu(flav7353,flav7465)
 *[yu+](flav7465,flav7757)
-*[su2eps](gauge7758,gauge7938)
-*[su2eps](gauge7355a,gauge7068a)
+*[su2eps](gauge7938,gauge7758)
+*[su2eps](gauge7068a,gauge7355a)
 *[su3eps](colf7464,colf7464a,colf7464b)
 *[sl2Ceps](Uslspin77591,Uslspin775912)
 *[sl2Ceps](Lsldotspin77601,Lsldotspin77591)
@@ -1762,12 +1762,12 @@ Q(Lslspin38271,gauge2785,colf3015,flav2784)
 *H(gauge2421)
 *H(gauge3116)
 *[H+](gauge3116a)*(
--
++
 1/2
 *yu(flav3552,flav3017)
-*[yu+](flav3826,flav3552)
 *[yu+](flav3017,flav2784)
-*[su2eps](gauge2421,gauge2785)
+*[yu+](flav3826,flav3552)
+*[su2eps](gauge2785,gauge2421)
 *[su2eps](gauge3116,gauge3116a)
 *[su3eps](colf3015,colf3015a,colf3015b)
 *[sl2Ceps](Uslspin38271,Uslspin38272)
@@ -1783,8 +1783,8 @@ H(gauge3101)
 *[u_C+](Usldotspin27631,colf2891,flav3747)*(
 +
 1/2
-*yu(flav3302,flav3747)
 *yu(flav2762,flav2893)
+*yu(flav3302,flav3747)
 *[yu+](flav2893,flav3302)
 *[su2eps](gauge3101,gauge3101a)
 *[su2eps](gauge2347a,gauge2764a)
@@ -1800,12 +1800,12 @@ Q(Lslspin38271,gauge2379,colf3029,flav2772)
 *H(gauge3549)
 *H(gauge3848)
 *[H+](gauge2379a)*(
-+
+-
 1/2
 *yd(flav3552,flav3031)
 *[yu+](flav3826,flav3552)
 *[yd+](flav3031,flav2772)
-*[su2eps](gauge3549,gauge3848)
+*[su2eps](gauge3848,gauge3549)
 *[su2eps](gauge2379,gauge2379a)
 *[su3eps](colf3029,colf3029a,colf3029b)
 *[sl2Ceps](Uslspin38271,Uslspin38272)
@@ -1857,12 +1857,12 @@ H(gauge2438)
 *[H+](gauge3850a)
 *[d_C+](Usldotspin37871,colf3065,flav2791)
 *[Q+](Usldotspin37872,gauge3788a,colf3065a,colf3065b,flav3786)*(
-+
+-
 1/2
 *yu(flav3786,flav3389)
 *yd(flav3067,flav2791)
 *[yu+](flav3389,flav3067)
-*[su2eps](gauge3129,gauge2438)
+*[su2eps](gauge2438,gauge3129)
 *[su2eps](gauge3788a,gauge3850a)
 *[su3eps](colf3065,colf3065a,colf3065b)
 *[sl2Ceps](Lsldotspin37871,Lsldotspin37872)

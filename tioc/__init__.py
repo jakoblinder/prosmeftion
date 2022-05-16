@@ -1,7 +1,9 @@
-import re
 import sys
+from fractions import Fraction
 from pathlib import Path
+
 from yaml import safe_load
+
 from autoeft.model import Model
 
 if Path.cwd().name == "projection":
@@ -59,7 +61,8 @@ def sort_model_fields(fields):
             if fields[j].helicity > fields[j + 1].helicity:
                 fields[j], fields[j + 1] = fields[j + 1], fields[j]
             elif fields[j].helicity == fields[j + 1].helicity:
-                if fields[j].name.lower() > fields[j + 1].name.lower():
+                # Note that due to the ASCII standard the letter 'A' stands before 'a' and so on
+                if fields[j].name > fields[j + 1].name:
                     fields[j], fields[j + 1] = fields[j + 1], fields[j]
     field_dict = {}
     for field in fields:
@@ -84,6 +87,10 @@ spSL2C_c_values = list(spinorsSL2C_c.values())
 field_config = configurations("fields.yml")
 coeff_config = configurations("coefficients.yml")
 
+for field in field_config.keys():
+    if field != "D":
+        field_config[field]["helicity"] = str(field_config[field]["helicity"]).split(" | ")
+        field_config[field]["helicity"] = list(map(float, map(Fraction, field_config[field]["helicity"])))
 for field in field_config.keys():
     field_config[field]["tex"] = field_config[field]["tex"].split(" | ")
 for field in field_config.keys():
@@ -115,7 +122,7 @@ def escape_regex(regex):
     modyfied_regex = ""
     for a in regex:
         if a in r"^[]{}().$*\+|?<>=":
-            modyfied_regex += f"\{a}"
+            modyfied_regex += fr"\{a}"
         else:
             modyfied_regex += a
     return modyfied_regex

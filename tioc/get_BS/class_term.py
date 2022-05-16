@@ -1,13 +1,12 @@
-import re
 import logging
+import re
 import sys
 from typing import List, Tuple
-from yaml import safe_load
-from fractions import Fraction
 
-from tioc import opname, opnameSL2C, spinorsSL2C_c, CONFIG_PATH
-from .class_operator import Operator, OperatorModel
+from tioc import opname, opnameSL2C, spinorsSL2C_c, field_config
+
 from .class_coefficient import Coefficient
+from .class_operator import Operator, OperatorModel
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild("term")
@@ -1005,7 +1004,7 @@ class Term(Operator, Coefficient):
         return form
 
     def form_simplifyEps(self):
-        """
+        r"""
         Simplify contracted SL2C epsilon tensors:
         Examples:
         :math:`\epsilon^{\alpha \beta} \epsilon_{\beta \gamma} = \delta^{\alpha}_{\gamma}` and
@@ -1118,7 +1117,7 @@ class Term(Operator, Coefficient):
         return form
 
     def form_simplifyEpsSU2(self):
-        """
+        r"""
         Simplify contracted SU2 epsilon tensors:
         Examples:
         :math:`\epsilon^{a b} \epsilon_{b c} = \delta^{a}_{c}` and
@@ -1949,13 +1948,6 @@ class Term(Operator, Coefficient):
         -------
         Tuple of str, i.e. names of the fields in the demanded order.
         """
-        with open(CONFIG_PATH / "fields.yml", "r") as file:
-            field_config = safe_load(file)
-            for field in field_config.keys():
-                if field != "D":
-                    field_config[field]["helicity"] = str(field_config[field]["helicity"]).split(" | ")
-                    field_config[field]["helicity"] = list(map(float,map(Fraction,field_config[field]["helicity"])))
-
         form = {'GL' : f"{opname['G']:s}L", 'GR' : f"{opname['G']:s}R",
                'WL' : f"{opname['V']:s}L", 'WR' : f"{opname['V']:s}R",
                'BL' : f"{opname['F']:s}L", 'BR' : f"{opname['F']:s}R",
@@ -1994,7 +1986,8 @@ class Term(Operator, Coefficient):
                 if fields[j].helicity > fields[j + 1].helicity:
                     fields[j], fields[j + 1] = fields[j + 1], fields[j]
                 elif fields[j].helicity == fields[j + 1].helicity:
-                    if fields[j].name.lower() > fields[j + 1].name.lower():
+                    # Note that due to the ASCII standard the letter 'A' stands before 'a' and so on
+                    if fields[j].name > fields[j + 1].name:
                         fields[j], fields[j + 1] = fields[j + 1], fields[j]
         logger.debug(f"Fields are ordered by helicity like: {' '.join([f.form_name for f in fields])}")
         return fields

@@ -54,7 +54,7 @@ def main():
     # SUN_Projection:
     single_terms = sun_projection(single_terms, max_dim = 6)
 
-    print(type(single_terms))
+    # print(type(single_terms))
 
     return single_terms
 

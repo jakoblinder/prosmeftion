@@ -143,7 +143,7 @@ class Operator():
         translate["eC"]    = opnameSL2C["[e_C]"]
         translate["L"]     = opnameSL2C["L"]
         translate["Q"]     = opnameSL2C["Q"]
-        translate["uC"] = opnameSL2C["[u_C]"]
+        translate["uC"]    = opnameSL2C["[u_C]"]
         translate["H"]     = opname["H"]
         translate["H+"]    = opname["conj[H]"]
         translate["dC+"]   = opnameSL2C["[d_C+]"]

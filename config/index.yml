@@ -26,7 +26,7 @@ gauge:
   dimension: 2
   description: "Fundamental index of SU2."
   tex_indices: i...t
-gaugeadjoint:
+gaugeadj:
   dimension: 3
   description: "Adjoint index of SU2."
   tex_indices: I...T

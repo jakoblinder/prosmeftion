@@ -1,4 +1,5 @@
 import sys
+import re
 from fractions import Fraction
 from pathlib import Path
 
@@ -6,22 +7,22 @@ from yaml import safe_load
 
 from autoeft.model import Model
 
-if Path.cwd().name == "projection":
-    PROJECTION_PATH = Path.cwd()
-elif Path.cwd().name == "tioc":
-    PROJECTION_PATH = Path.cwd().parent
-elif Path.cwd().name == "smeft-invariants":
-    PROJECTION_PATH = Path.cwd() / "projection"
+PROJECTION_PATH = Path(__file__).parent.parent
 
 # Include the autoeft package in system path for easier import
 AUTOEFT_PATH = PROJECTION_PATH.parent
 sys.path.append(AUTOEFT_PATH/ "autoeft")
 
-
 CONFIG_PATH = PROJECTION_PATH / "config"
+CONFIG_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
 FORM_PATH = PROJECTION_PATH / "form_files"
+FORM_PATH.mkdir(parents=True, exist_ok=True)
 INPUT_PATH = PROJECTION_PATH / "BS"
+INPUT_PATH.mkdir(parents=True, exist_ok=True)
 LATEX_PATH = PROJECTION_PATH / "Latex"
+LATEX_PATH.mkdir(parents=True, exist_ok=True)
+FORM_GENERAL_PATH = FORM_PATH / "general"
+FORM_GENERAL_PATH.mkdir(parents=True, exist_ok=True)
 
 def configurations(filename):
     filename = Path(filename)
@@ -127,4 +128,238 @@ def escape_regex(regex):
             modyfied_regex += a
     return modyfied_regex
 
+###################
+# FORM refactored #
+###################
+op_config = configurations("op_config.yml")
+
+def save_set(dictionary, key, value):
+    """Don't overwrite already set values. """
+    if key not in dictionary.keys():
+        dictionary[key] = value
+
+def update_opname_and_modelfile(op_dict):
+    """
+    Specify default values in op_config and get helicities of the fields and other information from the model file and insert them into the op_config dictionary.
+    Parameters
+    ----------
+    op_dict
+
+    Returns
+    -------
+        Updated op_config dictionary.
+    """
+    # If autoeft name isn't set, the form name without square brackets is taken.
+    def autoeft_transl(kind, skip = []):
+        """
+        Specify kind of fields (str) and which fields are to skip (List[str]) and give auteft translation if not specified.
+        """
+        for name, field in op_dict[kind].items():
+            if name in skip:
+                continue
+            if "autoeft" not in field.keys():
+                field["autoeft"] = {}
+                field["autoeft"][name] = field["mathematica"][name]
+                if f"conj[{name}]" in field["mathematica"].keys():
+                    field["autoeft"][f"[{name}+]"] = field["mathematica"][f"conj[{name}]"][1:-1]  # "[]" are removed
+
+    autoeft_transl("tensors", ["T", "gamma"])
+    autoeft_transl("bosonfields")
+    autoeft_transl("fermionfields", ["D"])
+
+    # get helicities values and so on
+    modelfields = model.fields
+
+    for model_field in modelfields.values():
+        # write {} around daggers
+        model_field.tex = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex)
+        try:
+            model_field.tex_hc = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex_hc)
+        except:
+            pass
+
+        if "+" in model_field.name:
+            # skip hermitian conjugated fields
+            continue
+        for name, field in {**op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
+            if model_field.name == name:
+                save_set(field, "helicity", model_field.helicity)
+                save_set(field, "ac", model_field.ac)
+                save_set(field, "conj", model_field.conj)
+                save_set(field, "tex", model_field.tex)
+                try:
+                    save_set(field, "tex_hc", model_field.tex_hc)
+                except:
+                    pass
+
+    # write index_structure as list of lists:
+    for name, field in {**op_dict["tensors"], **op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
+        if type(field["index_structure"][0]) != list:
+            field["index_structure"] = [field["index_structure"]]
+
+    return op_dict
+op_config = update_opname_and_modelfile(op_config)
+
+
+mathematica = {name_typ: {key: value for fac in typ.values() for key, value in fac["mathematica"].items()} for name_typ, typ in op_config.items()}
+
+# mathematica = {key: value for typ in op_config.values() for fac in typ.values() for key, value in fac["mathematica"].items()}
+
+index_config = configurations("index.yml")
+# If not explicitly given update SUN indices of index_config which are written in model file:
+for name, index in index_config.items():
+    if name == "gauge":
+        ind = model.sun_groups["SU2_W"].indices
+        save_set(index, "tex_indices", ind)
+        save_set(index_config["gaugeadj"], "tex_indices", list(map(str.upper, ind)))
+    elif name == "colf":
+        ind = model.sun_groups["SU3_C"].indices
+        save_set(index, "tex_indices", ind)
+        save_set(index_config["cola"], "tex_indices", list(map(str.upper, ind)))
+
+op_pattern = r"[a-zA-Z0-9,\(\)\[\]\+]+"
+op_name_pattern = r"[a-zA-Z0-9\[\]\+]+"
+index_number_pattern = r"[A-Z0-9]+"
+ambiguous_types = ["Lsl", "Usl", "gauge"]
+negative_Assertion = [r"(?!dot)", r"(?!dot)", r"(?!adj)"]
+index_pattern  = r"(?P<typ>"
+index_pattern += r"|".join(indextyp for indextyp in index_config.keys() if indextyp not in ambiguous_types)
+index_pattern += r"|" + r"|".join(map(lambda aType, negAssert: aType + negAssert, ambiguous_types, negative_Assertion))  # Lsl(?!dot)|Usl(?!dot)|gauge(?!adj)
+index_pattern += r")"
+index_pattern += r"(?P<id>" + index_number_pattern + r")"
+del ambiguous_types
+del negative_Assertion
+
+coeff = [form_field for field in op_config["coefficients"].values() for form_field in field["mathematica"].values() if form_field != "i_"]
+coeff += [form_field for field in op_config["abbreviation"].values() for form_field in field["mathematica"].values()]
+bosons = [form_field for field in op_config["bosonfields"].values() for form_field in field["mathematica"].values()]
+fermions = [form_field for field in op_config["fermionfields"].values() for form_field in field["mathematica"].values()]
+tensors = [form_field for field in op_config["tensors"].values() for form_field in field["mathematica"].values()]
+
+def form_declarations():
+    """
+    Contains all general declarations valid for any term, i.e. for example the declaration of all fields and indices.
+    Returns
+    -------
+    form : str
+        Content of the FORM file "declarations.h".
+    """
+    form = ""
+    form += "*--#[ tensors :\n"
+    form += "CFunction " + ", ".join(tensors) + ";\n"
+    form += "*--#] tensors :\n"
+    form += "\n"
+    form += "*--#[ declarations :\n"
+    # Coefficient
+    form += f"CFunction {', '.join(coeff)};\n"
+    # write commuting and anti-commuting operators of each term in separate list for initialization. Thus
+    # Duplicated operators are removed.
+    def get_commuting_op(op):
+        """eC -> eCc, [eC+] -> [eC+c], where eCc and [eC+c] are commuting functions."""
+        if op[0] == "[" and op[-1] == "]":
+            commuting_op = op[:-1] + "c]"
+        else:
+            commuting_op = op + "c"
+        return commuting_op
+    form += "Function " + ", ".join(bosons) + ";\n"
+    # Auxiliary commuting bosons
+    form += "CFunction " + ", ".join(map(get_commuting_op, bosons)) + ";\n"
+    form += "\n"
+    form += "Function " + ", ".join(fermions) + ";\n"
+    # Auxiliary commuting fermions
+    form += "CFunction " + ", ".join(map(get_commuting_op, fermions)) + ";\n"
+    form += "\n"
+
+    SL2C_fieldstrengths = [form_field for field in op_config["bosonfields"].values() for form_field in field["mathematica"].values() if "helicity" in field.keys() if field["helicity"] == -1]
+    form += f"Set Fieldc: {', '.join(map(get_commuting_op, SL2C_fieldstrengths))};\n"
+    form += "\n"
+    form += "CFunction xi, [xi+], chi, [chi+];\n"
+    form += "\n"
+    spinors = [list(field["mathematica"].values())[0] for field_name, field in op_config["fermionfields"].items() if "helicity" not in field.keys() if field_name != "D"]
+    adjspinors = [list(field["mathematica"].values())[1] for field_name, field in op_config["fermionfields"].items() if "helicity" not in field.keys() if field_name != "D"]
+    form += f"Set spinors: {', '.join(spinors)};\n"
+    form += f"Set spinorsAdj: {', '.join(adjspinors)};\n"
+    form += f"Set spinorsAll: {', '.join(spinors + adjspinors)};\n"
+    form += "\n"
+    form += f"Set spinorsc: {', '.join(map(get_commuting_op, spinors))};\n"
+    form += f"Set spinorsAdjc: {', '.join(map(get_commuting_op, adjspinors))};\n"
+    form += f"Set spinorsAllc: {', '.join(map(get_commuting_op, spinors + adjspinors))};\n"
+    form += "\n"
+    form += """AutoDeclare Indices lor      = 4; * 4d Lorentz index
+AutoDeclare Indices lorA     = 4; * Auxiliary 4d Lorentz index
+AutoDeclare Indices spin     = 4; * Index for Gamma matrices/ spinor index
+AutoDeclare Indices spinA    = 2; * Auxiliary index for Gamma matrices/ spinor index
+AutoDeclare Indices gauge    = 2; * SU(2)-index in fundamental
+AutoDeclare Indices gaugeA   = 2; * Auxiliary SU(2)-index in fundamental
+AutoDeclare Indices gaugeadj = 3; * SU(2)-index in adjoint
+AutoDeclare Indices colf     = 3; * SU(3)-index in fundamental
+AutoDeclare Indices colfA    = 3; * Auxiliary SU(3)-index in fundamental
+AutoDeclare Indices cola     = 8; * SU(3)-index in adjoint
+AutoDeclare Indices flav     = n; * flavor index"""
+    form += "\n\n"
+    form += "AutoDeclare Indices op; * auxiliary index for converting between commuting and noncommuting operators.\n\n"
+    form += "* Declare some Symbols for pattern matching\n"
+    form += "Symbols k,m;\n"
+    form += "*\n* Indices and functions for derivatives in SL2C notation.\n*\n"
+    form += "CFunction sigma, sigmabar;\n"
+    form += "CFunction sigma2, sigmabar2;\n"
+    form += "* Auxiliary antisymmtric epsilons, used in combination with replace_.\n"
+    eps = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if "eps" in tensor_name]
+    form += f"CFunction {', '.join(map(lambda text: text + 'A(antisymmetric)', eps))};\n"  # sl2CepsA(antisymmetric), su2epsA(antisymmetric), su3epsA(antisymmetric)
+    form += "\n"
+    form += "* Declare Kronecker Delta symbol for Sl2C Indices, because built in can not handle upper and lower (un-)dottet indices.\n"
+    form += "* Since two indices are also symmetric when they are cyclic and vice versa and pattern matching is not allowed for symmetric function but for cyclic it is, [sl2CdK] is declared as cyclic.\n"
+    dK = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if "dK" in tensor_name]
+    form += f"CFunction {', '.join(map(lambda text: text + '(cyclic)', dK))};\n"  # sl2CdK(cyclic), su2dK(cyclic), su3dK(cyclic)
+    form += "\n"
+    form += "Off Statistics;\n"
+    form += "*--#] declarations :\n"  # trailing "\n" important otherwise form will not find the "fold" declarations
+
+    return form
+
+def run_form(fp_cwd: Path, filename: Path, fp_p: Path = None, keep_backslash = False):
+    """
+    Run form in linux terminal.
+    Parameters
+    ----------
+    fp_cwd
+        Path of the working directory.
+    filename
+        name of the file which should be run.
+    fp_p (optional)
+        Path of additional input files for form.
+    keep_backslash
+        True in order to keep "\" which is important for tex outputs.
+    Returns
+    -------
+        In console printed FORM output.
+    """
+    if fp_p:
+        command = ["form", "-p", fp_p, f"{filename}"]
+    else:
+        command = ["form", f"{filename}"]
+    try:
+        formprocess = subprocess.run(
+            command,
+            cwd=fp_cwd,  # path of the working directory
+            capture_output=True,  # If capture_output is true, stdout and stderr will be captured.
+            text=True,  # output in stdout is now a string and not a byte sequence anymore
+            check=True,  # If check is true, and the process exits with a non-zero exit code, a CalledProcessError
+            # exception will be raised. Attributes of that exception hold the arguments, the exit code,
+            # and stdout and stderr if they were captured.
+        )
+    except subprocess.CalledProcessError as exc:
+        exc.cmd = list(map(str, list(exc.cmd)))
+        logger.error(" ".join(exc.cmd) + "\n" + str(exc.stdout))
+        logger.error(f"form returned non-zero exit status {exc.returncode}")
+        sys.exit("STOP")
+    else:
+        # No Error occured
+        logger.debug(" ".join(map(str, formprocess.args)))
+        output = formprocess.stdout
+        output = re.sub(r" *", "", output)  # Remove only all whitespaces
+        # Sometimes FORM splits indices in long expressions with an backslash "\" which is discarded:
+        if not keep_backslash:
+            output = re.sub(r"\\", "", output)
+        return output
 

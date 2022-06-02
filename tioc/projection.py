@@ -621,7 +621,7 @@ def tensor_fields_indices(tensor_field, indices):
     else:
         tex = f"({tensor_field.tex})"
     subscript_indices = {"Lsl": [], "gauge": [], "colf": []}
-    superscript_indices = {"Usl": [], "gaugeadjoint": [], "cola": [], "flav": []}
+    superscript_indices = {"Usl": [], "gaugeadj": [], "cola": [], "flav": []}
     for index in indices:
         if index.typ in ["Lsldot","Lsl"]:
             subscript_indices["Lsl"].append(index)
@@ -630,8 +630,8 @@ def tensor_fields_indices(tensor_field, indices):
     for index in indices:
         if index.typ == "gauge":
             subscript_indices["gauge"].append(index)
-        if index.typ == "gaugeadjoint":
-            superscript_indices["gaugeadjoint"].append(index)
+        if index.typ == "gaugeadj":
+            superscript_indices["gaugeadj"].append(index)
     for index in indices:
         if index.typ == "colf":
             subscript_indices["colf"].append(index)

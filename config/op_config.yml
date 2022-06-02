@@ -1,0 +1,511 @@
+tensors:
+    yu:
+      description: "Up-type flavormatrix -> Coupling between quark dubletts and RH down-type quarks."
+      # if conj == true, hermitian conjugate of tensor/ field (with negativ helicity for a field) exist.
+      conj: True
+      # if conj == true and only "tex" is specified the conjugated element is given by "tex"^{\dagger}.
+      tex: y_{u}
+      # Special conjugated element could be specified by "tex_hc".
+      # translation between Mathematica[FORM]
+      mathematica:
+        yu: yu
+        conj[yu]: "[yu+]"
+      index_structure:
+        - flav
+        - flav
+    yd:
+      description: "Down-type flavormatrix -> Coupling between quark dubletts and RH up-type quarks."
+      conj: True
+      tex: y_{d}
+      mathematica:
+        yd: yd
+        conj[yd]: "[yd+]"
+      index_structure:
+        - flav
+        - flav
+    ye:
+      description: "Electon-type flavormatrix -> Coupling between lepton dubletts and RH-electrons."
+      conj: True
+      tex: y_{e}
+      mathematica:
+        ye: ye
+        conj[ye]: "[ye+]"
+      index_structure:
+        - flav
+        - flav
+    su2eps:
+      description: "Epsilontensor of SU2."
+      tex: \varepsilon
+      mathematica:
+        su2eps: su2eps
+      index_structure:
+        - gauge
+        - gauge
+    su3eps:
+      description: "Epsilontensor of SU3."
+      tex: \varepsilon
+      mathematica:
+        su3eps: su3eps
+      index_structure:
+        - colf
+        - colf
+        - colf
+    sl2Ceps:
+      description: "Epsilontensor of SL2C."
+      tex: \varepsilon
+      mathematica:
+        sl2Ceps: sl2Ceps
+      index_structure:
+        -
+          - Usl
+          - Usl
+        -
+          - Lsl
+          - Lsl
+        -
+          - Usldot
+          - Usldot
+        -
+          - Lsldot
+          - Lsldot
+    su2dK:
+      description: "Kronecker-delta of SU2."
+      tex: \delta
+      mathematica:
+        su2dK: su2dK
+      index_structure:
+        - gauge
+        - gauge
+    su3dK:
+      description: "Kronecker-delta of SU3."
+      tex: \delta
+      mathematica:
+        su3dK: su3dK
+      index_structure:
+        - colf
+        - colf
+    sl2CdK:
+      description: "Kronecker-delta of SL2C."
+      tex: \delta
+      mathematica:
+        sl2CdK: sl2CdK
+      index_structure:
+        -
+          - Lsl
+          - Usl
+        -
+          - Usl
+          - Lsl
+        -
+          - Lsldot
+          - Usldot
+        -
+          - Usldot
+          - Lsldot
+    T:
+      description: "Generator of SU(2)-group."
+      tex: \mathrm{T}
+      mathematica:
+        TT: T
+      index_structure:
+        - gaugeadj
+        - gauge
+        - gauge
+    gamma:
+      description: "Dirac gamma matrix considered in weyl representation."
+      tex: \gamma
+      mathematica:
+        gamma: gamma
+      index_structure:
+        - lor
+        - spin
+        - spin
+bosonfields:
+    H:
+      description: "Higgsdublett of SU2."
+      conj: True
+      tex: H
+      ac: False
+      mathematica:
+        H: H
+        conj[H]: "[H+]"
+      # Translation between FORM and autoeft: FORM[AutoEFT]
+      # is in principle just given by the normal, i.e. not
+      # conjugated name and the conjugated name is always
+      # the same name with a "+".
+      autoeft:
+        H: H
+        #evaluate form_name with square brackets with property option, if name contains a "+".
+        "[H+]": "H+"
+      index_structure:
+        - gauge
+    G:
+      description: "Fieldstrengthtensor of SU3."
+      tex: G
+      ac: False
+      mathematica:
+        G: G
+      autoeft:
+        #RHS of unconjugated field has to match the field of the corresponding model file.
+        GL: GL
+        "[GL+]": GL+
+      index_structure:
+        - cola
+        - lor
+        - lor
+    W:
+      description: "Fieldstrengthtensor of SU2."
+      tex: W
+      ac: False
+      mathematica:
+        V: W
+      autoeft:
+        WL: WL
+        "[WL+]": WL+
+      index_structure:
+        - gaugeadj
+        - lor
+        - lor
+    B:
+      description: "Fieldstrengthtensor of U1."
+      tex: B
+      ac: False
+      mathematica:
+        F: B
+      autoeft:
+        BL: BL
+        "[BL+]": BL+
+      index_structure:
+        - lor
+        - lor
+    GL:
+      description: "Left handed fieldstrengthtensor of SU3."
+      conj: True
+      tex: G_{\mathrm{L}}
+      tex_hc: G_{\mathrm{R}}
+      mathematica:
+        GL: GL
+        conj[GL]: "[GL+]"
+      index_structure:
+        -
+          - colf
+          - colf
+          - colf
+          - Lsl
+          - Lsl
+        - 
+          - colf
+          - colf
+          - colf
+          - Usldot
+          - Usldot
+    WL:
+      description: "Left handed fieldstrengthtensor of SU2."
+      conj: True
+      tex: W_{\mathrm{L}}
+      tex_hc: W_{\mathrm{R}}
+      mathematica:
+        WL: WL
+        conj[WL]: "[WL+]"
+      index_structure:
+        -
+          - gauge
+          - gauge
+          - Lsl
+          - Lsl
+        - 
+          - gauge
+          - gauge
+          - Usldot
+          - Usldot
+    BL:
+      description: "Left handed fieldstrengthtensor of U1."
+      conj: True
+      tex: B_{\mathrm{L}}
+      tex_hc: B_{\mathrm{R}}
+      mathematica:
+        BL: BL
+        conj[BL]: "[BL+]"
+      index_structure:
+        -
+          - Lsl
+          - Lsl
+        - 
+          - Usldot
+          - Usldot
+fermionfields:
+    D:
+      description: "Covariant derivative."
+      tex: D
+      mathematica:
+        cov: D
+      index_structure:
+        -
+          - lor
+        -
+          - Lsl
+          - Usldot
+        -
+          - Usldot
+          - Lsl
+    l:
+      description: "Lepton dublett of SU2."
+      spinor: Dirac
+      conj: True
+      tex: l
+      ac: True
+      mathematica:
+        l: l
+        bar[l]: lbar
+      autoeft:
+        l: L
+        lbar: "[L+]"
+      index_structure:
+        - spin
+        - gauge
+        - flav
+    L:
+      description: "Lepton dublett of SU2."
+      spinor: Weyl
+      conj: True
+      tex: L
+      mathematica:
+        L: L
+        conj[L]: "[L+]"
+      index_structure:
+        - Lsl
+        - gauge
+        - flav
+    e:
+      description: "Right handed leptons."
+      spinor: Dirac
+      conj: True
+      tex: e
+      ac: True
+      mathematica:
+        e: e
+        bar[e]: ebar
+      autoeft:
+        e: eC+
+        ebar: eC
+      index_structure:
+        - spin
+        - flav
+    eC:
+      description: "Right handed leptons."
+      spinor: Weyl
+      conj: True
+      tex: e_{\mathbb{C}}
+      mathematica:
+        eC: eC
+        conj[eC]: "[eC+]"
+      index_structure:
+        -
+          - Lsl
+          - flav
+        -
+          - Usldot
+          - flav
+    u:
+      description: "Right up-type quarks."
+      spinor: Dirac
+      conj: True
+      tex: u
+      ac: True
+      mathematica:
+        u: u
+        bar[u]: ubar
+      autoeft:
+        u: uC+
+        ubar: uC
+      index_structure:
+        - spin
+        - colf
+        - flav
+    uC:
+      description: "Right up-type quarks."
+      spinor: Weyl
+      conj: True
+      tex: u_{\mathbb{C}}
+      mathematica:
+        uC: uC
+        conj[uC]: "[uC+]"
+      index_structure:
+        -
+          - Lsl
+          - colf
+          - colf
+          - flav
+        -
+          - Usldot
+          - colf
+          - flav
+    b:
+      description: "Right down-type quarks."
+      spinor: Dirac
+      conj: True
+      tex: d
+      ac: True
+      mathematica:
+        b: b
+        bar[b]: bbar
+      autoeft:
+        b: dC+
+        bbar: dC
+      index_structure:
+        - spin
+        - colf
+        - flav
+    dC:
+      description: "Right down-type quarks."
+      spinor: Weyl
+      conj: True
+      tex: d_{\mathbb{C}}
+      mathematica:
+        dC: dC
+        conj[dC]: "[dC+]"
+      index_structure:
+        -
+          - Lsl
+          - colf
+          - colf
+          - flav
+        -
+          - Usldot
+          - colf
+          - flav
+    q:
+      description: "Quark dublett of SU2."
+      spinor: Dirac
+      conj: True
+      tex: q
+      ac: True
+      mathematica:
+        q: q
+        bar[q]: qbar
+      autoeft:
+        q: Q
+        qbar: Q+
+      index_structure:
+        - spin
+        - gauge
+        - colf
+        - flav
+    Q:
+      description: "Quark dublett of SU2."
+      spinor: Weyl
+      conj: True
+      tex: Q
+      mathematica:
+        Q: Q
+        conj[Q]: "[Q+]"
+      index_structure:
+        -
+          - Lsl
+          - gauge
+          - colf
+          - flav
+        -
+          - Usldot
+          - gauge
+          - colf
+          - colf
+          - flav
+coefficients:
+    d:
+      description: "Generalised dimension d."
+      tex: d
+      mathematica:
+        d: d
+      massdim: 0
+    eps:
+      description: "Epsilontensor of dimensional regularisation."
+      tex: \varepsilon
+      mathematica:
+        eps: eps
+      massdim: 0
+    lambdah:
+      description: "Constant of |H|^4 term."
+      tex: \lambda_{h}
+      mathematica:
+        lambdah: lambdah
+      massdim: 0
+    At:
+      description: "Constant of |H|^2*phi term."
+      tex: A_{t}
+      mathematica:
+        At: At
+      massdim: 1
+      tex_dimless: a_{t}
+    g1:
+      description: "U(1) gauge coupling."
+      tex: g_{1}
+      mathematica:
+        g1: g1
+      massdim: 0
+    g2:
+      description: "SU(2) gauge coupling."
+      tex: g_{2}
+      mathematica:
+        g2: g2
+      massdim: 0
+    g3:
+      description: "SU(3) gauge coupling."
+      tex: g_{3}
+      mathematica:
+        g3: g3
+      massdim: 0
+    mu:
+      description: "Constant of phi^3 term."
+      tex: \mu
+      mathematica:
+        mu: mu
+      massdim: 1
+      tex_dimless: \hat{\mu}
+    lambdaphi:
+      description: "Constant of phi^4 term."
+      tex: \lambda_{\varphi}
+      mathematica:
+        lambdaphi: lambdaphi
+      massdim: 0
+    kappa:
+      description: "Constant of |H|^2*phi^2 term."
+      tex: \kappa
+      mathematica:
+        kappa: kappa
+      massdim: 0
+    Ms:
+      description: "Mass of the real scalar field, i.e. expansionparameter of the EFT."
+      tex: M_{s}
+      mathematica:
+        Ms: Ms
+      massdim: 1
+    Mu:
+      description: "Tachyonic mass of the Higgsfield."
+      tex: \mu_{h}
+      mathematica:
+        Mu: Mu
+      massdim: 1
+      tex_dimless: \hat{\mu}_{h}
+    I:
+      description: "Imaginary unit i or just a 1?"
+      tex: \mathrm{i}
+      # i_
+      mathematica:
+        I: "i_"
+      massdim: 0
+    muM:
+      description: "Mass scale parameter."
+      tex: \mu
+      mathematica:
+        "\\[Mu]": muM
+      massdim: 1
+      tex_dimless: \hat{\mu}_{M}
+abbreviation:
+    lg:
+      description: "[2L[Ms,muM]]"
+      tex: \ln{\frac{M_{s}^{2}}{\mu_{M}^{2}}}
+      mathematica:
+      #TODO
+        "L[Ms^2,muM^2]": "[2L[Ms,muM]]"
+    

@@ -1,0 +1,292 @@
+import re
+import logging
+import sys
+from yaml import safe_load
+from typing import Dict, List, Tuple
+from abc import ABC, abstractmethod
+from copy import copy
+# from functools import cache  # to cache properties
+from tioc import cached_property
+
+from tioc import CONFIG_PATH, opname, escape_regex, model, index_config, op_pattern, index_pattern, op_name_pattern
+from .index import Index
+from .indices import Indices_Operator
+from tioc import index_number_pattern as inp
+
+logger_autoeft = logging.getLogger("autoeft.projection")
+logger = logger_autoeft.getChild(__name__)
+
+class Operator_Model(Index):
+    """
+    A class describing the operators in a term which is previously transformed via form.
+    Possible Operators:
+        {H, e, u, b, l, q} & {[H+], [e_C+], [u_C+], [d_C+], [L+], [Q+]}
+        field strength tensors of U(1),SU(2) and SU(3) named B, W and G
+        completely antisymmetric symbol su2eps(gauge1,gauge2), su3eps, ...
+        completely symmetric symbol su2dK(gauge1,gauge2), su3dK, ...
+        couplings that carry indices (only Yukawa couplings): {yu, yd, ye, [yu+], [yd+], [ye+]}
+    """
+    expr: str
+    indices: Indices_Operator
+    name: str
+    isconj: bool
+    non_conj_name: str
+    tex: str
+    description: str
+
+    @abstractmethod
+    def __init__(self, expr: str):
+        self.expr = expr
+
+    @abstractmethod
+    def __repr__(self):
+        """Specify the format the general string representation and for printing with repr()."""
+        return f"{self.expr:s}"
+
+    def __str__(self):
+        """Specify the format for printing with str() or print() statement function: Here the same as the string representation repr() itself."""
+        return self.__repr__()
+
+    def __format__(self, key):
+        """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
+        if key == "tex":
+            if r"_" not in self.tex and r"^" not in self.tex:
+                tex = f"{self.tex}"
+            else:
+                tex = f"({self.tex})"
+            subscript_indices= [f"{index:tex}" for index in self.indices if index.typ in ["lor", "Lsldot", "Lsl", "gauge", "colf"] and not index.derIndex]
+            superscript_indices = [f"{index:tex}" for index in self.indices if index.typ in ["Usldot", "Usl", "gaugeadj", "cola", "flav"] and not index.derIndex]
+            tex_output = f"{tex}"
+            if subscript_indices:
+                tex_output += f"_{{{', '.join(subscript_indices)}}}"
+            if superscript_indices:
+                tex_output += f"^{{{', '.join(superscript_indices)}}}"
+            return tex_output
+        else:
+            return self.__repr__()
+
+    @staticmethod
+    def read_in_operator(expression:str) -> (Tuple[str, bool, str], Tuple[Index], int, Tuple[Index]):
+        der_indices = []
+        cov = escape_regex(opname["fermionfields"]["D"]["mathematica"]["cov"])
+        # ReadinMethod for cov(lor1234 derivative
+        match_lor = re.finditer(r"(" + cov + r"\((?P<index>lor" + inp + r"),)", expression)
+        matches_lor = list(match_lor)  # contain derivative indices
+        # ReadinMethod for cov(Lsl, Usldot derivative
+        ind_pat = f"(Lsl(?!dot)|Usl(?!dot)|Lsldot|Usldot)" + inp
+        match_sl2C = re.finditer(r"(" + cov + r"\((?P<index1>" + ind_pat + r"),(?P<index2>" + ind_pat + r"))", expression)
+        matches_sl2C = list(match_sl2C)
+        if any(matches_lor):
+            for i, v in enumerate(matches_lor):
+                index = v.group("index")
+                der_indices.append(Index(index, derIndex=i+1))
+            nD = len(matches_lor)
+            op = expression[matches_lor[-1].end(): (-1)*len(matches_lor)]
+        elif any(matches_sl2C):
+            # TODO: Check
+            for i, v in enumerate(matches_sl2C):
+                index1 = v.group("index1")
+                index2 = v.group("index2")
+                der_indices.append(Index(index1, derIndex=i+1))
+                der_indices.append(Index(index2, derIndex=i+1))
+            nD = len(matches_sl2C)
+            op = expression[matches_sl2C[-1].end(): (-1) * len(matches_sl2C)]
+        else:
+            nD = 0
+            op = expression
+        op_indices = []
+        match = re.match(r"(?P<name>" + op_name_pattern + ")", op)  # \((" + index_pattern + r",?)+\)
+        if match:
+            name = match.group("name")
+            # Test if operator is a conjugated one:
+            for operator in {**opname["tensors"], **opname["bosonfields"], **opname["fermionfields"]}.values():
+                form_names = list(operator["mathematica"].values())
+                if len(form_names) == 1 and name == form_names[0]:
+                    non_conj_name = name
+                    isconj = False
+                elif len(form_names) == 2:
+                    if name == form_names[1]:
+                        non_conj_name =  form_names[0]
+                        isconj = True
+                    elif name == form_names[0]:
+                        non_conj_name = name
+                        isconj = False
+            indices = op[match.end()+1:-1]
+            matches = list(re.finditer(r"(?P<index>" + index_pattern + r")", indices))
+            if any(matches):
+                for match in matches:
+                    index = match.group("index")
+                    op_indices.append(Index(index))
+        else:
+            logger.error("No index found.")
+            sys.exit("STOP")
+        return (name, isconj, non_conj_name), tuple(op_indices), nD, tuple(der_indices)
+
+    @property
+    def expr(self):
+        return self._expr
+
+    @expr.setter
+    def expr(self, fp_epxr):
+        """
+        Set expression of the operator and extract the name and a string tuple of indices.
+        Returns
+        -------
+        """
+        names, op_indices, self.nD, der_indices = Operator_Model.read_in_operator(fp_epxr)
+        self.name, self.isconj, self.non_conj_name = names # names[0], names[1], names[2]
+        self.indices = Indices_Operator(der_indices + op_indices)
+        # Indexstructure of the operator only without the derivative.
+        ind_structure = [index.typ for index in op_indices]
+        def assertion(ind_structure_op, fieldtype, non_conj_name):
+            if fieldtype == "tensors":
+                ind_structure = opname[fieldtype][non_conj_name]["index_structure"]
+            else:
+                bosonsANDfermions = {**opname["bosonfields"], **opname["fermionfields"]}
+                ind_structure = bosonsANDfermions[non_conj_name]["index_structure"]
+
+            if ind_structure_op not in ind_structure:
+                login.error("Indexstructure doesn't match the required structure for this field.")
+                sys.exit("STOP")
+
+        if type(self) == Tensor:
+            assertion(ind_structure, "tensors", self.non_conj_name)
+        elif type(self) == Field:
+            if self.isconj:
+                # Fermionfield
+                assertion(ind_structure, "field", self.non_conj_name)
+            else:
+                # Bosonfield
+                assertion(ind_structure, "field", self.non_conj_name)
+
+        self._expr = fp_epxr
+
+    @property
+    def tex(self):
+        """Create tex expression of operator."""
+        all_ops = {**opname["tensors"], **opname["bosonfields"], **opname["fermionfields"]}
+        if self.isconj:
+            try:
+                tex_expr = all_ops[self.non_conj_name]["tex_hc"]
+            except KeyError:
+                tex_expr = all_ops[self.non_conj_name]["tex"] + r"^{\dagger}"
+        else:
+            tex_expr = all_ops[self.non_conj_name]["tex"]
+
+        derIndices = Indices_Operator([index for index in self.indices if index.derIndex].copy())
+        derIndices_sorted = {}
+        for derivativeIndex in derIndices:
+            try:
+                derIndices_sorted[derivativeIndex.derIndex].append(derivativeIndex)
+            except KeyError:
+                derIndices_sorted[derivativeIndex.derIndex] = [derivativeIndex]
+        tex_derivatives = ""
+        cov_tex = opname["fermionfields"]["D"]["tex"]
+        for key, index in derIndices_sorted.items():
+            if index[0].typ == "lor":
+                tex_derivatives += cov_tex + "_{" + f"{index[0]:tex}" + "}"
+            elif index[0].typ in ["Lsldot", "Lsl"]:
+                tex_derivatives += cov_tex + "_{" + f"{index[0]:tex}" + "}" + "^{" + f"{index[1]:tex}" + "}"
+            elif index[0].typ in ["Usldot", "Usl"]:
+                tex_derivatives += cov_tex + "_{" + f"{index[1]:tex}" + "}" + "^{" + f"{index[0]:tex}" + "}"
+
+        return tex_derivatives + tex_expr
+
+    @property
+    def description(self):
+        """Gives description to the operator."""
+        all_ops = {**op_dict["tensors"], **op_dict["bosonfields"], **op_dict["fermionfields"]}
+        description_expr = all_ops[self.non_conj_name]["description"]
+        return description_expr
+
+    @property
+    def autoeft(self):
+        """Returns autoeft name of the field/ tensor."""
+        all_ops = {**op_dict["tensors"], **op_dict["bosonfields"], **op_dict["fermionfields"]}
+        if self.isconj:
+            form_field = list(all_ops[self.non_conj_name]["mathematica"].values())[1]
+        else:
+            form_field = list(all_ops[self.non_conj_name]["mathematica"].values())[0]
+        autoeft_expr = all_ops[self.non_conj_name]["autoeft"][form_field]
+        return autoeft_expr
+
+
+###########################################################################################
+    # TODO
+    # def gaugeIndicesforProjection(self):
+    #     """
+    #     The gauge indices of a field should be denoted by the pattern idxF2I1, where A denotes the second field
+    #     (remember the unique ordering by helicity) and one the first index of this field. I.e. idxF2I1 denotes the first
+    #     gauge index of the second field in this term.
+    #     Note that the indices of the different gauge group are not distinguished and thus should always be part of the
+    #     index object.
+    #
+    #     Returns
+    #     -------
+    #
+    #     """
+    #     pre = "idx"
+    #     counter = {"gauge": 1, "colf": 1}
+    #     # indtype = "gauge"
+    #     for indtype in ["gauge", "colf"]:
+    #         for index in self.indices:
+    #             if index.typ == indtype:
+    #                 index.projection = f"{pre:s}F{self.numID:d}I{counter[indtype]:d}"
+    #                 counter[indtype] += 1
+
+    # def get_NDerivative(self):
+    #     """
+    #     Determine number of derivatives acting on a field by remembering that each derivative must have an usldot and an lsl index.
+    #     By taking the minimal number of usldot and lsl indices the number of derivatives can be unambiguously determined.
+    #     Returns
+    #     -------
+    #     Number of derivatives acting on a field.
+    #     """
+    #     n_usldot = 0  # number of usldot indices
+    #     n_lsl = 0  # number of lsl indices
+    #     for ind in self.indices:
+    #         if ind.typ == "Usldot":
+    #             n_usldot += 1
+    #         elif ind.typ == "Lsl":
+    #             n_lsl += 1
+    #
+    #     return min(n_usldot, n_lsl)
+
+class Tensor(Operator_Model):
+    expr: str
+    indices: Tuple[Index]
+    name: str
+    tex: str
+    description: str
+
+    def __init__(self, expr: str):
+        super().__init__(expr)
+
+    def __repr__(self):
+        """Specify the format the general string representation and for printing with repr()."""
+        return super().__repr__()
+
+
+class Field(Operator_Model):
+    expr: str
+    field_pos: int
+    indices: Tuple[Index]
+    name: str
+    tex: str
+    ac: bool
+    description: str
+    nD: int
+
+    def __init__(self, expr: str, pos: int):
+        super().__init__(expr)
+        self.field_pos = pos
+
+    def __repr__(self):
+        """Specify the format the general string representation and for printing with repr()."""
+        return super().__repr__()
+
+    @property
+    def ac(self) -> bool:
+        """Specififes whether Field commutes or anticommutes."""
+        ac_expr = opname["fermionfields"][self.non_conj_name]["ac"]
+        return ac_expr

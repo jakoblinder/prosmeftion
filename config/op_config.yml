@@ -33,28 +33,28 @@ tensors:
       index_structure:
         - flav
         - flav
-    su2eps:
+    "[su2eps]":
       description: "Epsilontensor of SU2."
       tex: \varepsilon
       mathematica:
-        su2eps: su2eps
+        su2eps: "[su2eps]"
       index_structure:
         - gauge
         - gauge
-    su3eps:
+    "[su3eps]":
       description: "Epsilontensor of SU3."
       tex: \varepsilon
       mathematica:
-        su3eps: su3eps
+        su3eps: "[su3eps]"
       index_structure:
         - colf
         - colf
         - colf
-    sl2Ceps:
+    "[sl2Ceps]":
       description: "Epsilontensor of SL2C."
       tex: \varepsilon
       mathematica:
-        sl2Ceps: sl2Ceps
+        sl2Ceps: "[sl2Ceps]"
       index_structure:
         -
           - Usl
@@ -68,27 +68,27 @@ tensors:
         -
           - Lsldot
           - Lsldot
-    su2dK:
+    "[su2dK]":
       description: "Kronecker-delta of SU2."
       tex: \delta
       mathematica:
-        su2dK: su2dK
+        su2dK: "[su2dK]"
       index_structure:
         - gauge
         - gauge
-    su3dK:
+    "[su3dK]":
       description: "Kronecker-delta of SU3."
       tex: \delta
       mathematica:
-        su3dK: su3dK
+        su3dK: "[su3dK]"
       index_structure:
         - colf
         - colf
-    sl2CdK:
+    "[sl2CdK]":
       description: "Kronecker-delta of SL2C."
       tex: \delta
       mathematica:
-        sl2CdK: sl2CdK
+        sl2CdK: "[sl2CdK]"
       index_structure:
         -
           - Lsl
@@ -185,7 +185,10 @@ bosonfields:
       tex_hc: G_{\mathrm{R}}
       mathematica:
         GL: GL
-        conj[GL]: "[GL+]"
+        conj[GL]: "GR"
+      autoeft:
+        GL: GL
+        GR: GL+
       index_structure:
         -
           - colf
@@ -206,7 +209,10 @@ bosonfields:
       tex_hc: W_{\mathrm{R}}
       mathematica:
         WL: WL
-        conj[WL]: "[WL+]"
+        conj[WL]: "WR"
+      autoeft:
+        WL: WL
+        WR: WL+
       index_structure:
         -
           - gauge
@@ -225,7 +231,10 @@ bosonfields:
       tex_hc: B_{\mathrm{R}}
       mathematica:
         BL: BL
-        conj[BL]: "[BL+]"
+        conj[BL]: "BR"
+      autoeft:
+        BL: BL
+        BR: BL+
       index_structure:
         -
           - Lsl
@@ -273,9 +282,14 @@ fermionfields:
         L: L
         conj[L]: "[L+]"
       index_structure:
-        - Lsl
-        - gauge
-        - flav
+        -
+          - Lsl
+          - gauge
+          - flav
+        -
+          - Usldot
+          - gauge
+          - flav
     e:
       description: "Right handed leptons."
       spinor: Dirac
@@ -291,14 +305,14 @@ fermionfields:
       index_structure:
         - spin
         - flav
-    eC:
+    "[e_C]":
       description: "Right handed leptons."
       spinor: Weyl
       conj: True
       tex: e_{\mathbb{C}}
       mathematica:
-        eC: eC
-        conj[eC]: "[eC+]"
+        eC: "[e_C]"
+        conj[eC]: "[e_C+]"
       index_structure:
         -
           - Lsl
@@ -322,14 +336,14 @@ fermionfields:
         - spin
         - colf
         - flav
-    uC:
+    "[u_C]":
       description: "Right up-type quarks."
       spinor: Weyl
       conj: True
       tex: u_{\mathbb{C}}
       mathematica:
-        uC: uC
-        conj[uC]: "[uC+]"
+        uC: "[u_C]"
+        conj[uC]: "[u_C+]"
       index_structure:
         -
           - Lsl
@@ -356,14 +370,14 @@ fermionfields:
         - spin
         - colf
         - flav
-    dC:
+    "[d_C]":
       description: "Right down-type quarks."
       spinor: Weyl
       conj: True
       tex: d_{\mathbb{C}}
       mathematica:
-        dC: dC
-        conj[dC]: "[dC+]"
+        dC: "[d_C]"
+        conj[dC]: "[d_C+]"
       index_structure:
         -
           - Lsl

@@ -1,11 +1,16 @@
 import sys
 import re
+import subprocess
+import logging
 from fractions import Fraction
 from pathlib import Path
 
 from yaml import safe_load
 
 from autoeft.model import Model
+
+logger_autoeft = logging.getLogger("autoeft.projection")
+logger = logger_autoeft.getChild(__name__)
 
 PROJECTION_PATH = Path(__file__).parent.parent
 
@@ -163,9 +168,10 @@ def update_opname_and_modelfile(op_dict):
                 if f"conj[{name}]" in field["mathematica"].keys():
                     field["autoeft"][f"[{name}+]"] = field["mathematica"][f"conj[{name}]"][1:-1]  # "[]" are removed
 
-    autoeft_transl("tensors", ["T", "gamma"])
-    autoeft_transl("bosonfields")
-    autoeft_transl("fermionfields", ["D"])
+    # namings like [su2eps] instead of su2eps doesn't allow the automatic filling of the autoeft dictionary.
+    # autoeft_transl("tensors", ["T", "gamma"])
+    # autoeft_transl("bosonfields")
+    # autoeft_transl("fermionfields", ["D"])
 
     # get helicities values and so on
     modelfields = model.fields
@@ -217,15 +223,16 @@ for name, index in index_config.items():
         save_set(index, "tex_indices", ind)
         save_set(index_config["cola"], "tex_indices", list(map(str.upper, ind)))
 
-op_pattern = r"[a-zA-Z0-9,\(\)\[\]\+]+"
-op_name_pattern = r"[a-zA-Z0-9\[\]\+]+"
-index_number_pattern = r"[A-Z0-9]+"
+op_pattern = r"[a-zA-Z0-9,\(\)\[\]\+\_]+"
+op_name_pattern = r"[a-zA-Z0-9\[\]\+\_]+"
+index_number_pattern = r"[A-Za-z0-9]+"  # r"[A-Z0-9]+"
 ambiguous_types = ["Lsl", "Usl", "gauge"]
 negative_Assertion = [r"(?!dot)", r"(?!dot)", r"(?!adj)"]
 index_pattern  = r"(?P<typ>"
 index_pattern += r"|".join(indextyp for indextyp in index_config.keys() if indextyp not in ambiguous_types)
 index_pattern += r"|" + r"|".join(map(lambda aType, negAssert: aType + negAssert, ambiguous_types, negative_Assertion))  # Lsl(?!dot)|Usl(?!dot)|gauge(?!adj)
 index_pattern += r")"
+# cannot use "index_number_pattern" in the following, because indices like Uslgauge1234 occur.
 index_pattern += r"(?P<id>" + index_number_pattern + r")"
 del ambiguous_types
 del negative_Assertion
@@ -247,6 +254,20 @@ def form_declarations():
     form = ""
     form += "*--#[ tensors :\n"
     form += "CFunction " + ", ".join(tensors) + ";\n"
+    form += "* Indices and functions for derivatives in SL2C notation.\n"
+    form += "CFunction sigma, sigmabar;\n"
+    form += "CFunction sigma2, sigmabar2;\n"
+    form += "* Auxiliary antisymmtric epsilons, used in combination with replace_.\n"
+    eps = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if
+           "eps" in tensor_name]
+    form += f"CFunction {', '.join(map(lambda text: text + 'A(antisymmetric)', eps))};\n"  # sl2CepsA(antisymmetric), su2epsA(antisymmetric), su3epsA(antisymmetric)
+    form += "\n"
+    form += "* Declare Kronecker Delta symbol for Sl2C Indices, because built in can not handle upper and lower (un-)dottet indices.\n"
+    form += "* Since two indices are also symmetric when they are cyclic and vice versa and pattern matching is not allowed for symmetric function but for cyclic it is, [sl2CdK] is declared as cyclic.\n"
+    dK = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if
+          "dK" in tensor_name]
+    form += f"CFunction {', '.join(map(lambda text: text + '(cyclic)', dK))};\n"  # sl2CdK(cyclic), su2dK(cyclic), su3dK(cyclic)
+    form += "\n"
     form += "*--#] tensors :\n"
     form += "\n"
     form += "*--#[ declarations :\n"
@@ -295,23 +316,15 @@ AutoDeclare Indices gaugeadj = 3; * SU(2)-index in adjoint
 AutoDeclare Indices colf     = 3; * SU(3)-index in fundamental
 AutoDeclare Indices colfA    = 3; * Auxiliary SU(3)-index in fundamental
 AutoDeclare Indices cola     = 8; * SU(3)-index in adjoint
-AutoDeclare Indices flav     = n; * flavor index"""
+AutoDeclare Indices flav     = n; * flavor index
+AutoDeclare Indices Lsl      = 2; * SL2C Index
+AutoDeclare Indices Usl      = 2; * SL2C Index
+AutoDeclare Indices Lsldot   = 2; * SL2C Index
+AutoDeclare Indices Usldot   = 2; * SL2C Index"""
     form += "\n\n"
     form += "AutoDeclare Indices op; * auxiliary index for converting between commuting and noncommuting operators.\n\n"
     form += "* Declare some Symbols for pattern matching\n"
     form += "Symbols k,m;\n"
-    form += "*\n* Indices and functions for derivatives in SL2C notation.\n*\n"
-    form += "CFunction sigma, sigmabar;\n"
-    form += "CFunction sigma2, sigmabar2;\n"
-    form += "* Auxiliary antisymmtric epsilons, used in combination with replace_.\n"
-    eps = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if "eps" in tensor_name]
-    form += f"CFunction {', '.join(map(lambda text: text + 'A(antisymmetric)', eps))};\n"  # sl2CepsA(antisymmetric), su2epsA(antisymmetric), su3epsA(antisymmetric)
-    form += "\n"
-    form += "* Declare Kronecker Delta symbol for Sl2C Indices, because built in can not handle upper and lower (un-)dottet indices.\n"
-    form += "* Since two indices are also symmetric when they are cyclic and vice versa and pattern matching is not allowed for symmetric function but for cyclic it is, [sl2CdK] is declared as cyclic.\n"
-    dK = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if "dK" in tensor_name]
-    form += f"CFunction {', '.join(map(lambda text: text + '(cyclic)', dK))};\n"  # sl2CdK(cyclic), su2dK(cyclic), su3dK(cyclic)
-    form += "\n"
     form += "Off Statistics;\n"
     form += "*--#] declarations :\n"  # trailing "\n" important otherwise form will not find the "fold" declarations
 

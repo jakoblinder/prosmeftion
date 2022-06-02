@@ -1,8 +1,8 @@
-#include declarations.h # tensors
-#include declarations.h # declarations
+#include declarations_general.h # tensors
+#include declarations_general.h # declarations
 
 Local expression = 
-#include formTerm.h
+#include term0.h
 ;
 .sort
 

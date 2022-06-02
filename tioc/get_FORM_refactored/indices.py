@@ -245,14 +245,14 @@ class Indices_Summand(Indices_Model):
         # Consider now the possible uncontracted indices which can only be SL2C-indices:
         # TODO: Check
         for index in uncontractedInd_tmp:
-            if (index.typ == "Usl" and f"Lsl{index.id}" in uncontractedInd) or (index.typ == "Lsl" and f"Usl{index.id}" in uncontractedInd):
+            if (index.typ == "Usl" and Index(f"Lsl{index.id}") in uncontractedInd) or (index.typ == "Lsl" and Index(f"Usl{index.id}") in uncontractedInd):
                 contract += [True, True]
-                uncontractedInd.remove(f"Usl{index.id}")
-                uncontractedInd.remove(f"Lsl{index.id}")
-            if (index.typ == "Usldot" and f"Lsldot{index.id}" in uncontractedInd) or (index.typ == "Lsldot" and f"Usldot{index.id}" in uncontractedInd):
+                uncontractedInd.remove(Index(f"Usl{index.id}"))
+                uncontractedInd.remove(Index(f"Lsl{index.id}"))
+            if (index.typ == "Usldot" and Index(f"Lsldot{index.id}") in uncontractedInd) or (index.typ == "Lsldot" and Index(f"Usldot{index.id}") in uncontractedInd):
                 contract += [True, True]
-                uncontractedInd.remove(f"Usldot{index.id}")
-                uncontractedInd.remove(f"Lsldot{index.id}")
+                uncontractedInd.remove(Index(f"Usldot{index.id}"))
+                uncontractedInd.remove(Index(f"Lsldot{index.id}"))
         if len(uncontractedInd) == 0 and all(contract):
             contracted = True
 

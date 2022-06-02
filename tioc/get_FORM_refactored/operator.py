@@ -5,10 +5,8 @@ from yaml import safe_load
 from typing import Dict, List, Tuple
 from abc import ABC, abstractmethod
 from copy import copy
-# from functools import cache  # to cache properties
-from tioc import cached_property
 
-from tioc import CONFIG_PATH, opname, escape_regex, model, index_config, op_pattern, index_pattern, op_name_pattern
+from tioc import CONFIG_PATH, op_config, escape_regex, model, index_config, op_pattern, index_pattern, op_name_pattern
 from .index import Index
 from .indices import Indices_Operator
 from tioc import index_number_pattern as inp
@@ -68,7 +66,7 @@ class Operator_Model(Index):
     @staticmethod
     def read_in_operator(expression:str) -> (Tuple[str, bool, str], Tuple[Index], int, Tuple[Index]):
         der_indices = []
-        cov = escape_regex(opname["fermionfields"]["D"]["mathematica"]["cov"])
+        cov = escape_regex(op_config["fermionfields"]["D"]["mathematica"]["cov"])
         # ReadinMethod for cov(lor1234 derivative
         match_lor = re.finditer(r"(" + cov + r"\((?P<index>lor" + inp + r"),)", expression)
         matches_lor = list(match_lor)  # contain derivative indices
@@ -81,7 +79,7 @@ class Operator_Model(Index):
                 index = v.group("index")
                 der_indices.append(Index(index, derIndex=i+1))
             nD = len(matches_lor)
-            op = expression[matches_lor[-1].end(): (-1)*len(matches_lor)]
+            op = expression[matches_lor[-1].end(): (-1)*len(matches_lor)] # TODO: nicht matches_lor[-1].end() +1 ?
         elif any(matches_sl2C):
             # TODO: Check
             for i, v in enumerate(matches_sl2C):
@@ -90,7 +88,7 @@ class Operator_Model(Index):
                 der_indices.append(Index(index1, derIndex=i+1))
                 der_indices.append(Index(index2, derIndex=i+1))
             nD = len(matches_sl2C)
-            op = expression[matches_sl2C[-1].end(): (-1) * len(matches_sl2C)]
+            op = expression[matches_sl2C[-1].end()+1: (-1) * len(matches_sl2C)]
         else:
             nD = 0
             op = expression
@@ -99,24 +97,37 @@ class Operator_Model(Index):
         if match:
             name = match.group("name")
             # Test if operator is a conjugated one:
-            for operator in {**opname["tensors"], **opname["bosonfields"], **opname["fermionfields"]}.values():
+            for operator in {**op_config["tensors"], **op_config["bosonfields"], **op_config["fermionfields"]}.values():
                 form_names = list(operator["mathematica"].values())
                 if len(form_names) == 1 and name == form_names[0]:
                     non_conj_name = name
                     isconj = False
+                    break
                 elif len(form_names) == 2:
                     if name == form_names[1]:
                         non_conj_name =  form_names[0]
                         isconj = True
+                        break
                     elif name == form_names[0]:
                         non_conj_name = name
                         isconj = False
+                        break
             indices = op[match.end()+1:-1]
-            matches = list(re.finditer(r"(?P<index>" + index_pattern + r")", indices))
-            if any(matches):
-                for match in matches:
+            indices = indices.split(",")
+            for index in indices:
+                # use match here in order to assure that one matches the start of the index.
+                match = re.match(r"(?P<index>" + index_pattern + r")", index)
+                if match:
                     index = match.group("index")
                     op_indices.append(Index(index))
+                else:
+                    logger.error("Index can not be identified.")
+                    sys.exit("STOP")
+            # matches = list(re.finditer(r"(?P<index>" + index_pattern + r")", indices))
+            # if any(matches):
+            #     for match in matches:
+            #         index = match.group("index")
+            #         op_indices.append(Index(index))
         else:
             logger.error("No index found.")
             sys.exit("STOP")
@@ -140,31 +151,26 @@ class Operator_Model(Index):
         ind_structure = [index.typ for index in op_indices]
         def assertion(ind_structure_op, fieldtype, non_conj_name):
             if fieldtype == "tensors":
-                ind_structure = opname[fieldtype][non_conj_name]["index_structure"]
+                ind_structure = op_config[fieldtype][non_conj_name]["index_structure"]
             else:
-                bosonsANDfermions = {**opname["bosonfields"], **opname["fermionfields"]}
+                bosonsANDfermions = {**op_config["bosonfields"], **op_config["fermionfields"]}
                 ind_structure = bosonsANDfermions[non_conj_name]["index_structure"]
 
             if ind_structure_op not in ind_structure:
-                login.error("Indexstructure doesn't match the required structure for this field.")
+                logger.error("Indexstructure doesn't match the required structure for this field.")
                 sys.exit("STOP")
 
         if type(self) == Tensor:
             assertion(ind_structure, "tensors", self.non_conj_name)
         elif type(self) == Field:
-            if self.isconj:
-                # Fermionfield
-                assertion(ind_structure, "field", self.non_conj_name)
-            else:
-                # Bosonfield
-                assertion(ind_structure, "field", self.non_conj_name)
+            assertion(ind_structure, "field", self.non_conj_name)
 
         self._expr = fp_epxr
 
     @property
     def tex(self):
         """Create tex expression of operator."""
-        all_ops = {**opname["tensors"], **opname["bosonfields"], **opname["fermionfields"]}
+        all_ops = {**op_config["tensors"], **op_config["bosonfields"], **op_config["fermionfields"]}
         if self.isconj:
             try:
                 tex_expr = all_ops[self.non_conj_name]["tex_hc"]
@@ -181,7 +187,7 @@ class Operator_Model(Index):
             except KeyError:
                 derIndices_sorted[derivativeIndex.derIndex] = [derivativeIndex]
         tex_derivatives = ""
-        cov_tex = opname["fermionfields"]["D"]["tex"]
+        cov_tex = op_config["fermionfields"]["D"]["tex"]
         for key, index in derIndices_sorted.items():
             if index[0].typ == "lor":
                 tex_derivatives += cov_tex + "_{" + f"{index[0]:tex}" + "}"
@@ -288,5 +294,5 @@ class Field(Operator_Model):
     @property
     def ac(self) -> bool:
         """Specififes whether Field commutes or anticommutes."""
-        ac_expr = opname["fermionfields"][self.non_conj_name]["ac"]
+        ac_expr = op_config["fermionfields"][self.non_conj_name]["ac"]
         return ac_expr

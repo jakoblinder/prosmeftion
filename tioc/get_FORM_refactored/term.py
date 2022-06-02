@@ -4,8 +4,6 @@ import sys
 from yaml import safe_load
 from typing import Dict, List, Tuple
 from abc import ABC, abstractmethod
-# from functools import cache  # to cache properties
-from tioc import cached_property
 
 from tioc import CONFIG_PATH, opname, escape_regex, model, index_config
 from tioc.get_FORM_refactored.coefficient import Coefficient
@@ -44,6 +42,17 @@ class Term_Model(Summand):
             return self.tex
         else:
             return self.__repr__()
+
+    def __len__(self):
+        """List length"""
+        return len(self.terms)
+
+    def __getitem__(self, ii):
+        """Get a list item"""
+        if isinstance(ii, slice):
+            return type(self)(self.terms[ii])
+        else:
+            return self.terms[ii]
 
     @property
     def indices(self):

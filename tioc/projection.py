@@ -19,10 +19,11 @@ from yaml import safe_load, YAMLError
 from typing import List, Dict
 
 from tioc.get_BS.class_term import Term
-from tioc.get_BS.class_term import Coefficient
 from tioc.get_FORM.form_read_in import Term_form, Term_Model, Term_s
 from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values, model
 from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
+from tioc.get_FORM_refactored.read_write import get_terms
+from tioc.get_FORM_refactored.coefficient import Factor
 
 logger_autoeft = logging.getLogger("autoeft")
 logger = logging.getLogger("autoeft.projection")
@@ -456,6 +457,11 @@ def form(term, filename, cout=False, nDer=4):
         file.write(Term.form_sortfields(Term.extractOrder()))
     formexpression += "#call sortfields\n"
 
+    formexpression += "* Write derivatives again outside of fields.\n"
+    with open(TERM_PATH / "indexasDerivative.prc", "w") as file:
+        file.write(Term.form_indexasDerivative(nDer))
+    formexpression += "#call indexasDerivative\n"
+
 
     # Rearrange terms in a need way:
     commutingOps = list(opname_sorted["bosonfields"].values())  # opvalues[9:14]
@@ -728,7 +734,16 @@ def convertviaform(term):
     formoutput_formatted = print_form(filename,
                                       original=f"{term.cops_original:s}",
                                       converted=formoutput)
-    return formoutput_formatted, Term_form(formoutput, term.coeff, term.name)
+    ###
+    TERM_PATH = FORM_PATH / filename
+    with open(TERM_PATH / f"{filename}.h", "w") as file:
+        formoutput=re.sub(r"(\s)*", "", formoutput)
+        file.write(formoutput)
+    new_term = get_terms(filepath=TERM_PATH / f"{filename}.h", as_one=True, name=term.name)
+    for summand in new_term:
+        summand.coeff *= Factor(term.coeff.expression)
+    ###
+    return formoutput_formatted, new_term  # Term_form(formoutput, term.coeff, term.name)
 
 def converttoSL2C(inputfile, header = 0, pprint=True):
     """

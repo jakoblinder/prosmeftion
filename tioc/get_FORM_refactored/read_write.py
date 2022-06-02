@@ -1,11 +1,12 @@
 import re
 import logging
+import sys
 
 from pathlib import Path
 from yaml import safe_load
 from typing import Dict, List, Tuple
 
-from tioc import CONFIG_PATH, PROJECTION_PATH, FORM_GENERAL_PATH, FORM_PATH, opname, mathematica, escape_regex
+from tioc import CONFIG_PATH, PROJECTION_PATH, FORM_GENERAL_PATH, FORM_PATH, op_config, mathematica, escape_regex
 from tioc import bosons, fermions, tensors, run_form, op_pattern, index_number_pattern, LATEX_PATH
 
 from tioc.get_FORM_refactored.term import Term
@@ -56,7 +57,7 @@ def mathematica_to_form(inputfile: Path, outputfile: Path, header: int = 0):
     # Replace complex conjugation of Yukawa matrices, by hermitiant conjugation, i.e. swap the indices:
     # conj[yd][{flav7784, flav7493}] -> conj[yd][{flav7493,flav7784}]
     yukawa = ["yu", "yd", "ye"]
-    yukawa_conj = r'|'.join(escape_regex(list(opname["tensors"][y]["mathematica"].keys())[1]) for y in yukawa)
+    yukawa_conj = r'|'.join(escape_regex(list(op_config["tensors"][y]["mathematica"].keys())[1]) for y in yukawa)
     line = re.sub(r"(?P<op>" + yukawa_conj + r")\[\{(?P<index1>flav" + index_number_pattern + r"),(?P<index2>flav" + index_number_pattern + r")\}\]",
                   "\g<op>[{\g<index2>,\g<index1>}]", line)
 
@@ -113,10 +114,13 @@ def read_form_1d_table(table_file: Path, table_label: str) -> Tuple[str]:
             if match:
                 # print(f"Op {int(match.group('opPosition')):d}: {match.group('op'):s}")
                 op = match.group("op")
-                # Remove addtional bracket: D(lor1,(D(lor2,(H(gauge1234))))) -> D(lor1,D(lor2,H(gauge1234)))
-                cov = escape_regex(opname["fermionfields"]["D"]["mathematica"]["cov"])
+                # Remove additional brackets: D(lor1,(D(lor2,(H(gauge1234))))) -> D(lor1,D(lor2,H(gauge1234)))
+                cov = escape_regex(op_config["fermionfields"]["D"]["mathematica"]["cov"])
                 while re.search(r"(" + cov + r"\(lor" + inp + r",\()+", op):
                     op = re.sub(cov + r"\((?P<index>lor" + inp + r"),\((?P<actedOnStuff>" + op_pattern + ")\)\)", cov + "(\g<index>,\g<actedOnStuff>)", op)
+                # D(Lsl1, Usldot1, (D(Lsl2, Usldot2 (H(gauge1234))))) -> D(Lsl1, Usldot1, D(Lsl2, Usldot2, H(gauge1234)))
+                while re.search(r"(" + cov + r"\(Lsl" + inp + r",Usl" + inp + r",\()+", op):
+                    op = re.sub(cov + r"\((?P<index1>Lsl" + inp + r"),(?P<index2>Usl" + inp + r"),\((?P<actedOnStuff>" + op_pattern + ")\)\)", cov + "(\g<index1>,\g<index2>,\g<actedOnStuff>)", op)
                 op_list.append(op)
             elif line.strip():
                 raise ValueError
@@ -147,7 +151,10 @@ def get_ops(expr: str, groupOps: List[List[str]], dir_name: Path, maxDimLagr:int
     # maximum number of operators
     maxNOp = int(maxDimLagr// minDimOp)
     form = "Function " + ", ".join(tensors) + ";\n"
-    form += "#include declarations.h # declarations\n"
+    form += "*\n* Indices and functions for derivatives in SL2C notation.\n*\n"
+    form += "Function sigma, sigmabar;\n"
+    form += "Function sigma2, sigmabar2;\n"
+    form += "#include declarations_general.h # declarations\n"
     form += "\n"
     if type(groupOps) != list:
         groupOps = [groupOps]
@@ -202,8 +209,8 @@ def get_terms(filepath: Path, as_one=False, name:str=""):
     """
     if not as_one:
         assert not name, "The parameter name can only be set, when as_one is True."
-    form = "#include declarations.h # tensors\n"
-    form += "#include declarations.h # declarations\n"
+    form = "#include declarations_general.h # tensors\n"
+    form += "#include declarations_general.h # declarations\n"
     form += "\n"
     form += "Local expression = \n"
     form += f"#include {filepath.name}\n"
@@ -222,12 +229,13 @@ def get_terms(filepath: Path, as_one=False, name:str=""):
     form += "Print +s;\n"
     form += ".end"
 
-    with open(FORM_GENERAL_PATH / "term.frm", "w") as file:
+    folder = filepath.parent
+    with open(folder / "term_read.frm", "w") as file:
         file.write(form)
 
-    output = run_form(fp_cwd=FORM_GENERAL_PATH, filename="term.frm", fp_p=filepath.parent)
+    output = run_form(fp_cwd=folder, filename="term_read.frm", fp_p=folder.parent / "general")
     pattern = r"Print(\+s{1,2})?;\n{2}expression=\n{1,2}(?P<expression>(.|\n)*);"
-    pattern_short = r"Print(\+s{1,2})?;\n{2}expr=(?P<expression>(.|\n)*);"  # Pattern for extremely short expressions, i.e. fitting in one line.
+    pattern_short = r"Print(\+s{1,2})?;\n{2}expression=(?P<expression>(.|\n)*);"  # Pattern for extremely short expressions, i.e. fitting in one line.
     match = re.search(pattern, output)
     match_short = re.search(pattern_short, output)
     if match:
@@ -271,16 +279,18 @@ def get_terms(filepath: Path, as_one=False, name:str=""):
         terms = list(map(Term, [[term] for term in sorted_terms], [f"term{i:d}" for i in range(len(sorted_terms))]))
 
     latex = ""
-    for term in terms:
-        latex += r"\paragraph{" + f"{term.name}" + "}\n"
-        latex += r"\begin{dmath}" + "\n"
-        latex += f"{term:tex} \n"
-        latex += r"\end{dmath}" + "\n"
-        # print(f"{term:tex}")
-    with open(LATEX_PATH / "terms_all.tex", "w") as file:
-        file.write(latex)
-    # for term in terms:
-    #     print(repr(term))
+    if type(terms) == list:
+        for term in terms:
+            latex += r"\paragraph{" + f"{term.name}" + "}\n"
+            latex += r"\begin{dmath}" + "\n"
+            latex += f"{term:tex} \n"
+            latex += r"\end{dmath}" + "\n"
+        # with open(LATEX_PATH / "terms_all.tex", "w") as file:
+        #     file.write(latex)
+    else:
+        pass
+        # print(f"{terms:tex}")
+
     return terms
 
 

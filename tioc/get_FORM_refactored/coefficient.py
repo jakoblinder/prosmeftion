@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from abc import ABC, abstractmethod
 
-from tioc import cached_property, run_form, opname, coeff
+from tioc import run_form, op_config, coeff
 from tioc import escape_regex, PROJECTION_PATH, FORM_PATH
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild("coefficient")
@@ -69,7 +69,7 @@ class Coefficient_Model(ABC):
             login.error("At least one coefficient has to be named.")
             sys.exit("STOP")
 
-        return Coefficient(f"{self.expr}*{other.expr}", new_name)
+        return Coefficient(f"({self.expr})*({other.expr})", new_name)
 
     @abstractmethod
     def __add__(self, other):
@@ -103,20 +103,16 @@ class Coefficient_Model(ABC):
         """
         TERM_PATH = FORM_PATH / self.name
         TERM_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
-        ms = opname["coefficients"]["Ms"]["mathematica"]["Ms"]  # FORM expression of EFT mass Ms
+        ms = op_config["coefficients"]["Ms"]["mathematica"]["Ms"]  # FORM expression of EFT mass Ms
 
         form = "Off statistics;\n"
         form += f"Symbols {', '.join(coeff + ['n'])};\n" # Symbols d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]];
         form += "\n"
 
-        form += f"Local coefficient = {self.expr:s};\n"
-        form += ".sort\n"
-        form += "\n"
-
         if self.output_dimless:
             dimlessConst = []
             idStatements = []
-            for key, constant in opname["coefficients"].items():
+            for key, constant in op_config["coefficients"].items():
                 if key == "I" or key == "Ms":
                     continue
                 if constant["massdim"] != 0:
@@ -130,6 +126,12 @@ class Coefficient_Model(ABC):
                         dimlessConst.append(dimlessC)
                         idStatements.append(f"id {form_coeff:s} = {dimlessC:s}*{ms:s}^{constant['massdim']:d}")
             form += f"Symbols {', '.join(dimlessConst):s};\n"
+
+        form += f"Local coefficient = {self.expr:s};\n"
+        form += ".sort\n"
+        form += "\n"
+
+        if self.output_dimless:
             form_factorizeCoeff = "#procedure factorizeCoeff\n"
             for idStatement in idStatements:
                 form_factorizeCoeff += f"\t{idStatement:s};\n"
@@ -204,7 +206,7 @@ class Coefficient_Model(ABC):
 
         if self.output_dimless:
             # only dimless constants appear.
-            for key, constant in opname["coefficients"].items():
+            for key, constant in op_config["coefficients"].items():
                 form_coeff = list(constant['mathematica'].values())[0]
                 if constant["massdim"] == 0 or key == "Ms":
                     tex_statements[form_coeff] = constant["tex"]
@@ -213,11 +215,11 @@ class Coefficient_Model(ABC):
                 elif constant["massdim"] > 1 and key != "Ms":
                     tex_statements[f"[{form_coeff:s}/{ms:s}^{constant['massdim']:d}]"] = constant["tex_dimless"]
         else:
-            for key, constant in opname["coefficients"].items():
+            for key, constant in op_config["coefficients"].items():
                 form_coeff = list(constant['mathematica'].values())[0]
                 tex_statements[form_coeff] = constant["tex"]
 
-        for key, constant in opname["abbreviation"].items():
+        for key, constant in op_config["abbreviation"].items():
             form_coeff = list(constant['mathematica'].values())[0]
             tex_statements[form_coeff] = constant["tex"]
 
@@ -254,8 +256,8 @@ class Coefficient_Model(ABC):
                          r"\\" + "frac{\g<nominator>}{\g<denominator>}", tex)
 
             # The Expression should look like: bbracket(<a bunch of terms here>)*Ms^-n -> \left(<a bunch of terms here>\right)*M_{s}^{-n}
-            tex = re.sub(r"bbracket\((?P<summands>.+)\)\*" + escape_regex(opname["coefficients"]["Ms"]["tex"]) + r"\^(?P<exponent>-?\d{1,2})",
-                         r"\\" + r"left(" + r"\g<summands>" + r"\\" + r"right)*" + opname["coefficients"]["Ms"]["tex"] + r"^{\g<exponent>}", tex)
+            tex = re.sub(r"bbracket\((?P<summands>.+)\)\*" + escape_regex(op_config["coefficients"]["Ms"]["tex"]) + r"\^(?P<exponent>-?\d{1,2})",
+                         r"\\" + r"left(" + r"\g<summands>" + r"\\" + r"right)*" + op_config["coefficients"]["Ms"]["tex"] + r"^{\g<exponent>}", tex)
 
             # Subistute terms where n = 0, i.e. Ms^n = 1:
             tex = re.sub(r"bbracket\((?P<summands>.+)\)\Z",
@@ -298,12 +300,10 @@ class Coefficient(Coefficient_Model):
         TERM_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
         form = f"Symbols {', '.join(coeff + ['n'])};\n" # Symbols d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]];
         form += "\n"
-        form += f"Local coefficient = {self.expr:s};\n"
-        form += ".sort\n"
         dimlessConst = []
         idStatements = []
-        ms = opname["coefficients"]["Ms"]["mathematica"]["Ms"]
-        for key, constant in opname["coefficients"].items():
+        ms = op_config["coefficients"]["Ms"]["mathematica"]["Ms"]
+        for key, constant in op_config["coefficients"].items():
             if key == "I" or key == "Ms":
                 continue
             if constant["massdim"] != 0:
@@ -317,6 +317,11 @@ class Coefficient(Coefficient_Model):
                     dimlessConst.append(dimlessC)
                     idStatements.append(f"id {form_coeff:s} = {dimlessC:s}*{ms:s}^{constant['massdim']:d}")
         form += f"Symbols {', '.join(dimlessConst):s};\n"
+        form += "\n"
+
+        form += f"Local coefficient = {self.expr:s};\n"
+        form += ".sort\n"
+
         form_factorizeCoeff = "#procedure factorizeCoeff\n"
         for idStatement in idStatements:
             form_factorizeCoeff += f"\t{idStatement:s};\n"
@@ -366,6 +371,7 @@ class Factor(Coefficient_Model):
     """
     def __init__(self, expr):
         super().__init__(expr)
+        self.name = None
     def __repr__(self):
         """Spedify general string representation of the coefficient."""
         return super().__repr__()

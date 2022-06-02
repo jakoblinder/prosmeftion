@@ -9,6 +9,7 @@ from yaml import safe_load
 
 from tioc.projection import CONFIG_PATH, converttoSL2C, write_texfile  # , main
 from tioc.sun_projection import get_type, sun_projection
+from tioc import form_declarations, FORM_GENERAL_PATH
 
 # configure logger
 timestamp = datetime.now()
@@ -44,8 +45,12 @@ logger.info(timestamp.replace(microsecond=0).isoformat())
 def main():
     bs_file = args.matched.resolve()  # "exampleOutputBS.m"
 
+    with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
+        file.write(form_declarations())
+
     terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
 
+    # TODO: Write tex:
     if args.tex:
         write_texfile(terms)
 

@@ -892,6 +892,36 @@ class Term(Operator, Coefficient):
             rHS_indices += f"?{a:s}, "
         return lHS, rHS_indices
 
+    @staticmethod
+    def indtoDerivatives(n=4):
+        """
+        'x', 'y', 'z' are free to use them for internal field indices.
+        Parameters
+        ----------
+        n
+
+        Returns
+        -------
+        lHS_indices
+        rHS
+        brackets
+        """
+        abc = "abcdefghijklmnopqrstuvw"
+        lHS_indices = []
+        rHS = []
+        for i in range(1, n+1):
+            j1 = 2 * i - 1
+            j2 = 2*i
+            lHS_indices.append(f"Lsl{j1:d}?Lsl, Usldot{j2:d}?Usldot")
+            rHS.append(f"D(Lsl{j1:d}, Usldot{j2:d}")
+        rHS = ", ".join(rHS)
+        rHS += ", "
+        brackets = n * ")"
+
+        lHS_indices = ", ".join(lHS_indices)
+
+        return lHS_indices, rHS, brackets
+
     def form_higgsDerivativetoSL2C(self, nDer=4):
         """
         Replace derivatives acting on a Higgsfields SL2C notated derivative and sigma matrices.
@@ -1935,10 +1965,30 @@ class Term(Operator, Coefficient):
         form += "repeat;\n"
         for i in range(1, nDer + 1):
             lHS, rHS_Indices = Term.derivativestoInd(f"{opnameSL2C['[e_C]']}?(?x)", n=i)
-            form += f"id {lHS} = {opnameSL2C['[e_C]']}({rHS_Indices}?x);\n"
+            form += f"\tid {lHS} = {opnameSL2C['[e_C]']}({rHS_Indices}?x);\n"
         form += "endrepeat;\n"
         form += "#endprocedure"
         return form
+
+    def form_indexasDerivative(nDer=4):
+        """
+        Derivative are the only object that have always the index structure [Lsl, Usldot].
+        """
+        form = "#procedure indexasDerivative\n"
+        form += "repeat;\n"
+        for i in reversed(range(1, nDer + 1)):
+            lHS_Indices, rHS, brackets = Term.indtoDerivatives(n=i)
+            form += f"\tid {opnameSL2C['[e_C]']}?!" + "{D}" + f"({lHS_Indices}, ?x) = {rHS}{opnameSL2C['[e_C]']}(?x){brackets};\n"
+        form += "endrepeat;\n"
+        form += "#endprocedure"
+        return form
+
+    #     repeat;
+    # 	id [e_C]?!{D}(Lsl1?Lsl, Usldot2?Usldot, Lsl3?Lsl, Usldot4?Usldot, Lsl5?Lsl, Usldot6?Usldot, Lsl7?Lsl, Usldot8?Usldot, gauge1?) = D(Lsl1, Usldot2, D(Lsl3, Usldot4, D(Lsl5, Usldot6, D(Lsl7, Usldot8, [e_C](gauge1)))));
+    # 	id [e_C]?!{D}(Lsl1?Lsl, Usldot2?Usldot, Lsl3?Lsl, Usldot4?Usldot, Lsl5?Lsl, Usldot6?Usldot, ?x) = D(Lsl1, Usldot2, D(Lsl3, Usldot4, D(Lsl5, Usldot6, [e_C](?x))));
+    # 	id [e_C]?!{D}(Lsl1?Lsl, Usldot2?Usldot, Lsl3?Lsl, Usldot4?Usldot, ?x) = D(Lsl1, Usldot2, D(Lsl3, Usldot4, [e_C](?x)));
+    # 	id [e_C]?!{D}(Lsl1?Lsl, Usldot2?Usldot, ?x) = D(Lsl1, Usldot2, [e_C](?x));
+    # endrepeat;
 
     @staticmethod
     def extractOrder():

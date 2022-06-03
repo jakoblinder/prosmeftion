@@ -24,9 +24,12 @@ class Indices_Model(Index):
     alpha_beta_gamma_dot = list(map(lambda ind : f"\dot{{{ind}}}", alpha_beta_gamma))
 
     @abstractmethod
-    def __init__(self, indices: Tuple[Index]):
+    def __init__(self, indices: Tuple[Index], allow_uncontracted=False):
         # assert type(indices) == tuple
-        self.indices = indices
+        if allow_uncontracted:
+            self._indices = indices
+        else:
+            self.indices = indices
 
     @abstractmethod
     def __repr__(self):
@@ -65,7 +68,7 @@ class Indices_Model(Index):
         for i in other_indices:
             if not i.is_in(indices):
                 indices.append(i)
-        return type(self.indices)(indices)
+        return type(self)(indices, allow_uncontracted=True)
 
     def __len__(self):
         """List length"""
@@ -220,8 +223,8 @@ class Indices_Operator(Indices_Model):
 class Indices_Summand(Indices_Model):
     indices: Tuple[Index]  # Tuple of indices in one term.
 
-    def __init__(self, indices: Tuple[Index]):
-        super().__init__(indices)
+    def __init__(self, indices: Tuple[Index], allow_uncontracted=False):
+        super().__init__(indices, allow_uncontracted)
 
     @property
     def indices(self):
@@ -275,7 +278,7 @@ class Indices_Summand(Indices_Model):
             #     #     while :
             self._indices = tuple(reduced_indices)
         else:
-            login.error(f"Not all indices are contracted. The indices {', '.join(uncontractedInd_tmp)} are not contracted.")
+            logger.error(f"Not all indices are contracted. The indices {', '.join(map(str,uncontractedInd_tmp))} are not contracted.")
             sys.exit("STOP")
 
     def __repr__(self):
@@ -290,5 +293,19 @@ class Indices_Term(Indices_Model):
     def __repr__(self):
         return ", ".join(f"{self.tex_indices[index.name]}({index.name})" for index in self.indices)
 
+    @property
+    def indices(self):
+        return self._indices
+
+    @indices.setter
+    def indices(self, fp_indices):
+        reduced_indices = list(fp_indices)
+
+        # Remove more than one time occurring indices from self.indices.
+        for index in reduced_indices.copy():
+            while index.is_in(reduced_indices) > 1:
+                reduced_indices.remove(index)
+
+        self._indices = tuple(reduced_indices)
 
 

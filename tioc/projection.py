@@ -814,19 +814,24 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
 def write_texfile(terms):
     # tex output of the operators
     tex = []
+    logger.info("Create texed pdf of all terms.")
+    logger.debug("Create Tex file of all terms.")
     for term in terms:
-        tex.append((term.name,print_tex(term, coeff = True)))
+        print(repr(term))
+        tex.append((term.name, f"{term:tex}"))
+        # tex.append((term.name,print_tex(term, coeff = True)))
     latex = ""
     for i,v in tex:
         latex += r"\paragraph{" + f"{i:s}" + "}\n"
         # latex += r"\begin{itemize}" + "\n"
         latex += r"\begin{dmath}" + "\n"
-        latex += v
+        latex += v + "\n"
         # latex += r"\end{itemize}" + "\n"
         latex += r"\end{dmath}" + "\n"
     with open(LATEX_PATH / "terms_all.tex", "w") as file:
         file.write(latex)
     try:
+        logger.debug("Construct pdf.")
         # print(subprocess.list2cmdline(["pdflatex", f"-output-directory={LATEX_PATH}", LATEX_PATH / "terms.tex"]))
         subprocess.run(["pdflatex", f"-output-directory={LATEX_PATH}", LATEX_PATH / "terms.tex"],
                        capture_output=True, text=True, check=True)

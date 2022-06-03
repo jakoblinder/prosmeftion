@@ -50,10 +50,9 @@ def main():
 
     terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
 
-    # TODO: Write tex:
     if args.tex:
         write_texfile(terms)
-
+    # Sort terms by type and do projection again.
     single_terms = get_type(terms)
     del terms
     # SUN_Projection:

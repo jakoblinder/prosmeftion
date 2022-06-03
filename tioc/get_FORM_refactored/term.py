@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from tioc import CONFIG_PATH, opname, escape_regex, model, index_config
 from tioc.get_FORM_refactored.coefficient import Coefficient
 from .summand import Summand
-from .indices import Indices_Term
+from .indices import Indices_Term, Indices_Summand
 from .index import Index
 
 logger_autoeft = logging.getLogger("autoeft.projection")
@@ -30,7 +30,10 @@ class Term_Model(Summand):
     @abstractmethod
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""
-        return f"{'+'.join(map(repr, self.terms))}"
+        if len(self.terms) == 0:
+            return "0"
+        else:
+            return f"{'+'.join(map(repr, self.terms))}"
 
     def __str__(self):
         """Specify the format for printing with str() or print() statement function: Here the same as the string representation repr() itself."""
@@ -39,7 +42,10 @@ class Term_Model(Summand):
     def __format__(self, key):
         """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
         if key == "tex":
-            return self.tex
+            if len(self.terms) == 0:
+                return "0"
+            else:
+                return self.tex
         else:
             return self.__repr__()
 
@@ -65,11 +71,11 @@ class Term_Model(Summand):
         -------
         Returns a list of all occurring indices.
         """
-        indices_expr = Indices_Term([])
+        indices_expr = Indices_Summand([])
         for term in self.terms:
             indices_expr += term.indices
 
-        return indices_expr
+        return Indices_Term(indices_expr.indices)
 
     @property
     def tex(self):

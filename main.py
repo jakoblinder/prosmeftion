@@ -9,7 +9,7 @@ from yaml import safe_load
 
 from tioc.projection import CONFIG_PATH, converttoSL2C, write_texfile  # , main
 from tioc.sun_projection import get_type, sun_projection
-from tioc import form_declarations, FORM_GENERAL_PATH
+from tioc import form_declarations, FORM_GENERAL_PATH, op_config
 
 # configure logger
 timestamp = datetime.now()
@@ -43,6 +43,7 @@ logger.info(timestamp.replace(microsecond=0).isoformat())
 
 
 def main():
+    op = op_config
     bs_file = args.matched.resolve()  # "exampleOutputBS.m"
 
     with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
@@ -53,8 +54,14 @@ def main():
     if args.tex:
         write_texfile(terms)
     # Sort terms by type and do projection again.
+    # for term in terms:
+    #     for summand in term.terms:
+    #         print(f"Fieldcounter: {summand.fieldcounter}")
+    #         print(f"Summand: {summand}")
+
     single_terms = get_type(terms)
     del terms
+
     # SUN_Projection:
     single_terms = sun_projection(single_terms, max_dim = 6)
 

@@ -109,7 +109,7 @@ class Indices_Model(Index):
         -------
         """
         for j in range(max):
-            prime = r"^{" + "\prime" * j + r"}"
+            prime = r"^{" + r"\prime" * j + r"}"
             for i in finite_list:
                 if j:  # j > 0
                     yield i + prime

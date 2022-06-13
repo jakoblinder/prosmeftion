@@ -260,7 +260,7 @@ class Operator_Model(Index):
 
 class Tensor(Operator_Model):
     expr: str
-    indices: Tuple[Index]
+    indices: Indices_Operator
     name: str
     tex: str
     description: str
@@ -276,7 +276,7 @@ class Tensor(Operator_Model):
 class Field(Operator_Model):
     expr: str
     field_pos: int
-    indices: Tuple[Index]
+    indices: Indices_Operator
     name: str
     tex: str
     ac: bool

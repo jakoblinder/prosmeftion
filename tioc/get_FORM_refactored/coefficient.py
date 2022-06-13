@@ -243,17 +243,17 @@ class Coefficient_Model(ABC):
             tex = match.group("coefficient")
             # substitute coeff(x/y) by \frac{x}{y}
             tex = re.sub(r"coeff\((?P<nominator>\d+)/(?P<denominator>\d+)\)",
-                         r"\\" + "frac{\g<nominator>}{\g<denominator>}", tex)
+                         r"\\" + r"frac{\g<nominator>}{\g<denominator>}", tex)
             # substitute coeff(x) by x
             tex = re.sub(r"coeff\((?P<number>\d+)\)",
-                         "\g<number>", tex)
+                         r"\g<number>", tex)
 
             # First, substitute fractions standing at the end of the term
             tex = re.sub(r"frac\((?P<nominator>[^+-]+),(?P<denominator>[^+-]+)\)" + r"\)", #  + r"(?=\)|\*" + escape_regex(coeffname["Ms"]["tex"]) + r")",
-                         r"\\" + "frac{\g<nominator>}{\g<denominator>}" + ")", tex)
+                         r"\\" + r"frac{\g<nominator>}{\g<denominator>}" + ")", tex)
             # substitute all remaining fractions
             tex = re.sub(r"frac\((?P<nominator>[^+-]+),(?P<denominator>[^+-]+)\)",
-                         r"\\" + "frac{\g<nominator>}{\g<denominator>}", tex)
+                         r"\\" + r"frac{\g<nominator>}{\g<denominator>}", tex)
 
             # The Expression should look like: bbracket(<a bunch of terms here>)*Ms^-n -> \left(<a bunch of terms here>\right)*M_{s}^{-n}
             tex = re.sub(r"bbracket\((?P<summands>.+)\)\*" + escape_regex(op_config["coefficients"]["Ms"]["tex"]) + r"\^(?P<exponent>-?\d{1,2})",

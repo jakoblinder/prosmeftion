@@ -6,7 +6,7 @@ from copy import copy
 from fractions import Fraction
 from typing import Dict, List, Tuple
 
-from tioc import model
+from tioc import model, op_config
 from .operator import Tensor, Field
 from .coefficient import Coefficient
 from .indices import Indices_Summand, Indices_Operator
@@ -22,6 +22,7 @@ class Summand_Model(Tensor, Field, Coefficient):
     fieldcounter: Dict[str, int]
     d: int  # massdimension of operator
     indices: Indices_Summand
+    nD: int  # number of derivatives in the summand
 
     @abstractmethod
     def __init__(self, tensors: List[str], fields: Tuple[str], coeff: str, fp_name: str):
@@ -30,6 +31,8 @@ class Summand_Model(Tensor, Field, Coefficient):
         self.tensors = tensors
         self.fields = fields
         self.coeff = coeff
+        self.nD
+        self.fieldcounter
 
     @abstractmethod
     def __repr__(self):
@@ -93,14 +96,34 @@ class Summand_Model(Tensor, Field, Coefficient):
     @property
     def fieldcounter(self):
         fieldcount = {key.name: 0 for key in model.fields.values()}
-        # TODO
+        # op = {**op_config["bosonfields"], **op_config["fermionfields"]}
+        autoeft_projection = {autoeft: projection for field_name, field in {**op_config["bosonfields"], **op_config["fermionfields"]}.items() if field_name != "D" for projection, autoeft in field["autoeft"].items()}
+        for field in self.fields:
+            try:
+                for counted_field in fieldcount.keys():
+                    if autoeft_projection[counted_field] == field.name:
+                        fieldcount[counted_field] += 1
+                        break
+            except KeyError:
+                logger.error(f"Field {field.name:s} doesn't have an autoeft translation.")
+                sys.exit("STOP")
+
         return fieldcount
+
+    @property
+    def fieldcounter_stripped(self):
+        # Remove all 0 entries:
+        fieldcount_s = {field: count for field, count in self.fieldcounter.items() if count != 0}
+
+        return fieldcount_s
+
 
     @property
     def nD(self):
         """ Number of derivatives in a summand."""
         n_D = 0
-        # TODO
+        for field in self.fields:
+            n_D += field.nD
         return n_D
 
     @property

@@ -1,6 +1,9 @@
 import re
 import logging
 import sys
+import sage.all
+import sage.matrix as mx
+from sage.rings.rational_field import QQ
 from yaml import safe_load
 from typing import Dict, List, Tuple
 from abc import ABC, abstractmethod
@@ -20,11 +23,10 @@ class Term_Model(Summand):
     name: str
     # indices: Indices
     @abstractmethod
-    def __init__(self, terms: List[Dict[str, str]], name: str):
+    def __init__(self, terms: List[Dict[str, List[str]]], name: str):
         """Load in fields, tensors and the coefficient."""
         self.terms = [Summand(term["tensors"], term["fields"], term["coefficient"], name) for term in terms]
         self.name = name
-        # # The following has to stay in order to generate the tex expression for the indices on operator level
         # self.indices
 
     @abstractmethod
@@ -59,6 +61,14 @@ class Term_Model(Summand):
             return type(self)(self.terms[ii])
         else:
             return self.terms[ii]
+
+    def insert(self, ii, val):
+        assert type(val) == Summand, f"Inserted expression '{val}' doesn't has the type Summand."
+        self.terms.insert(ii, val)
+
+    def append(self, val):
+        # insert value at the end
+        self.insert(len(self.terms), val)
 
     @property
     def indices(self):
@@ -118,8 +128,6 @@ class Term_Model(Summand):
 
         return tex_expr
 
-    # TODO: Tex expression for índices.
-
 class Term(Term_Model):
     """
     A term from the form output can consist of many summand. The term ist therefore split in Term_s objects
@@ -128,11 +136,44 @@ class Term(Term_Model):
     name: str
     terms: List[Summand]
     # indices: Indices
-    def __init__(self,  terms: List[Dict[str, str]], name: str):
+    def __init__(self,  terms: List[Dict[str, List[str]]], name: str):
         super().__init__(terms, name)
         self.indices
 
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""
         return super().__repr__()
+
+class TermType(Term_Model):
+    """
+    Summand objects sorted by their type:
+    """
+    terms: List[Summand]
+    name: str
+    nD: int  # Number of derivatives in the term.
+    field_content: Dict
+    d: int  # mass dimension
+    sun_projection_tensors: Dict[str,Dict[str,List[str]]]  # Sun_projection tensors
+    sun_projection_matrix: Dict[str, sage.matrix.matrix_rational_dense.Matrix_rational_dense]
+    def __init__(self, summand : Summand, field_content: Dict):
+        self.terms = [summand]  # [Summand([tensor.expr for tensor in summand.tensors], [field.expr for field in summand.fields], summand.coeff.expr, name) for term in terms]
+        self.name = str(field_content)
+        self.field_content = field_content
+
+        # self.sun_projection_tensors = None
+        # self.sun_projection_matrix = {key: mx.constructor.matrix(QQ, 0, 0, []) for key in model.sun_groups.keys()}
+
+    def __repr__(self):
+        """Specify the format the general string representation and for printing with repr()."""
+        return super().__repr__()
+
+    @property
+    def nD(self):
+        # Number of derivatives in the Term
+        return self.terms[0].nD
+
+    @property
+    def d(self):
+        # Mass dimension of the terms
+        return self.terms[0].d
 

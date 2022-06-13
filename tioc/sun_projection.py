@@ -143,3 +143,27 @@ def sun_projection(single_terms, max_dim: int):
                 # Term contains still redundancies and therefore their exist no basis tensor.
                 term_mass_dim.sun_projection_tensors = False
     return single_terms
+
+def replace_sun_tensors_by_projected_ones(single_terms):
+    for type in single_terms.values():
+        for term_mass_dim in type.values():
+            for sun_group, projection_matrix in term_mass_dim.sun_projection_matrix.items():
+                if not projection_matrix:
+                    # no projection matrix for this group and operator there
+                    continue
+                else:
+                    # projection_matrix exists
+                    sun_basis_tensors = term_mass_dim.sun_projection_tensors[sun_group]["sun_tensor"]
+                    basis_dim = len(sun_basis_tensors)
+                    assert len(term_mass_dim.terms) == projection_matrix.nrows(), "Projection matrix has the wrong shape."
+                    assert basis_dim == projection_matrix.ncols(), "Projection matrix has the wrong shape."
+                    for i, term in enumerate(term_mass_dim.terms):
+                        projected_tensors = []
+                        for j in range(basis_dim):
+                            projected_tensors.append(str(projection_matrix[i][j]) + "*" + f"({sun_basis_tensors[j]})")
+                        try:
+                            term.projected_tensors[sun_group] = "+".join(projected_tensors)
+                        except AttributeError:
+                            term.projected_tensors = {sun_group: "+".join(projected_tensors)}
+
+    return single_terms

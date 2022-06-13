@@ -82,14 +82,15 @@ class Index_Model(ABC):
             id_expr = match.group("id")
         else:
             logger.error(
-                f"The index {self.expr} is not written in a valid index format. An index should look like e.g.: flav67Av89.")
+                f"The index {self.expr} is not written in a valid index format. An index should look like e.g.: "
+                f"flav67Av89.")
             sys.exit("STOP")
         return id_expr
 
     @property
     def indname(self) -> str:
         """
-        E.g.: lor1234, gauge345, ... have id=name: 1234, 345, ...
+        E.g.: lor1234, gauge345, Lsldot123, Usldot123 ... have indname: lor-1234, gauge-345, sldot-123, sldot-123 ...
         """
         match = re.match(index_pattern, self.expr)
         if match:
@@ -148,6 +149,7 @@ class Index(Index_Model):
     tex: str  # readable name which should be printed in LaTex for the index
     d: int
     description: str
+    projection: str  # Index for projection of gauge indices.
 
     def __init__(self, expr, derIndex=False):
         super().__init__(expr, derIndex)

@@ -217,47 +217,6 @@ class Operator_Model(Index):
         return autoeft_expr
 
 
-###########################################################################################
-    # TODO
-    # def gaugeIndicesforProjection(self):
-    #     """
-    #     The gauge indices of a field should be denoted by the pattern idxF2I1, where A denotes the second field
-    #     (remember the unique ordering by helicity) and one the first index of this field. I.e. idxF2I1 denotes the first
-    #     gauge index of the second field in this term.
-    #     Note that the indices of the different gauge group are not distinguished and thus should always be part of the
-    #     index object.
-    #
-    #     Returns
-    #     -------
-    #
-    #     """
-    #     pre = "idx"
-    #     counter = {"gauge": 1, "colf": 1}
-    #     # indtype = "gauge"
-    #     for indtype in ["gauge", "colf"]:
-    #         for index in self.indices:
-    #             if index.typ == indtype:
-    #                 index.projection = f"{pre:s}F{self.numID:d}I{counter[indtype]:d}"
-    #                 counter[indtype] += 1
-
-    # def get_NDerivative(self):
-    #     """
-    #     Determine number of derivatives acting on a field by remembering that each derivative must have an usldot and an lsl index.
-    #     By taking the minimal number of usldot and lsl indices the number of derivatives can be unambiguously determined.
-    #     Returns
-    #     -------
-    #     Number of derivatives acting on a field.
-    #     """
-    #     n_usldot = 0  # number of usldot indices
-    #     n_lsl = 0  # number of lsl indices
-    #     for ind in self.indices:
-    #         if ind.typ == "Usldot":
-    #             n_usldot += 1
-    #         elif ind.typ == "Lsl":
-    #             n_lsl += 1
-    #
-    #     return min(n_usldot, n_lsl)
-
 class Tensor(Operator_Model):
     expr: str
     indices: Indices_Operator
@@ -275,7 +234,7 @@ class Tensor(Operator_Model):
 
 class Field(Operator_Model):
     expr: str
-    field_pos: int
+    field_pos: int  # Position of the Fiel starting at 1.
     indices: Indices_Operator
     name: str
     tex: str
@@ -286,6 +245,7 @@ class Field(Operator_Model):
     def __init__(self, expr: str, pos: int):
         super().__init__(expr)
         self.field_pos = pos
+        self.gaugeIndicesforProjection()  # Write projection Indices for gauge indices of field.
 
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""
@@ -296,3 +256,25 @@ class Field(Operator_Model):
         """Specififes whether Field commutes or anticommutes."""
         ac_expr = op_config["fermionfields"][self.non_conj_name]["ac"]
         return ac_expr
+
+    def gaugeIndicesforProjection(self):
+        """
+        The gauge indices of a field should be denoted by the pattern idxF2I1, where '2' denotes the second field
+        (remember the unique ordering by helicity) and '1' the first index of this field, i.e. idxF2I1 denotes the first
+        gauge index of the second field in this term.
+        Note that the indices of the different gauge group are not distinguished and thus should always be part of the
+        index object.
+
+        Returns
+        -------
+
+        """
+        pre = ""  # previously this was 'idx'
+        counter = {"gauge": 1, "colf": 1}
+        for indtype in ["gauge", "colf"]:
+            for index in self.indices:
+                if index.typ == indtype:
+                    index.projection = f"{pre:s}F{self.field_pos:d}I{counter[indtype]:d}"
+                    counter[indtype] += 1
+
+

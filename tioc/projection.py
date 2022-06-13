@@ -811,40 +811,76 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
                 print(f"{term:s}\n")
     return form_terms
 
-def write_texfile(terms):
-    # tex output of the operators
+
+def write_texfile_and_create_pdf(pdfname="terms"):
+    """
+    Define Decorator to generat tex files of given latex expression and name of pdf.
+    Parameters
+    ----------
+    pdfname: str
+        name of the pdf without postfix.
+    Returns
+    -------
+    """
+    def decorator(func):
+        def wrapper_with_func_args(*args, **kwargs):
+            logger.info(f"Create texed pdf {pdfname:s}.pdf of all terms.")
+            logger.debug("Create Tex file of all terms.")
+
+            # call wrapped function:
+            latex = func(*args, **kwargs)
+
+            with open(LATEX_PATH / "terms_all.tex", "w") as file:
+                file.write(latex)
+            try:
+                logger.debug("Construct pdf.")
+                # print(subprocess.list2cmdline(["pdflatex", f"-output-directory={LATEX_PATH}", LATEX_PATH / "terms.tex"]))
+                subprocess.run(["pdflatex", f"-output-directory={LATEX_PATH}", LATEX_PATH / "terms.tex"],
+                               capture_output=True, text=True, check=True)
+            except subprocess.CalledProcessError as exc:
+                exc.cmd = list(map(str, list(exc.cmd)))
+                logger.error(" ".join(exc.cmd) + "\n" + str(exc.stdout))
+                logger.error(f"Error {exc.returncode}")
+                sys.exit("STOP")
+            else:
+                # Move created pdf to the main projection folder.
+                file_path = LATEX_PATH / "terms.pdf"
+                file_path.rename(PROJECTION_PATH / f"{pdfname:s}.pdf")
+        return wrapper_with_func_args
+
+    return decorator
+
+@write_texfile_and_create_pdf("terms_unsorted")
+def tex_unsorted_terms(terms):
     tex = []
-    logger.info("Create texed pdf of all terms.")
-    logger.debug("Create Tex file of all terms.")
     for term in terms:
-        print(repr(term))
+        # print(repr(term))
         tex.append((term.name, f"{term:tex}"))
         # tex.append((term.name,print_tex(term, coeff = True)))
     latex = ""
-    for i,v in tex:
-        latex += r"\paragraph{" + f"{i:s}" + "}\n"
+    for name, v in tex:
+        latex += r"\paragraph{" + f"{name:s}" + "}\n"
         # latex += r"\begin{itemize}" + "\n"
         latex += r"\begin{dmath}" + "\n"
         latex += v + "\n"
         # latex += r"\end{itemize}" + "\n"
         latex += r"\end{dmath}" + "\n"
-    with open(LATEX_PATH / "terms_all.tex", "w") as file:
-        file.write(latex)
-    try:
-        logger.debug("Construct pdf.")
-        # print(subprocess.list2cmdline(["pdflatex", f"-output-directory={LATEX_PATH}", LATEX_PATH / "terms.tex"]))
-        subprocess.run(["pdflatex", f"-output-directory={LATEX_PATH}", LATEX_PATH / "terms.tex"],
-                       capture_output=True, text=True, check=True)
-    except subprocess.CalledProcessError as exc:
-        exc.cmd = list(map(str, list(exc.cmd)))
-        logger.error(" ".join(exc.cmd) + "\n" + str(exc.stdout))
-        logger.error(f"Error {exc.returncode}")
-        sys.exit("STOP")
-    else:
-        # Move created pdf to the main projection folder.
-        file_path = LATEX_PATH / "terms.pdf"
-        file_path.rename(PROJECTION_PATH / "terms.pdf")
 
+    return latex
+
+@write_texfile_and_create_pdf("terms_sorted")
+def tex_sorted_terms(single_terms):
+    latex = ""
+    for term_type in single_terms.values():
+        for term_type_nD in term_type.values():
+            latex += r"\section*{" + re.sub(r"'", "", term_type_nD.name) + "}\n"
+            for term in term_type_nD.terms:
+                latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
+                latex += r"\begin{dmath}" + "\n"
+                latex += f"{term:tex}\n"
+                latex += r"\end{dmath}" + "\n"
+
+    return latex
 
 # TODO: Implement progress bar: https://stackoverflow.com/questions/3160699/python-progress-bar
 # import sys

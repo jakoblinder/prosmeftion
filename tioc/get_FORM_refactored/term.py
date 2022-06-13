@@ -157,11 +157,12 @@ class TermType(Term_Model):
     sun_projection_matrix: Dict[str, sage.matrix.matrix_rational_dense.Matrix_rational_dense]
     def __init__(self, summand : Summand, field_content: Dict):
         self.terms = [summand]  # [Summand([tensor.expr for tensor in summand.tensors], [field.expr for field in summand.fields], summand.coeff.expr, name) for term in terms]
-        self.name = str(field_content)
+        self.name = str({"nD": self.nD, **field_content})
         self.field_content = field_content
 
-        # self.sun_projection_tensors = None
-        # self.sun_projection_matrix = {key: mx.constructor.matrix(QQ, 0, 0, []) for key in model.sun_groups.keys()}
+        # SUN-projection:
+        self.sun_projection_tensors = None
+        self.sun_projection_matrix = {key: mx.constructor.matrix(QQ, 0, 0, []) for key in model.sun_groups.keys()}
 
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""

@@ -75,7 +75,7 @@ class Summand_Model(Tensor, Field, Coefficient):
 
     @fields.setter
     def fields(self, fp_fields):
-        self._fields = tuple(map(Field, fp_fields, range(len(fp_fields))))
+        self._fields = tuple(map(Field, fp_fields, range(1, len(fp_fields)+1)))
 
     @property
     def coeff(self):
@@ -143,20 +143,16 @@ class Summand(Summand_Model):
     def __init__(self, tensors: List[str], fields: List[str], coeff: str, fp_name: str):
         super().__init__(tensors, fields, coeff, fp_name)
 
-        # self.fieldcounter, self.n_D = self.get_fieldcounts()
+        # Gauge fields contain special projection index of the form idxF2I1, which is transmitted to the contracted tensors:
+        self.gaugeIndicesforProjection_tensors()
 
-        # # Gauge fields contain special projection index of the form idxF2I1, which is transmitted to the contracted tensors:
-        # self.gaugeIndicesforProjection_tensors()
-        # # specify coefficient
-        # self.coeff = Coefficient(coeff)
+        def get_SUN_name(N):
+            """Get Name of SU2_W out of model file."""
+            for group_name, group_properties in model.sun_groups.items():
+                if group_properties.N == N:
+                    return group_name
 
-        # def get_SUN_name(N):
-        #     """Get Name of SU2_W out of model file."""
-        #     for group_name, group_properties in model.sun_groups.items():
-        #         if group_properties.N == N:
-        #             return group_name
-        #
-        # self.gaugeTensorsSUN = {get_SUN_name(2): self.get_SUN_tensors(2), get_SUN_name(3): self.get_SUN_tensors(3)}
+        self.gaugeTensorsSUN = {get_SUN_name(2): self.get_SUN_tensors(2), get_SUN_name(3): self.get_SUN_tensors(3)}
 
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""
@@ -185,44 +181,22 @@ class Summand(Summand_Model):
                     if index.typ == indtype:
                         index.projection = self.get_projectionIndex_from_Field(index.id)
 
-    # def get_SUN_tensors(self, N):
-    #     """
-    #     Returns coefficient tensors (i.e. epsilon and Kronecker delta) of the group SU("N") where the epsilontensor is
-    #     and the Kronecker delta are rewritten as the regarding tensors in FORM, i.e. e_(...) and d_(...,...).
-    #     -------
-    #     """
-    #     epsilon = f"su{N:d}eps"
-    #     delta = f"su{N:d}dK"
-    #     suNeps = []
-    #     suNdK = []
-    #     for tensor in self.tensors:
-    #         if tensor.name == epsilon:
-    #             suNeps.append(f"e_({','.join([index.projection for index in tensor.indices])})")
-    #         elif tensor.name == delta:
-    #             suNdK.append(f"d_({','.join([index.projection for index in tensor.indices])})")
-    #
-    #     form_tensors = "*".join(suNeps + suNdK)
-    #
-    #     return form_tensors
+    def get_SUN_tensors(self, N):
+        """
+        Returns coefficient tensors (i.e. epsilon and Kronecker delta) of the group SU("N") where the epsilontensor
+        and the Kronecker delta are rewritten as the regarding tensors in FORM, i.e. e_(...) and d_(...,...).
+        -------
+        """
+        epsilon = f"[su{N:d}eps]"
+        delta = f"[su{N:d}dK]"
+        suNeps = []
+        suNdK = []
+        for tensor in self.tensors:
+            if tensor.name == epsilon:
+                suNeps.append(f"e_({','.join([index.projection for index in tensor.indices])})")
+            elif tensor.name == delta:
+                suNdK.append(f"d_({','.join([index.projection for index in tensor.indices])})")
 
-    # def get_fieldcounts(self):
-    #     """
-    #     Return dictionary which contains number of fields for each field type:
-    #     Returns
-    #     -------
-    #
-    #     """
-    #     fieldcount = {key.name: 0 for key in model.fields.values()}
-    #     n_D = 0
-    #     for field in self.fields:
-    #         if field.name == None:
-    #             # Catches terms which are zero.
-    #             break
-    #         fieldcount[field.autoeft_name] += 1
-    #         n_D += field.n_D  # number of derivatives in a term
-    #     return fieldcount, n_D
-    #
-    # @property
-    # def fieldcounter_stripped(self):
-    #     fc_s = {field: count for field, count in self.fieldcounter.items() if count != 0}
-    #     return fc_s
+        form_tensors = "*".join(suNeps + suNdK)
+
+        return form_tensors

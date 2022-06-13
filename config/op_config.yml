@@ -281,6 +281,9 @@ fermionfields:
       mathematica:
         L: L
         conj[L]: "[L+]"
+      autoeft:
+        L: L
+        "[L+]": L+
       index_structure:
         -
           - Lsl
@@ -313,6 +316,9 @@ fermionfields:
       mathematica:
         eC: "[e_C]"
         conj[eC]: "[e_C+]"
+      autoeft:
+        "[e_C]": eC
+        "[e_C+]": eC+
       index_structure:
         -
           - Lsl
@@ -344,6 +350,9 @@ fermionfields:
       mathematica:
         uC: "[u_C]"
         conj[uC]: "[u_C+]"
+      autoeft:
+        "[u_C]": uC
+        "[u_C+]": uC+
       index_structure:
         -
           - Lsl
@@ -378,6 +387,9 @@ fermionfields:
       mathematica:
         dC: "[d_C]"
         conj[dC]: "[d_C+]"
+      autoeft:
+        "[d_C]": dC
+        "[d_C+]": dC+
       index_structure:
         -
           - Lsl
@@ -413,6 +425,9 @@ fermionfields:
       mathematica:
         Q: Q
         conj[Q]: "[Q+]"
+      autoeft:
+        Q: Q
+        "[Q+]": Q+
       index_structure:
         -
           - Lsl

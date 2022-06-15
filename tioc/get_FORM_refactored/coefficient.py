@@ -272,8 +272,8 @@ class Coefficient(Coefficient_Model):
     def __init__(self, expr, name):
         super().__init__(expr)
         self.name = name
-        self.mdim
-        self.tex
+        # self.mdim
+        # self.tex
 
     def __repr__(self):
         """Spedify general string representation of the coefficient."""

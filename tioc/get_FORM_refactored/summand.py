@@ -33,6 +33,7 @@ class Summand_Model(Tensor, Field, Coefficient):
         self.coeff = coeff
         self.nD
         self.fieldcounter
+        self.fieldstructure
 
     @abstractmethod
     def __repr__(self):
@@ -48,11 +49,11 @@ class Summand_Model(Tensor, Field, Coefficient):
     def __format__(self, key):
         """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
         if key == "tex":
-            mult_sign = '*'
+            mult_sign = ''  # '*'
             tex_expr = ""
             tensors = mult_sign.join([f"{op:tex}" for op in self.tensors])
             fields = mult_sign.join([f"{op:tex}" for op in self.fields])
-            tex_expr += rf"{self.coeff:tex}\\" + "*"
+            tex_expr += rf"{self.coeff:tex}\\" + mult_sign
             if tensors:
                 tex_expr += f"{tensors}{mult_sign}{fields}"
             else:
@@ -95,13 +96,20 @@ class Summand_Model(Tensor, Field, Coefficient):
 
     @property
     def fieldcounter(self):
+        """
+        Returns dictionary, e.g.
+        {'BL': 0, 'WL': 0, 'L': 0, 'Q': 0, 'dC': 0, 'eC': 0, 'uC': 0, 'H': 1,
+        'H+': 1, 'L+': 0, 'Q+': 0, 'dC+': 0, 'eC+': 0, 'uC+': 0, 'BL+': 0, 'WL+': 0}
+        which tells that there are one ordinary and one conjugated Higgs field in the Summand.
+        Returns
+        -------
+        """
         fieldcount = {key.name: 0 for key in model.fields.values()}
-        # op = {**op_config["bosonfields"], **op_config["fermionfields"]}
-        autoeft_projection = {autoeft: projection for field_name, field in {**op_config["bosonfields"], **op_config["fermionfields"]}.items() if field_name != "D" for projection, autoeft in field["autoeft"].items()}
+        autoeft_to_projection = {autoeft: projection for field_name, field in {**op_config["bosonfields"], **op_config["fermionfields"]}.items() if field_name != "D" for projection, autoeft in field["autoeft"].items()}
         for field in self.fields:
             try:
                 for counted_field in fieldcount.keys():
-                    if autoeft_projection[counted_field] == field.name:
+                    if autoeft_to_projection[counted_field] == field.name:
                         fieldcount[counted_field] += 1
                         break
             except KeyError:
@@ -112,11 +120,37 @@ class Summand_Model(Tensor, Field, Coefficient):
 
     @property
     def fieldcounter_stripped(self):
-        # Remove all 0 entries:
+        """
+        Remove all 0 entries, e.g.:
+        {'BL': 0, 'WL': 0, 'L': 0, 'Q': 0, 'dC': 0, 'eC': 0, 'uC': 0, 'H': 1,
+        'H+': 1, 'L+': 0, 'Q+': 0, 'dC+': 0, 'eC+': 0, 'uC+': 0, 'BL+': 0, 'WL+': 0}
+        -> {'H': 1, 'H+': 1}
+        """
         fieldcount_s = {field: count for field, count in self.fieldcounter.items() if count != 0}
 
         return fieldcount_s
 
+    @property
+    def fieldstructure(self):
+        """
+        Get the exact field and derivative structure, e.g. term D(uC)*H*H*d+ has structure:
+        ((uC,1),(H,0),(H,0),(d+,0))
+        I.e. a tuple of as many tuple as there are fields in the Summand is return, where each tuple give first,
+        the kind of field at this position and second, the number of derivatives acting on it.
+        """
+        projection_to_autoeft = {projection: autoeft for field_name, field in
+                              {**op_config["bosonfields"], **op_config["fermionfields"]}.items() if field_name != "D"
+                              for projection, autoeft in field["autoeft"].items()}
+        fieldstructure = []
+        for field in self.fields:
+            try:
+                structure = (projection_to_autoeft[field.name] , field.nD)
+                fieldstructure.append(structure)
+            except KeyError:
+                logger.error(f"Field {field.name:s} doesn't have an autoeft translation.")
+                sys.exit("STOP")
+
+        return tuple(fieldstructure)
 
     @property
     def nD(self):

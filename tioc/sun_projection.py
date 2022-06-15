@@ -3,12 +3,16 @@ import sys
 from fractions import Fraction
 from pathlib import Path
 from typing import List, Dict
+from copy import copy
 
 import sage.all
 import sage.matrix as mx
 from sage.rings.rational_field import QQ
 # from tioc.get_FORM.form_read_in import Term_Model, Term_s
 from tioc.get_FORM_refactored.term import TermType
+from tioc.get_FORM_refactored.summand import Summand
+from tioc.get_FORM_refactored.indices import Indices_Operator
+
 
 from autoeft.invariants import SUNTableau, field_projection_operator, symmetrize_tensors
 from autoeft.io import load_basis
@@ -46,6 +50,100 @@ def get_type(terms):
                     single_terms[typ][summand.nD] = TermType(summand, summand.fieldcounter_stripped)
             except KeyError:
                 single_terms[typ] = {summand.nD: TermType(summand,summand.fieldcounter_stripped)}
+
+    return single_terms
+
+def remove_doubles(single_terms):
+    """
+    Remove terms which occur in the exact same way, i.e. only with a different coefficient, more than ones.
+    Parameters
+    ----------
+    single_terms
+
+    Returns
+    -------
+    """
+    def equalize_indices(ref_term: Summand, eq_term: Summand) -> Summand:
+        """
+        Renames indices of the fields for a given Summand eq_term in the same way as in the reference Summand ref_term
+        and replaces them accordingly in the tensors of the eq_term.
+        Parameters
+        ----------
+        ref_term
+            Reference Summand.
+        eq_term
+            Summand for which the indices are equalized.
+        Returns
+        -------
+        """
+        for ref_field, eq_field in zip(ref_term.fields, eq_term.fields):
+            assert ref_field.name == eq_field.name
+            for i, index in enumerate(ref_field.indices):
+                index_tensor_found = False
+                for tensor in eq_term.tensors:
+                    for j, tensor_index in enumerate(tensor.indices):
+                        if tensor_index.indname == eq_field.indices[i].indname:
+                            index_tensor_found = True
+                            print(f"{index} -> {index.dual_index}")
+                            tensor.indices[j] = index.dual_index
+                            break
+                    if index_tensor_found: break
+                # Replace Field index afterwards to ensure that contraction stay the same.
+                eq_field.indices[i] = index
+        # FIXME: Contractions within tensors like for example between 2 Yukawa matrices are still allowed.
+
+        #  Contractions within tensors like for example between 2 Yukawa matrices are still allowed, but occur also
+        #  only between Yukawa matrices.
+        ref_tensor_indices = Indices_Operator([])  # All indices occuring in the tensors of ref_term
+        for ref_tensor in ref_term.tensors:
+            ref_tensor_indices += ref_tensor.indices
+        eq_tensor_indices = Indices_Operator([])  # All indices occuring in the tensors of eq_term
+        for eq_tensor in eq_term.tensors:
+            eq_tensor_indices += eq_tensor.indices
+
+        ref_tensor_indices = list(ref_tensor_indices.indices)
+        eq_tensor_indices = list(eq_tensor_indices.indices)
+        # Remove double indices in eq_tensor_indices and ref_tensor_indices
+        for index in ref_tensor_indices.copy():
+            while index.is_in(ref_tensor_indices) > 1:
+                ref_tensor_indices.remove(index)
+        for index in eq_tensor_indices.copy():
+            while index.is_in(eq_tensor_indices) > 1:
+                eq_tensor_indices.remove(index)
+        # Remove all indices from eq_tensor_indices which are already in ref_tensor_indices, so that only non renamed
+        # indices in eq_tensor_indices remain:
+        eq_tensor_indices_copy = eq_tensor_indices.copy()
+        for index in eq_tensor_indices_copy:
+            if index.is_in(ref_tensor_indices):
+                eq_tensor_indices.remove(index)
+        for index in ref_tensor_indices.copy():
+            if index.is_in(eq_tensor_indices_copy):
+                ref_tensor_indices.remove(index)
+        eq_tensor_indices = tuple(eq_tensor_indices)
+        ref_tensor_indices = tuple(ref_tensor_indices)
+        # Worst case:
+        # In  eq_term: [ye+](flav2765,flav3459)*ye(flav3459,flav2991)*[ye+](flav2991,flav3648)
+        # In ref_term: [ye+](flav2765,flav2917)*ye(flav2917,flav3140)*[ye+](flav3140,flav3648)
+        # -> Replace the Indices of outer Yukawa matrices, since for them the contraction is clear.
+        # TODO: Implement this.
+        # Possible problem when there are two identical Yukawa matrices!
+
+        return eq_term
+
+
+    for type in single_terms.values():
+        for term_mass_dim in type.values():
+            term_with_specific_field_structure = {}
+            for term in term_mass_dim.terms:
+                try:
+                    term_with_specific_field_structure[term.fieldstructure].append(term)
+                except KeyError:
+                    term_with_specific_field_structure[term.fieldstructure] = [term]
+            for terms_specific in term_with_specific_field_structure.values():
+                for term in terms_specific[1:]:
+                    term = equalize_indices(terms_specific[0], term)
+
+            print(term_with_specific_field_structure)
 
     return single_terms
 

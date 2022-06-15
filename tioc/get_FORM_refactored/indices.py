@@ -81,16 +81,16 @@ class Indices_Model(Index):
         else:
             return self.indices[ii]
 
+    def __setitem__(self, ii, val):
+        indices = list(self.indices)
+        assert type(val) == Index
+        indices[ii] = val
+        self.indices = tuple(indices)
+
     # def __delitem__(self, ii):
     #     """Delete an item"""
     #     del self.indices[ii]
     #
-    # def __setitem__(self, ii, val):
-    #     # optional: self._acl_check(val)
-    #     self.indices[ii] = val
-
-    # def append(self, val):
-    #     self.insert(len(self._list), val)
 
     @staticmethod
     def infinite_Indices(finite_list, max=5):
@@ -246,7 +246,6 @@ class Indices_Summand(Indices_Model):
         uncontractedInd_tmp = uncontractedInd.copy()
         # uncontractedInd_tmp = list(map(str, uncontractedInd_tmp))
         # Consider now the possible uncontracted indices which can only be SL2C-indices:
-        # TODO: Check
         for index in uncontractedInd_tmp:
             if (index.typ == "Usl" and Index(f"Lsl{index.id}") in uncontractedInd) or (index.typ == "Lsl" and Index(f"Usl{index.id}") in uncontractedInd):
                 contract += [True, True]
@@ -268,14 +267,6 @@ class Indices_Summand(Indices_Model):
                 while index.is_in(reduced_indices) > 1:
                     reduced_indices.remove(index)
 
-            # for index in fp_indices:
-            #     # if index.typ is not in ["Lsl", "Usl", "Lsldot", "Usldot"]:
-            #
-            #     while reduced_indices.count(index) > 1:
-            #         reduced_indices.remove(index)
-            #     # else:
-            #     #     cop = reduced_indices.copy()
-            #     #     while :
             self._indices = tuple(reduced_indices)
         else:
             logger.error(f"Not all indices are contracted. The indices {', '.join(map(str,uncontractedInd_tmp))} are not contracted.")

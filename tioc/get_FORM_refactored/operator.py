@@ -135,16 +135,38 @@ class Operator_Model(Index):
 
     @property
     def expr(self):
-        return self._expr
+        if type(self) == Tensor:
+            expr = self.name
+            expr += f"({','.join(map(str, self.indices))})"
+        elif type(self) == Field:
+            cov = op_config['fermionfields']['D']['mathematica']['cov']
+            expr = ""
+            if self.nD > 0:
+                # Term contain derivatives
+                for i in range(1, self.nD + 1):
+                    expr += f"{cov}({','.join(map(str, [nonD_index for nonD_index in self.indices if nonD_index.derIndex == i]))},"
+            n_brackets = self.nD * ")"
+            expr += self.name
+            non_Derivative_indices = [nonD_index for nonD_index in self.indices if not nonD_index.derIndex]
+            expr += f"({','.join(map(str, non_Derivative_indices))})"
+
+            expr += n_brackets
+
+        # print(f"{self._expr} == {expr}")
+        if self._expr != expr:
+            logger.debug(f"Expression changed from {self._expr:s} to {expr:s}.")
+        # assert self._expr == expr
+        return expr
+        # return self._expr
 
     @expr.setter
-    def expr(self, fp_epxr):
+    def expr(self, fp_expr):
         """
         Set expression of the operator and extract the name and a string tuple of indices.
         Returns
         -------
         """
-        names, op_indices, self.nD, der_indices = Operator_Model.read_in_operator(fp_epxr)
+        names, op_indices, self.nD, der_indices = Operator_Model.read_in_operator(fp_expr)
         self.name, self.isconj, self.non_conj_name = names # names[0], names[1], names[2]
         self.indices = Indices_Operator(der_indices + op_indices)
         # Indexstructure of the operator only without the derivative.
@@ -165,7 +187,7 @@ class Operator_Model(Index):
         elif type(self) == Field:
             assertion(ind_structure, "field", self.non_conj_name)
 
-        self._expr = fp_epxr
+        self._expr = fp_expr
 
     @property
     def tex(self):

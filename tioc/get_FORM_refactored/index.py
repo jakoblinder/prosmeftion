@@ -120,6 +120,24 @@ class Index_Model(ABC):
         description_expr = index_config[self.typ]["description"]
         return description_expr
 
+    @property
+    def dual_index(self):
+        """
+        Returns dual index, i.e. for a lowered index, the upper one and for an upper the lower index. If they are the same
+        it just returns the same index.
+        """
+        if self.typ == "Lsl":
+            expr = f"Usl{self.id}"
+        elif self.typ == "Usl":
+            expr = f"Lsl{self.id}"
+        elif self.typ == "Lsldot":
+            expr = f"Usldot{self.id}"
+        elif self.typ == "Usldot":
+            expr = f"Lsldot{self.id}"
+        else:
+            expr = self.expr
+        return type(self)(expr, derIndex=self.derIndex)
+
     def is_in(self,listofIndices):
         """
         Checks if index(self) exists in the given list of Indices.

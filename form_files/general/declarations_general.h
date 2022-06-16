@@ -4,7 +4,7 @@ CFunction yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [su2dK
 CFunction sigma, sigmabar;
 CFunction sigma2, sigmabar2;
 * Auxiliary antisymmtric epsilons, used in combination with replace_.
-CFunction [su2eps]A(antisymmetric), [su3eps]A(antisymmetric), [sl2Ceps]A(antisymmetric);
+CFunction [su2epsA](antisymmetric), [su3epsA](antisymmetric), [sl2CepsA](antisymmetric);
 
 * Declare Kronecker Delta symbol for Sl2C Indices, because built in can not handle upper and lower (un-)dottet indices.
 * Since two indices are also symmetric when they are cyclic and vice versa and pattern matching is not allowed for symmetric function but for cyclic it is, [sl2CdK] is declared as cyclic.

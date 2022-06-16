@@ -76,7 +76,7 @@ def main():
     # TODO: Put those terms again inside form, to combine them there.
 
     # TODO: Substitute epsilons of terms with sun projected basis for terms which have already a sun_projection.
-    #  Combine those expressions while writting sun basis tensors as TSU2[i, gauge123, gauge456, ...]
+    #  Combine those expressions while writing sun basis tensors as TSU2[i, gauge123, gauge456, ...]
     #  -> Need new read in method for those kind of tensors.
 
     return single_terms

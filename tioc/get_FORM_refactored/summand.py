@@ -59,6 +59,11 @@ class Summand_Model(Tensor, Field, Coefficient):
             else:
                 tex_expr += f"{fields}"
             return tex_expr
+        elif key == "complete" or key == "c":
+            coeff = self.coeff
+            tensor = "*".join(map(str, self.tensors))
+            contractedOp = "*".join(map(str, self.fields))
+            return f"({coeff})*{tensor:s}*{contractedOp:s}"
         else:
             return self.__repr__()
 

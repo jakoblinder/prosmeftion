@@ -353,6 +353,16 @@ def coefficient_handling():
     with open(FORM_GENERAL_PATH / "positiveTerm.prc", "w") as file:
         file.write(form_positiveTerm)
 
+def get_antisymEps(eps:str):
+    """
+    Returns antisymmetric FORM expression of epsilon tensor.
+    E.g.: su2eps -> su2epsA; [su2eps] -> [su2epsA].
+    """
+    if eps[-1] == ']':
+        return eps[:-1] + "A]"
+    else:
+        return eps + "A"
+
 def form_declarations():
     """
     Contains all general declarations valid for any term, i.e. for example the declaration of all fields and indices.
@@ -370,7 +380,7 @@ def form_declarations():
     form += "* Auxiliary antisymmtric epsilons, used in combination with replace_.\n"
     eps = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if
            "eps" in tensor_name]
-    form += f"CFunction {', '.join(map(lambda text: text + 'A(antisymmetric)', eps))};\n"  # sl2CepsA(antisymmetric), su2epsA(antisymmetric), su3epsA(antisymmetric)
+    form += f"CFunction {', '.join(map(lambda text: get_antisymEps(text) + '(antisymmetric)', eps))};\n"  # sl2CepsA(antisymmetric), su2epsA(antisymmetric), su3epsA(antisymmetric)
     form += "\n"
     form += "* Declare Kronecker Delta symbol for Sl2C Indices, because built in can not handle upper and lower (un-)dottet indices.\n"
     form += "* Since two indices are also symmetric when they are cyclic and vice versa and pattern matching is not allowed for symmetric function but for cyclic it is, [sl2CdK] is declared as cyclic.\n"

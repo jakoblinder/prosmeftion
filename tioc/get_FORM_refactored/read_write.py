@@ -105,11 +105,6 @@ def read_form_1d_table(table_file: Path, table_label: str) -> Tuple[str]:
     op_list = []
     with open(table_file, "r") as infile:
         for line in infile.readlines():
-
-            """v3.8
-            if found := pattern_2d_table.fullmatch(line.strip()):
-            """
-
             match = re.match(rf"Fill {table_label}\((?P<opPosition>(\d+))\) = \+ (?P<op>(" + op_pattern + "));", line.strip())
             if match:
                 # print(f"Op {int(match.group('opPosition')):d}: {match.group('op'):s}")
@@ -155,8 +150,8 @@ def get_ops(expr: str, groupOps: List[List[str]], dir_name: Path, maxDimLagr:int
     form += "Function sigma, sigmabar;\n"
     form += "Function sigma2, sigmabar2;\n"
     form += "#include declarations_general.h # coefficient\n"
-    form += "#include declarations_general.h # operators\n"
     form += "#include declarations_general.h # indices\n"
+    form += "#include declarations_general.h # operators\n"
 
     form += "\n"
     if type(groupOps) != list:
@@ -212,10 +207,10 @@ def get_terms(filepath: Path, as_one=False, name:str=""):
     """
     if not as_one:
         assert not name, "The parameter name can only be set, when as_one is True."
-    form = "#include declarations_general.h # tensors\n"
-    form += "#include declarations_general.h # coefficient\n"
-    form += "#include declarations_general.h # operators\n"
+    form = "#include declarations_general.h # coefficient\n"
     form += "#include declarations_general.h # indices\n"
+    form += "#include declarations_general.h # tensors\n"
+    form += "#include declarations_general.h # operators\n"
     form += "\n"
     form += "Local expression = \n"
     form += f"#include {filepath.name}\n"

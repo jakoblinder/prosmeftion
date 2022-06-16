@@ -84,7 +84,7 @@ def remove_doubles(single_terms):
                     for j, tensor_index in enumerate(tensor.indices):
                         if tensor_index.indname == eq_field.indices[i].indname:
                             index_tensor_found = True
-                            print(f"{index} -> {index.dual_index}")
+                            # print(f"{index} -> {index.dual_index}")
                             tensor.indices[j] = index.dual_index
                             break
                     if index_tensor_found: break
@@ -127,6 +127,43 @@ def remove_doubles(single_terms):
         # -> Replace the Indices of outer Yukawa matrices, since for them the contraction is clear.
         # TODO: Implement this.
         # Possible problem when there are two identical Yukawa matrices!
+        while eq_tensor_indices:
+            # contractions only within the tensors exist
+            found = 0
+            for eq_tensor in eq_term.tensors:
+                check = [index.is_in(eq_tensor_indices) for index in eq_tensor.indices]
+                if all(check):
+                    # All indices are unknown, rename therefore first other indices of a different tensor where at least on index is already renamed.
+                    print(f"eq: {eq_tensor}")
+                    continue
+                elif any(check) and not all(check):
+                    # At least one index is already renamed, but also at least one not
+                    for unrenamed, index in zip(check, eq_tensor.indices):
+                        if not unrenamed:
+                            # index is already renamed
+                            # print(f"{eq_tensor.indices}: {index}")
+                            # Find in ref_term.tensors tensor with the same index
+                            print("========")
+                            # found = 0
+                            for ref_tensor in ref_term.tensors:
+                                if index.is_in(ref_tensor.indices):
+                                    ref_check = [ref_index.is_in(ref_tensor_indices) for ref_index in ref_tensor.indices]  # specifies which index has to be renamed
+                                    for newname, ref_index in zip(check, ref_tensor.indices):
+                                        pass
+
+                                    print(f"Eq: {eq_tensor} <--> Ref: {ref_tensor}")
+                                    print("-------")
+                                    found += 1
+                            print(found)
+                            # assert found == 0 or found == 2
+
+                # print(check)
+                # print(any(check))
+                # print(all(check))
+
+                # for i, tensor_index in enumerate(tensor.indices):
+                #     if tensor_index.indname == eq_field.indices[i].indname:
+
 
         return eq_term
 
@@ -143,7 +180,7 @@ def remove_doubles(single_terms):
                 for term in terms_specific[1:]:
                     term = equalize_indices(terms_specific[0], term)
 
-            print(term_with_specific_field_structure)
+            # print(term_with_specific_field_structure)
 
     return single_terms
 

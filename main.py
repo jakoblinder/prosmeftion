@@ -44,15 +44,15 @@ logger.info(timestamp.replace(microsecond=0).isoformat())
 
 
 def main():
-    # bs_file = args.matched.resolve()  # "exampleOutputBS.m"
-    #
-    # with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
-    #     file.write(form_declarations())
-    #
-    # terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
-    # del bs_file
+    bs_file = args.matched.resolve()  # "exampleOutputBS.m"
+
+    with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
+        file.write(form_declarations())
+
+    terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
+    del bs_file
     # pickle.dump(terms, open(CONFIG_PATH / "terms.p", "wb"))
-    terms = pickle.load(open(CONFIG_PATH / "terms.p", "rb"))
+    # terms = pickle.load(open(CONFIG_PATH / "terms.p", "rb"))
 
     if args.tex:
         tex_unsorted_terms(terms)

@@ -243,6 +243,116 @@ bosons = [form_field for field in op_config["bosonfields"].values() for form_fie
 fermions = [form_field for field in op_config["fermionfields"].values() for form_field in field["mathematica"].values()]
 tensors = [form_field for field in op_config["tensors"].values() for form_field in field["mathematica"].values()]
 
+
+def factorizeCoeff():
+    """
+    Write FORM function which replaces dimensional constants in the coefficient by dimensionless ones.
+    Example
+    -------
+    #procedure factorizeCoeff
+        id At = [At/Ms]*Ms;
+        id mu = [mu/Ms]*Ms;
+        id Mu = [Mu/Ms]*Ms;
+        id muM = [muM/Ms]*Ms;
+    #endprocedure
+    Returns
+    -------
+    List of defined dimensionless constants.
+    """
+    ms = op_config["coefficients"]["Ms"]["mathematica"]["Ms"]  # FORM expression of EFT mass Ms
+
+    dimlessConst = []
+    idStatements = []
+    for key, constant in op_config["coefficients"].items():
+        if key == "I" or key == "Ms":
+            continue
+        if constant["massdim"] != 0:
+            form_coeff = list(constant['mathematica'].values())[0]
+            if constant["massdim"] == 1:
+                dimlessC = f"[{form_coeff:s}/{ms:s}]"
+                dimlessConst.append(dimlessC)
+                idStatements.append(f"id {form_coeff:s} = {dimlessC:s}*{ms:s}")
+            else:
+                dimlessC = f"[{form_coeff:s}/{ms:s}^{constant['massdim']:d}]"
+                dimlessConst.append(dimlessC)
+                idStatements.append(f"id {form_coeff:s} = {dimlessC:s}*{ms:s}^{constant['massdim']:d}")
+
+    form = "#procedure factorizeCoeff\n"
+    for idStatement in idStatements:
+        form += f"\t{idStatement:s};\n"
+    form += "#endprocedure\n"
+    with open(FORM_GENERAL_PATH / "factorizeCoeff.prc", "w") as file:
+        file.write(form)
+
+    return dimlessConst
+
+def coefficient_handling():
+    """
+    Write FORM procedure necessary for formatting the coefficient of each Summand and Term.
+    """
+    ms = op_config["coefficients"]["Ms"]["mathematica"]["Ms"]  # FORM expression of EFT mass Ms
+    # write fractions into frac(nominator, denominator) function
+    form_fractorizeCoeff = """#procedure fractorizeCoeff
+.sort
+\tSymbols u, v, x, y;
+* Get sign
+\tPolyFun sign;
+\t.sort
+* Write positive numerical coefficient in coeff and sign in sign
+\tPolyFun;
+\tid sign(x?) = coeff(sig_(x)*x)*sign(sig_(x));
+\t.sort
+* write everything else in frac function
+\trepeat;"""
+    form_fractorizeCoeff += "\t\tid d?!{" + f"{ms}" + "}^n?pos_ = frac(d^n, 1);\n"
+    form_fractorizeCoeff += "\t\tid d?!{" + f"{ms}" + "}^n?neg_ = frac(1, d^-n);\n"
+    form_fractorizeCoeff += """\tendrepeat;
+* combine the separate fractions
+\trepeat;
+\t\tid frac(u?, v?)*frac(x?, y?) = frac(u * x, v * y);
+\tendrepeat;
+\trepeat;
+\t\tid frac(u?, 1) = u;
+\t\tid sign(x?) = x;
+\t\tid coeff(1) = 1;
+\tendrepeat;
+\t.sort\n"""
+    # Write the expansion mass Ms outside of a bracket
+    form_fractorizeCoeff += f"\tBracket {ms};\n"
+    form_fractorizeCoeff += """\t.sort
+\tCollect bbracket;
+#endprocedure"""
+    with open(FORM_GENERAL_PATH / "fractorizeCoeff.prc", "w") as file:
+        file.write(form_fractorizeCoeff)
+    #  Ensure that the first term in each bracket has a positive sign
+    form_positiveTerm = """#procedure positiveTerm
+.sort
+* Ensure that first term in the bracket is positive
+\tid bbracket(x?$inb) = bbracket(x);
+* Save original expression in order to work only on the first term
+\t$coeffic = coefficient;
+\t.sort
+\tCFunction bsign;
+\tDrop coefficient;
+* Get only the first term and its sign
+\tLocal FirstTerm = firstterm_($inb);
+\t.sort
+\tPolyFun bsign;
+\t.sort
+\tPolyFun;
+\tid bsign(x?$s) = bsign(x);
+\t$sign = sig_($s);
+*	Print "Sign: %$", $sign;
+\t.sort
+\tDrop FirstTerm;
+* restore original expression
+\tLocal coefficient = $coeffic;
+* ensure that the first term in the bracket is positive
+\tid bbracket(x?) = $sign*bbracket($sign*x);
+#endprocedure"""
+    with open(FORM_GENERAL_PATH / "positiveTerm.prc", "w") as file:
+        file.write(form_positiveTerm)
+
 def form_declarations():
     """
     Contains all general declarations valid for any term, i.e. for example the declaration of all fields and indices.
@@ -270,9 +380,29 @@ def form_declarations():
     form += "\n"
     form += "*--#] tensors :\n"
     form += "\n"
-    form += "*--#[ declarations :\n"
+    form += "*--#[ coefficient :\n"
     # Coefficient
-    form += f"CFunction {', '.join(coeff)};\n"
+    form += f"Symbols {', '.join(coeff + ['n'])};\n" # Symbols d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]], n;
+
+    # ms = op_config["coefficients"]["Ms"]["mathematica"]["Ms"]  # FORM expression of EFT mass Ms
+    # dimlessConst = []
+    # for key, constant in op_config["coefficients"].items():
+    #     if key == "I" or key == "Ms":
+    #         continue
+    #     if constant["massdim"] != 0:
+    #         form_coeff = list(constant['mathematica'].values())[0]
+    #         if constant["massdim"] == 1:
+    #             dimlessC = f"[{form_coeff:s}/{ms:s}]"
+    #             dimlessConst.append(dimlessC)
+    #         else:
+    #             dimlessC = f"[{form_coeff:s}/{ms:s}^{constant['massdim']:d}]"
+    #             dimlessConst.append(dimlessC)
+    dimlessConst = factorizeCoeff()
+    form += f"Symbols {', '.join(dimlessConst):s};\n"  # Symbols [At/Ms], [mu/Ms], [Mu/Ms], [muM/Ms];
+    form += "*--#] coefficient :\n"
+    form += "\n"
+    form += "*--#[ operators :\n"
+    form += "Off Statistics;\n"
     # write commuting and anti-commuting operators of each term in separate list for initialization. Thus
     # Duplicated operators are removed.
     def get_commuting_op(op):
@@ -306,6 +436,9 @@ def form_declarations():
     form += f"Set spinorsAdjc: {', '.join(map(get_commuting_op, adjspinors))};\n"
     form += f"Set spinorsAllc: {', '.join(map(get_commuting_op, spinors + adjspinors))};\n"
     form += "\n"
+    form += "*--#] operators :\n"
+    form += "\n"
+    form += "*--#[ indices :\n"
     form += """AutoDeclare Indices lor      = 4; * 4d Lorentz index
 AutoDeclare Indices lorA     = 4; * Auxiliary 4d Lorentz index
 AutoDeclare Indices spin     = 4; * Index for Gamma matrices/ spinor index
@@ -325,8 +458,9 @@ AutoDeclare Indices Usldot   = 2; * SL2C Index"""
     form += "AutoDeclare Indices op; * auxiliary index for converting between commuting and noncommuting operators.\n\n"
     form += "* Declare some Symbols for pattern matching\n"
     form += "Symbols k,m;\n"
-    form += "Off Statistics;\n"
-    form += "*--#] declarations :\n"  # trailing "\n" important otherwise form will not find the "fold" declarations
+    form += "*--#] indices :\n"  # trailing "\n" important otherwise form will not find the "fold" declarations
+
+    coefficient_handling()
 
     return form
 

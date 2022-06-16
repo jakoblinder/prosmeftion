@@ -21,7 +21,7 @@ class Indices_Model(Index):
                         r"\iota", r"\kappa", r"\lambda", r"\mu", r"\nu", r"\omicron", r"\pi", r"\rho", r"\sigma",
                         r"\tau", r"\upsilon", r"\phi", r"\chi", r"\psi", r"\omega",
                         ]
-    alpha_beta_gamma_dot = list(map(lambda ind : f"\dot{{{ind}}}", alpha_beta_gamma))
+    alpha_beta_gamma_dot = list(map(lambda ind : rf"\dot{{{ind}}}", alpha_beta_gamma))
 
     @abstractmethod
     def __init__(self, indices: Tuple[Index], allow_uncontracted=False):
@@ -133,7 +133,7 @@ class Indices_Model(Index):
 
     @staticmethod
     def get_tex_range(tex_indices):
-        """
+        r"""
         Create finite list of indices out of specified range or by numbering a single given index.
         Parameters
         ----------

@@ -7,12 +7,12 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 
 from tioc import run_form, op_config, coeff
-from tioc import escape_regex, PROJECTION_PATH, FORM_PATH
+from tioc import escape_regex, PROJECTION_PATH, FORM_PATH, FORM_GENERAL_PATH
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild("coefficient")
 
 class Coefficient_Model(ABC):
-    """
+    r"""
     A class describing the coefficient in a term.
     Example coefficient (of term 18):
         +At*(-72*(4+3*eps)*kappa*Ms^4*mu+36*At^2*mu*(-3*eps*Ms^2+eps^2*Ms^2-8*Mu^2-8*eps*Mu^2)
@@ -106,99 +106,22 @@ class Coefficient_Model(ABC):
         ms = op_config["coefficients"]["Ms"]["mathematica"]["Ms"]  # FORM expression of EFT mass Ms
 
         form = "Off statistics;\n"
-        form += f"Symbols {', '.join(coeff + ['n'])};\n" # Symbols d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]];
+        form += "#include declarations_general.h # coefficient\n"
         form += "\n"
-
-        if self.output_dimless:
-            dimlessConst = []
-            idStatements = []
-            for key, constant in op_config["coefficients"].items():
-                if key == "I" or key == "Ms":
-                    continue
-                if constant["massdim"] != 0:
-                    form_coeff = list(constant['mathematica'].values())[0]
-                    if constant["massdim"] == 1:
-                        dimlessC = f"[{form_coeff:s}/{ms:s}]"
-                        dimlessConst.append(dimlessC)
-                        idStatements.append(f"id {form_coeff:s} = {dimlessC:s}*{ms:s}")
-                    else:
-                        dimlessC = f"[{form_coeff:s}/{ms:s}^{constant['massdim']:d}]"
-                        dimlessConst.append(dimlessC)
-                        idStatements.append(f"id {form_coeff:s} = {dimlessC:s}*{ms:s}^{constant['massdim']:d}")
-            form += f"Symbols {', '.join(dimlessConst):s};\n"
-
         form += f"Local coefficient = {self.expr:s};\n"
         form += ".sort\n"
         form += "\n"
 
         if self.output_dimless:
-            form_factorizeCoeff = "#procedure factorizeCoeff\n"
-            for idStatement in idStatements:
-                form_factorizeCoeff += f"\t{idStatement:s};\n"
-            form_factorizeCoeff += "#endprocedure\n"
-            with open(TERM_PATH / "factorizeCoeff.prc", "w") as file:
-                file.write(form_factorizeCoeff)
-
-            form += "\n"
             form += "#call factorizeCoeff\n"
             form += ".sort\n"
 
         form += "CFunction sign, coeff, frac;\n"
-        form += "Symbols u, v, x, y;\n"
-        form += "* Get sign\n"
-        form += "PolyFun sign;\n"
-        form += ".sort\n"
-        form += "* Write positive numerical coefficient in coeff and sign in sign\n"
-        form += "PolyFun;\n"
-        form += "id sign(x?) = coeff(sig_(x)*x)*sign(sig_(x));\n"
-        form += ".sort\n"
-        form += "* write everything else in frac function\n"
-        form += "repeat;\n"
-        form += "\tid d?!{" + f"{ms}" + "}^n?pos_ = frac(d^n, 1);\n"
-        form += "\tid d?!{" + f"{ms}" + "}^n?neg_ = frac(1, d^-n);\n"
-        form += "endrepeat;\n"
-        form += "* combine the separate fractions\n"
-        form += "repeat;\n"
-        form += "\tid frac(u?, v?)*frac(x?, y?) = frac(u * x, v * y);\n"
-        form += "endrepeat;\n"
-        form += "repeat;\n"
-        form += "\tid frac(u?, 1) = u;\n"
-        form += "\tid sign(x?) = x;\n"
-        form += "\tid coeff(1) = 1;\n"
-        form += "endrepeat;\n"
-        form += ".sort\n"
-        # Write the expansion mass Ms outside of a bracket
         form += "CFunction bbracket;\n"
-        form += "Bracket Ms;\n"
-        form += ".sort\n"
-        form += "Collect bbracket;\n"
+        # write fractions into frac(nominator, denominator) function
+        form += "#call fractorizeCoeff\n"
         #  Ensure that the first term in each bracket has a positive sign
-        form += ".sort\n"
-        form += """#procedure positiveTerm
-* Ensure that first term in the bracket is positive
-\tid bbracket(x?$inb) = bbracket(x);
-* Save original expression in order to work only on the first term
-\t$coeffic = coefficient;
-\t.sort
-\tCFunction bsign;
-\tDrop coefficient;
-* Get only the first term and its sign
-\tLocal FirstTerm = firstterm_($inb);
-\t.sort
-\tPolyFun bsign;
-\t.sort
-\tPolyFun;
-\tid bsign(x?$s) = bsign(x);
-\t$sign = sig_($s);
-*	Print "Sign: %$", $sign;
-\t.sort
-\tDrop FirstTerm;
-* restore original expression
-\tLocal coefficient = $coeffic;
-* ensure that the first term in the bracket is positive
-\tid bbracket(x?) = $sign*bbracket($sign*x);
-#endprocedure
-#call positiveTerm"""
+        form += "#call positiveTerm\n"
         # Rewrite everything in Latex notation
         form += "* Rewrite everything in Latex notation\n"
         form += "#OpenDictionary constants\n"
@@ -234,7 +157,7 @@ class Coefficient_Model(ABC):
         with open(TERM_PATH / "tex_coefficient.frm", "w") as file:
             file.write(form)
 
-        output = run_form(fp_cwd=TERM_PATH, filename="tex_coefficient.frm", keep_backslash=True)
+        output = run_form(fp_cwd=TERM_PATH, filename="tex_coefficient.frm", fp_p=FORM_GENERAL_PATH, keep_backslash=True)
         # write the newly formatted expression in the expression attribute.
         output = re.sub(r"(\s)*", "", output)  # Remove all whitespaces and newlines: \s = [\t\n\r\f\v]
         pattern = r"(?<!Local)coefficient=(?P<coefficient>.*);"
@@ -257,12 +180,14 @@ class Coefficient_Model(ABC):
 
             # The Expression should look like: bbracket(<a bunch of terms here>)*Ms^-n -> \left(<a bunch of terms here>\right)*M_{s}^{-n}
             tex = re.sub(r"bbracket\((?P<summands>.+)\)\*" + escape_regex(op_config["coefficients"]["Ms"]["tex"]) + r"\^(?P<exponent>-?\d{1,2})",
-                         r"\\" + r"left(" + r"\g<summands>" + r"\\" + r"right)*" + op_config["coefficients"]["Ms"]["tex"] + r"^{\g<exponent>}", tex)
+                         r"\\" + r"left(" + r"\g<summands>" + r"\\" + rf"right)*" + op_config["coefficients"]["Ms"]["tex"] + r"^{\g<exponent>}", tex)
 
             # Subistute terms where n = 0, i.e. Ms^n = 1:
             tex = re.sub(r"bbracket\((?P<summands>.+)\)\Z",
                          r"\\" + r"left(" + r"\g<summands>" + r"\\" + r"right)",
                          tex)
+            multSign = ""
+            tex = re.sub(r"\*", f"{multSign} ", tex)
         else:
             logger.error(f"No coefficient has been found in {output}.")
             sys.exit("STOP")
@@ -298,41 +223,21 @@ class Coefficient(Coefficient_Model):
         """
         TERM_PATH = FORM_PATH / self.name
         TERM_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
-        form = f"Symbols {', '.join(coeff + ['n'])};\n" # Symbols d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]];
-        form += "\n"
-        dimlessConst = []
-        idStatements = []
-        ms = op_config["coefficients"]["Ms"]["mathematica"]["Ms"]
-        for key, constant in op_config["coefficients"].items():
-            if key == "I" or key == "Ms":
-                continue
-            if constant["massdim"] != 0:
-                form_coeff = list(constant['mathematica'].values())[0]
-                if constant["massdim"] == 1:
-                    dimlessC = f"[{form_coeff:s}/{ms:s}]"
-                    dimlessConst.append(dimlessC)
-                    idStatements.append(f"id {form_coeff:s} = {dimlessC:s}*{ms:s}")
-                else:
-                    dimlessC = f"[{form_coeff:s}/{ms:s}^{constant['massdim']:d}]"
-                    dimlessConst.append(dimlessC)
-                    idStatements.append(f"id {form_coeff:s} = {dimlessC:s}*{ms:s}^{constant['massdim']:d}")
-        form += f"Symbols {', '.join(dimlessConst):s};\n"
+
+        ms = op_config["coefficients"]["Ms"]["mathematica"]["Ms"]  # FORM expression of EFT mass Ms
+
+        form = "Off statistics;\n"
+        form += "#include declarations_general.h # coefficient\n"
         form += "\n"
 
         form += f"Local coefficient = {self.expr:s};\n"
         form += ".sort\n"
-
-        form_factorizeCoeff = "#procedure factorizeCoeff\n"
-        for idStatement in idStatements:
-            form_factorizeCoeff += f"\t{idStatement:s};\n"
-        form_factorizeCoeff += "#endprocedure\n"
-        with open(TERM_PATH / "factorizeCoeff.prc", "w") as file:
-            file.write(form_factorizeCoeff)
-
         form += "\n"
-        form += "#call factorizeCoeff\n"
+        if self.output_dimless:
+            form += "#call factorizeCoeff\n"
+            form += ".sort\n"
         form += "\n"
-        form += "id Ms^n?$dim = Ms^n;\n"
+        form += f"id {ms}^n?$dim = {ms}^n;\n"
         form += "$dim = 4 - $dim;\n"
         form += "\n"
         form += ".sort\n"
@@ -346,7 +251,7 @@ class Coefficient(Coefficient_Model):
         with open(TERM_PATH / "get_dimension.frm", "w") as file:
             file.write(form)
 
-        run_form(fp_cwd=TERM_PATH, filename="get_dimension.frm")
+        run_form(fp_cwd=TERM_PATH, fp_p=FORM_GENERAL_PATH, filename="get_dimension.frm")
 
         with open(FILE_PATH, "r") as file:
             match = re.match(r"dim = (?P<dim>\d{1,2})", file.read())

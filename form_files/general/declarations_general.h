@@ -12,8 +12,13 @@ CFunction [su2dK](cyclic), [su3dK](cyclic), [sl2CdK](cyclic);
 
 *--#] tensors :
 
-*--#[ declarations :
-CFunction d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]];
+*--#[ coefficient :
+Symbols d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]], n;
+Symbols [At/Ms], [mu/Ms], [Mu/Ms], [muM/Ms];
+*--#] coefficient :
+
+*--#[ operators :
+Off Statistics;
 Function H, [H+], G, W, B, GL, GR, WL, WR, BL, BR;
 CFunction Hc, [H+c], Gc, Wc, Bc, GLc, GRc, WLc, WRc, BLc, BRc;
 
@@ -32,6 +37,9 @@ Set spinorsc: lc, ec, [e_Cc], uc, [u_Cc], bc, [d_Cc], qc;
 Set spinorsAdjc: lbarc, ebarc, [e_C+c], ubarc, [u_C+c], bbarc, [d_C+c], qbarc;
 Set spinorsAllc: lc, ec, [e_Cc], uc, [u_Cc], bc, [d_Cc], qc, lbarc, ebarc, [e_C+c], ubarc, [u_C+c], bbarc, [d_C+c], qbarc;
 
+*--#] operators :
+
+*--#[ indices :
 AutoDeclare Indices lor      = 4; * 4d Lorentz index
 AutoDeclare Indices lorA     = 4; * Auxiliary 4d Lorentz index
 AutoDeclare Indices spin     = 4; * Index for Gamma matrices/ spinor index
@@ -52,5 +60,4 @@ AutoDeclare Indices op; * auxiliary index for converting between commuting and n
 
 * Declare some Symbols for pattern matching
 Symbols k,m;
-Off Statistics;
-*--#] declarations :
+*--#] indices :

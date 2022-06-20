@@ -535,6 +535,5 @@ abbreviation:
       description: "[2L[Ms,muM]]"
       tex: \ln{\frac{M_{s}^{2}}{\mu_{M}^{2}}}
       mathematica:
-      #TODO
         "L[Ms^2,muM^2]": "[2L[Ms,muM]]"
     

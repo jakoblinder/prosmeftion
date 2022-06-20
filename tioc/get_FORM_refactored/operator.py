@@ -4,10 +4,11 @@ import sys
 from yaml import safe_load
 from typing import Dict, List, Tuple
 from abc import ABC, abstractmethod
+from collections.abc import MutableMapping
 from copy import copy
 
-from tioc import CONFIG_PATH, op_config, escape_regex, model, index_config, op_pattern, index_pattern, op_name_pattern
-from .index import Index
+from tioc import CONFIG_PATH, op_config, escape_regex, model, index_config, op_pattern, index_pattern, dummy_index_pattern, op_name_pattern
+from .index import Index, Dummy_Index
 from .indices import Indices_Operator
 from tioc import index_number_pattern as inp
 
@@ -79,9 +80,8 @@ class Operator_Model(Index):
                 index = v.group("index")
                 der_indices.append(Index(index, derIndex=i+1))
             nD = len(matches_lor)
-            op = expression[matches_lor[-1].end(): (-1)*len(matches_lor)] # TODO: nicht matches_lor[-1].end() +1 ?
+            op = expression[matches_lor[-1].end(): (-1)*len(matches_lor)]
         elif any(matches_sl2C):
-            # TODO: Check
             for i, v in enumerate(matches_sl2C):
                 index1 = v.group("index1")
                 index2 = v.group("index2")
@@ -117,12 +117,18 @@ class Operator_Model(Index):
             for index in indices:
                 # use match here in order to assure that one matches the start of the index.
                 match = re.match(r"(?P<index>" + index_pattern + r")", index)
+                # TODO: Insert dummy Index handlement.
                 if match:
-                    index = match.group("index")
-                    op_indices.append(Index(index))
+                    index_matched = match.group("index")
+                    op_indices.append(Index(index_matched))
                 else:
-                    logger.error("Index can not be identified.")
-                    sys.exit("STOP")
+                    match_dummy = re.match(dummy_index_pattern, index)
+                    if match_dummy:
+                        index_matched = Dummy_Index(int(match_dummy.group("number")))
+                        op_indices.append(index_matched)
+                    else:
+                        logger.error("Index can not be identified.")
+                        sys.exit("STOP")
             # matches = list(re.finditer(r"(?P<index>" + index_pattern + r")", indices))
             # if any(matches):
             #     for match in matches:
@@ -168,24 +174,49 @@ class Operator_Model(Index):
         """
         names, op_indices, self.nD, der_indices = Operator_Model.read_in_operator(fp_expr)
         self.name, self.isconj, self.non_conj_name = names # names[0], names[1], names[2]
-        self.indices = Indices_Operator(der_indices + op_indices)
+        # self.indices = Indices_Operator(der_indices + op_indices)
         # Indexstructure of the operator only without the derivative.
         ind_structure = [index.typ for index in op_indices]
-        def assertion(ind_structure_op, fieldtype, non_conj_name):
+        def assertion(der_indices, op_indices, fieldtype, non_conj_name):
+            indices = Indices_Operator(der_indices + op_indices)
+            # Indexstructure of the operator only without the derivative.
+            ind_structure_op = [index.typ for index in op_indices]
             if fieldtype == "tensors":
                 ind_structure = op_config[fieldtype][non_conj_name]["index_structure"]
             else:
                 bosonsANDfermions = {**op_config["bosonfields"], **op_config["fermionfields"]}
                 ind_structure = bosonsANDfermions[non_conj_name]["index_structure"]
 
+            # Check that index structure matches:
             if ind_structure_op not in ind_structure:
-                logger.error("Indexstructure doesn't match the required structure for this field.")
-                sys.exit("STOP")
+                structure_match = [[1 if ind_structure_op[i] == should_index else 0 for i, should_index in enumerate(ind_struc)] for ind_struc in ind_structure]
+                dummy_in_indices = [True if index_typ == "dummy" else False for index_typ in ind_structure_op]
+                if all(dummy_in_indices):
+                    # Since dummy indices should in general only occur in tensors and those are rewritten such that
+                    # they only have fundamental indices, i.e. only indices of the same type, for each tensor which
+                    # could occur here the 'ind_structure' should consist of only one unique possible structure.
+                    # Thus, even for tensors with only dummy indices, the will_be_typ of the index can be determined.
+                    # As a small check it is ensured that the type of the field is really a tensor.
+                    assert fieldtype == "tensors"
+                if any(dummy_in_indices):
+                    best_matches = [sum(match) for match in structure_match]
+                    if max(best_matches) > 0 or all(dummy_in_indices):
+                        best_match = ind_structure[best_matches.index(max(best_matches))]
+                        for i, should_be_typ in enumerate(best_match):
+                            if op_indices[i].typ == "dummy":
+                                op_indices[i].will_be_typ = should_be_typ
+
+                        assertion(der_indices, op_indices, fieldtype, non_conj_name)
+                else:
+                    logger.error("Indexstructure doesn't match the required structure for this field.")
+                    sys.exit("STOP")
+
+            return indices
 
         if type(self) == Tensor:
-            assertion(ind_structure, "tensors", self.non_conj_name)
+            self.indices = assertion(der_indices, op_indices, "tensors", self.non_conj_name)
         elif type(self) == Field:
-            assertion(ind_structure, "field", self.non_conj_name)
+            self.indices = assertion(der_indices, op_indices, "field", self.non_conj_name)
 
         self._expr = fp_expr
 

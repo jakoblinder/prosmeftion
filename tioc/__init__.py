@@ -89,7 +89,6 @@ opSL2Cvalues = list(opnameSL2C.values())
 spinorsSL2C_c = opnameSL2C_all["auxiliary"]
 spSL2C_c_values = list(spinorsSL2C_c.values())
 
-#TODO: Tex for Fields could be read from the modelfile
 field_config = configurations("fields.yml")
 coeff_config = configurations("coefficients.yml")
 
@@ -223,7 +222,7 @@ for name, index in index_config.items():
         save_set(index, "tex_indices", ind)
         save_set(index_config["cola"], "tex_indices", list(map(str.upper, ind)))
 
-op_pattern = r"[a-zA-Z0-9,\(\)\[\]\+\_]+"
+op_pattern = r"[a-zA-Z0-9,\(\)\[\]\+\_\?]+"
 op_name_pattern = r"[a-zA-Z0-9\[\]\+\_]+"
 index_number_pattern = r"[A-Za-z0-9]+"  # r"[A-Z0-9]+"
 ambiguous_types = ["Lsl", "Usl", "gauge"]
@@ -232,8 +231,9 @@ index_pattern  = r"(?P<typ>"
 index_pattern += r"|".join(indextyp for indextyp in index_config.keys() if indextyp not in ambiguous_types)
 index_pattern += r"|" + r"|".join(map(lambda aType, negAssert: aType + negAssert, ambiguous_types, negative_Assertion))  # Lsl(?!dot)|Usl(?!dot)|gauge(?!adj)
 index_pattern += r")"
-# cannot use "index_number_pattern" in the following, because indices like Uslgauge1234 occur.
+# cannot use "index_number_pattern" in the following, because indices like Usldotgauge1234 occur.
 index_pattern += r"(?P<id>" + index_number_pattern + r")"
+dummy_index_pattern = r"N(?P<number>\d{1,2})\_\?"
 del ambiguous_types
 del negative_Assertion
 
@@ -519,4 +519,29 @@ def run_form(fp_cwd: Path, filename: Path, fp_p: Path = None, keep_backslash = F
         if not keep_backslash:
             output = re.sub(r"\\", "", output)
         return output
+
+def get_expression_from_FORM_output(output: str):
+    """
+    Return only the expression from the FORM output.
+    Parameters
+    ----------
+    output
+
+    Returns
+    -------
+
+    """
+    pattern = r"Print(\+s{1,2})?;(.end)?\n{2}expr=\n{1,2}(?P<expression>(.|\n)*);"
+    pattern_short = r"Print(\+s{1,2})?;(.end)?\n{2}expr=(?P<expression>(.|\n)*);"  # Pattern for extremely short expressions, i.e. fitting in one line.
+    match = re.search(pattern, output)
+    match_short = re.search(pattern_short, output)
+    if match:
+        # expression = re.sub(r"(\s)*", "", match.group("expression"))  # Replace all whitespaces and newlines: \s = [\t\n\r\f\v]
+        return match.group("expression")
+    elif match_short:
+        # expression = re.sub(r"(\s)*", "", match_short.group("expression"))  # Replace all whitespaces and newlines: \s = [\t\n\r\f\v]
+        return match_short.group("expression")
+    else:
+        logger.error(f"No output term has been found in {output}.")
+        sys.exit("STOP")
 

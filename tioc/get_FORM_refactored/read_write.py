@@ -268,14 +268,16 @@ def get_terms(filepath: Path, as_one=False, name:str=""):
         match = re.search(r"coeff", term)
         coeff = term[match.end()+1:-1]
         ops = term[:match.start()-1]
-        t, f = get_ops(expr=ops, groupOps=[tensors, bosons + fermions], dir_name=Path(f"term{i:d}"), maxDimLagr=6, minDimOp=1)
+        if name:
+            t, f = get_ops(expr=ops, groupOps=[tensors, bosons + fermions], dir_name=Path(name), maxDimLagr=6, minDimOp=1)
+        else:
+            t, f = get_ops(expr=ops, groupOps=[tensors, bosons + fermions], dir_name=Path(f"term{i:d}"), maxDimLagr=6, minDimOp=1)
         sorted_terms.append({"tensors": t, "fields": f, "coefficient": coeff})
 
     if as_one:
         terms = Term(sorted_terms, name)
     else:
         # terms = [Term([term], f"term{i:d}") for i, term in enumerate(sorted_terms)]
-
         terms = list(map(Term, [[term] for term in sorted_terms], [f"term{i:d}" for i in range(len(sorted_terms))]))
 
     latex = ""

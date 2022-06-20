@@ -88,6 +88,12 @@ class Index_Model(ABC):
         return id_expr
 
     @property
+    def description(self) -> str:
+        """Some information about the index."""
+        description_expr = index_config[self.typ]["description"]
+        return description_expr
+
+    @property
     def indname(self) -> str:
         """
         E.g.: lor1234, gauge345, Lsldot123, Usldot123 ... have indname: lor-1234, gauge-345, sldot-123, sldot-123 ...
@@ -107,18 +113,6 @@ class Index_Model(ABC):
                 f"The index {self.expr} is not written in a valid index format. An index should look like e.g.: flav67Av89.")
             sys.exit("STOP")
         return indname_expr
-
-    @property
-    def d(self) -> int:
-        """Dimension of the index."""
-        d_expr = index_config[self.typ]["dimension"]
-        return d_expr
-
-    @property
-    def description(self) -> str:
-        """Some information about the index."""
-        description_expr = index_config[self.typ]["description"]
-        return description_expr
 
     @property
     def dual_index(self):
@@ -187,3 +181,54 @@ class Index(Index_Model):
             return f"{self.tex}({self.name})"
         else:
             return self.__repr__()
+
+    @property
+    def d(self) -> int:
+        """Dimension of the index."""
+        d_expr = index_config[self.typ]["dimension"]
+        return d_expr
+
+class Dummy_Index(Index_Model):
+    expr: str
+    typ: str  # gauge, colf, lorentz, etc.
+    id: str  # Number of the dummy index.
+    indname: str  # Ensures clear contractions
+    description: str
+    derIndex: bool or int
+
+    def __init__(self, number: int, derIndex=False):
+        super().__init__(f"N{number:d}_?", derIndex)
+        self.number = number
+        self.will_be_typ = None
+
+    def __repr__(self):
+        return super().__repr__()
+
+    @property
+    def typ(self) -> str:
+        """
+        E.g.: lor1234, gauge345, ... have type lor, gauge, ...
+        """
+        if self.will_be_typ:
+            return self.will_be_typ
+        else:
+            return "dummy"
+
+    @property
+    def id(self) -> str:
+        """
+        E.g.: lor1234, gauge345, ... have id 1234, 345, ...
+        """
+        return self.number
+
+    @property
+    def indname(self) -> str:
+        """
+        E.g.: lor1234, gauge345, Lsldot123, Usldot123 ... have indname: lor-1234, gauge-345, sldot-123, sldot-123 ...
+        """
+        return f"N-{self.id:d}"
+
+    @property
+    def description(self) -> str:
+        """Some information about the index."""
+        return "Dummy index of FORM."

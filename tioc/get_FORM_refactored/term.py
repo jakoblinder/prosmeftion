@@ -62,6 +62,31 @@ class Term_Model(Summand):
         else:
             return self.terms[ii]
 
+    def __setitem__(self, key, value):
+        if not isinstance(key, int) or (isinstance(key, int) and key < 0):
+            logger.error("Key has to be of typ int and >= 0.")
+            sys.exit("STOP")
+        if not isinstance(value, Summand):
+            logger.error("The value which will be set has to be of type Summand.")
+            sys.exit("STOP")
+        logger.error("A Summand cannot be overwritten afterwards.")
+        sys.exit("STOP")
+        # logger.warning(f"The Summand {self.terms[key]:s} will be rewritten with {value:s}.")
+        # self.indices[key] = value
+
+    def __delitem__(self, key):
+        if not isinstance(key, int) or (isinstance(key, int) and key < 0):
+            logger.error("Key has to be of typ int and >= 0.")
+            sys.exit("STOP")
+        logger.error("A Summand cannot be deleted.")
+        sys.exit("STOP")
+        # logger.warning(f"The Summand {self.terms[key]:s} will be deleted.")
+        # del self.indices[key]
+
+    def __iter__(self):
+        return iter(self.terms)
+
+
     def insert(self, ii, val):
         assert type(val) == Summand, f"Inserted expression '{val}' doesn't has the type Summand."
         self.terms.insert(ii, val)

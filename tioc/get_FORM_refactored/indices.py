@@ -3,16 +3,17 @@ from yaml import safe_load
 import logging
 import sys
 from typing import Dict, List, Tuple
+from collections.abc import MutableMapping
 from abc import ABC, abstractmethod
 from copy import copy
 
-from tioc import CONFIG_PATH, index_pattern
+from tioc import CONFIG_PATH, index_pattern, index_config
 from .index import Index
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
-class Indices_Model(Index):
+class Indices_Model(Index, MutableMapping):
     indices: Tuple[Index]  # Tuple of indices in one term.
 
     abc = "abcdefghijklmnopqrstuvwxyz"
@@ -74,23 +75,96 @@ class Indices_Model(Index):
         """List length"""
         return len(self.indices)
 
-    def __getitem__(self, ii):
-        """Get a list item"""
-        if isinstance(ii, slice):
-            return type(self)(self.indices[ii])
-        else:
-            return self.indices[ii]
+    def __getitem__(self, key):
+        """
+        If 'key' is of type slice or int we just get a list item. If 'key' is of type str, all indices or the type indicated
+        by 'key' are returned in their occurring order.
+        Parameters
+        ----------
+        key: int, slice, str
 
-    def __setitem__(self, ii, val):
+        Returns
+        -------
+        """
+        if isinstance(key, int):
+            return self.indices[key]
+        elif isinstance(key, slice):
+            return type(self)(self.indices[key])
+        elif isinstance(key, str):
+            index_types = [indextyp for indextyp in index_config.keys()]
+            index_special_types = ["sl", "sldot"]
+            # index_types = ['lor', 'Lsl', 'Usl', 'Lsldot', 'Usldot', 'spin', 'gauge', 'gaugeadj', 'colf', 'cola', 'flav']
+            if key not in (index_types + index_special_types):
+                logger.error(f"Key {key:s} is not a possible index typ.")
+                sys.exit("STOP")
+            elif key in index_special_types:
+                index_of_typ = []
+                if key == "sl":
+                    for index in self.indices:
+                        if index.typ == "Lsl" or index.typ == "Usl":
+                            index_of_typ.append(index)
+                elif key == "sldot":
+                    for index in self.indices:
+                        if index.typ == "Lsldot" or index.typ == "Usldot":
+                            index_of_typ.append(index)
+            else:
+                index_of_typ = []
+                for index in self.indices:
+                    if index.typ == key:
+                        index_of_typ.append(index)
+            if index_of_typ:
+                return type(self)(tuple(index_of_typ))
+            else:
+                return
+        else:
+            logger.error(f"Key is of type {type(key)}, but it should be of type int, str or slice.")
+            sys.exit("STOP")
+
+    def __setitem__(self, key, value):
+        if not isinstance(key, int) or (isinstance(key, int) and key < 0):
+            logger.error("Key has to be of typ int and >= 0.")
+            sys.exit("STOP")
+        if not isinstance(value, Index):
+            logger.error("The value which will be set has to be of type Index.")
+            sys.exit("STOP")
+        logger.warning(f"The index {self.indices[key]:s} will be rewritten with {value:s}.")
         indices = list(self.indices)
-        assert type(val) == Index
-        indices[ii] = val
+        indices[key] = value
         self.indices = tuple(indices)
 
-    # def __delitem__(self, ii):
-    #     """Delete an item"""
-    #     del self.indices[ii]
-    #
+    def __delitem__(self, key):
+        if not isinstance(key, int) or (isinstance(key, int) and key < 0):
+            logger.error("Key has to be of typ int and >= 0.")
+            sys.exit("STOP")
+        logger.warning(f"The index {self.indices[key]:s} will be deleted.")
+        indices = list(self.indices)
+        del indices[key]
+        self.indices = tuple(indices)
+
+    def __iter__(self):
+        return iter(self.indices)
+
+    def insert(self, ii, val):
+        if not isinstance(value, Index):
+            logger.error("The value which will be inserted has to be of type Index.")
+            sys.exit("STOP")
+        logger.warning(f"The index {self.indices[key]:s} will be inserted.")
+        indices = list(self.indices)
+        indices.insert(ii, val)
+        self.indices = tuple(indices)
+
+    def append(self, val):
+        if not isinstance(value, Index):
+            logger.error("The value which will be appended has to be of type Index.")
+            sys.exit("STOP")
+        logger.warning(f"The index {self.indices[key]:s} will be appended.")
+        self.insert(len(self.indices), val)
+
+    def clear(self):
+        return self.indices.clear()
+
+    def copy(self):
+        return self.indices.copy()
 
     @staticmethod
     def infinite_Indices(finite_list, max=5):
@@ -282,7 +356,14 @@ class Indices_Term(Indices_Model):
         super().__init__(indices)
 
     def __repr__(self):
-        return ", ".join(f"{self.tex_indices[index.name]}({index.name})" for index in self.indices)
+        return super().__repr__()
+
+    def __format__(self, key):
+        """Specify the format for "format" function in print statement: Here the same as the print statement itself."""
+        if key == "debug":
+            return ", ".join(f"{self.tex_indices[index.name]}({index.name})" for index in self.indices)
+        else:
+            return self.__repr__()
 
     @property
     def indices(self):

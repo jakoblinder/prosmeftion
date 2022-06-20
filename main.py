@@ -60,8 +60,22 @@ def main():
     # Sort terms by type for the projection:
     single_terms = get_type(terms)
     del terms
+
+    nterms_before = 0
+    for terms in single_terms.values():
+        for terms_n in terms.values():
+            nterms_before += len(terms_n)
+
     # Remove double terms:
     single_terms = remove_doubles(single_terms)
+
+    nterms_after = 0
+    for terms in single_terms.values():
+        for terms_n in terms.values():
+            nterms_after += len(terms_n)
+
+    print(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+
     # print terms
     if args.tex:
         tex_sorted_terms(single_terms)

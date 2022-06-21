@@ -200,6 +200,7 @@ class Dummy_Index(Index_Model):
         super().__init__(f"N{number:d}_?", derIndex)
         self.number = number
         self.will_be_typ = None
+        self.will_be_expr = None
 
     def __repr__(self):
         return super().__repr__()

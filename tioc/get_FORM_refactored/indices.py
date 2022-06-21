@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from copy import copy
 
 from tioc import CONFIG_PATH, index_pattern, index_config
-from .index import Index
+from .index import Index, Dummy_Index
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
@@ -92,7 +92,7 @@ class Indices_Model(Index, MutableMapping):
             return type(self)(self.indices[key])
         elif isinstance(key, str):
             index_types = [indextyp for indextyp in index_config.keys()]
-            index_special_types = ["sl", "sldot"]
+            index_special_types = ["sl", "sldot", "dummy"]
             # index_types = ['lor', 'Lsl', 'Usl', 'Lsldot', 'Usldot', 'spin', 'gauge', 'gaugeadj', 'colf', 'cola', 'flav']
             if key not in (index_types + index_special_types):
                 logger.error(f"Key {key:s} is not a possible index typ.")
@@ -107,13 +107,17 @@ class Indices_Model(Index, MutableMapping):
                     for index in self.indices:
                         if index.typ == "Lsldot" or index.typ == "Usldot":
                             index_of_typ.append(index)
+                elif key == "dummy":
+                    for index in self.indices:
+                        if isinstance(index, Dummy_Index):
+                            index_of_typ.append(index)
             else:
                 index_of_typ = []
                 for index in self.indices:
                     if index.typ == key:
                         index_of_typ.append(index)
             if index_of_typ:
-                return type(self)(tuple(index_of_typ))
+                return type(self)(tuple(index_of_typ), allow_uncontracted=True)
             else:
                 return
         else:
@@ -283,8 +287,8 @@ class Indices_Model(Index, MutableMapping):
 class Indices_Operator(Indices_Model):
     indices: Tuple[Index]  # Tuple of indices in one term.
 
-    def __init__(self, indices: Tuple[Index]):
-        super().__init__(indices)
+    def __init__(self, indices: Tuple[Index], allow_uncontracted=False):
+        super().__init__(indices, allow_uncontracted)
 
     def __repr__(self):
         return super().__repr__()
@@ -349,11 +353,56 @@ class Indices_Summand(Indices_Model):
     def __repr__(self):
         return super().__repr__()
 
+    def generate_index(self, typ: str, derIndex=False, fp_min: int=1, fp_max: int=None):
+        """
+        Returns an new, unused index of the specified typ.
+        Parameters
+        ----------
+        typ
+            typ of index
+        derIndex
+            Is this an index of a derivative or not.
+        fp_min
+        fp_max
+
+        Returns
+        -------
+
+        """
+        index_types = [indextyp for indextyp in index_config.keys()]
+        if typ not in index_types:
+            logger.error(f"The type {typ} is not one of the possible types {', '.join(index_types)}")
+            sys.exit("STOP")
+
+        sentinel = object()
+        def count(min, max=None):
+            # count(10) --> 10 11 12 13 14 ...
+            # count(2.5, 0.5) -> 2.5 3.0 3.5 ..
+            n = min
+            while True:
+                if max:
+                    if n >= max:
+                        yield sentinel
+                yield n
+                n += 1
+
+        for i in count(fp_min, fp_max):
+            index = Index(f"{typ}{i}", derIndex)
+            index_list = self[typ]
+            if index.is_in(index_list.indices):
+                continue
+            elif i is sentinel:
+                logger.error("Not possible to generate a new index, since generator is out of range.")
+                sys.exit("STOP")
+            else:
+                yield index
+
+
 class Indices_Term(Indices_Model):
     indices: Tuple[Index]  # Tuple of indices in one term.
     tex_indices: Dict  # Dictionary for each index containing the unique tex name.
-    def __init__(self, indices: Tuple[Index]):
-        super().__init__(indices)
+    def __init__(self, indices: Tuple[Index], allow_uncontracted=False):
+        super().__init__(indices, allow_uncontracted)
 
     def __repr__(self):
         return super().__repr__()

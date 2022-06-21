@@ -120,6 +120,7 @@ class Term_Model(Summand):
         Returns
         -------
             Dictionary with name of index and corresponding tex expression.
+            Todo: Move to Summand
         """
         # Instantiate an index generator for each type of index
         generator = {}
@@ -162,7 +163,11 @@ class Term(Term_Model):
     terms: List[Summand]
     # indices: Indices
     def __init__(self,  terms: List[Dict[str, List[str]]], name: str):
-        super().__init__(terms, name)
+        if all(isinstance(term, dict) for term in terms):
+            super().__init__(terms, name)
+        elif all(isinstance(term, Summand) for term in terms):
+            self.terms = terms
+            self.name = name
         self.indices
 
     def __repr__(self):

@@ -873,12 +873,25 @@ def tex_sorted_terms(single_terms):
     latex = ""
     for term_type in single_terms.values():
         for term_type_nD in term_type.values():
+            auxi = f"{term_type_nD:tex}"
             latex += r"\section*{" + re.sub(r"'", "", term_type_nD.name) + "}\n"
             for term in term_type_nD.terms:
                 latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
                 latex += r"\begin{dmath}" + "\n"
                 latex += f"{term:tex}\n"
                 latex += r"\end{dmath}" + "\n"
+
+        # for term_type_nD in term_type.values():
+        #     latex += r"\section*{" + re.sub(r"'", "", term_type_nD.name) + "}\n"
+        #     # try:
+        #     # for term in term_type_nD:
+        #     print(term_type_nD)
+        #     # latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
+        #     latex += r"\begin{dmath}" + "\n"
+        #     latex += f"{term_type_nD:tex}\n"
+        #     latex += r"\end{dmath}" + "\n"
+        #     # except AttributeError:
+        #     #     print("-----")
 
     return latex
 

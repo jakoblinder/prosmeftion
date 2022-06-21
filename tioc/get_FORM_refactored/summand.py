@@ -10,6 +10,7 @@ from tioc import model, op_config
 from .operator import Tensor, Field
 from .coefficient import Coefficient
 from .indices import Indices_Summand, Indices_Operator
+from .index import Dummy_Index
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
@@ -67,6 +68,16 @@ class Summand_Model(Tensor, Field, Coefficient):
         else:
             return self.__repr__()
 
+    # @property
+    # def tex(self):
+    #     """
+    #     Tex expression of whole term, but before
+    #     tex indices are generated with created generators from the range specified in config files.
+    #     Returns
+    #     -------
+    #         Dictionary with name of index and corresponding tex expression.
+    #     """
+    #TODO
     @property
     def tensors(self):
         return self._tensors
@@ -173,7 +184,11 @@ class Summand_Model(Tensor, Field, Coefficient):
             indices_expr += tensor.indices
         for field in self.fields:
             indices_expr += field.indices
-        return Indices_Summand(indices_expr.indices)
+        if any(isinstance(index, Dummy_Index) for index in indices_expr):
+            # Allow uncontracted indices when there is a Dummy_index in the indices.
+            return Indices_Summand(indices_expr.indices, allow_uncontracted=True)
+        else:
+            return Indices_Summand(indices_expr.indices)
 
 class Summand(Summand_Model):
     """Single term consisting of an overall coefficient and a product of operators."""

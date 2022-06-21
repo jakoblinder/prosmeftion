@@ -66,6 +66,7 @@ def main():
         for terms_n in terms.values():
             nterms_before += len(terms_n)
 
+    single_terms_tmp = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
     # Remove double terms:
     single_terms = remove_doubles(single_terms)
 
@@ -75,6 +76,9 @@ def main():
             nterms_after += len(terms_n)
 
     print(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
+    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
     # print terms
     if args.tex:

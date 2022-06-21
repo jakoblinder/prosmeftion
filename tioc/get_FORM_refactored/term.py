@@ -115,41 +115,13 @@ class Term_Model(Summand):
     @property
     def tex(self):
         """
-        Tex expression of whole term, but before
-        tex indices are generated with created generators from the range specified in config files.
         Returns
         -------
-            Dictionary with name of index and corresponding tex expression.
-            Todo: Move to Summand
+            Tex expression of whole term.
         """
-        # Instantiate an index generator for each type of index
-        generator = {}
-        for index in self.indices:
-            indrange = Indices_Term.get_tex_range(index_config[index.typ]["tex_indices"])
-            if indrange:
-                generator[index.typ] = Indices_Term.infinite_Indices(indrange)
-            else:
-                generator[index.typ] = Indices_Term.infinite_numIndices(index_config[index.typ]["tex_indices"])
-
-        tex_indices = {}  # Dictionary for unique tex names of indices.
-        for index in self.indices:
-            try:
-                tex_indices[index.indname] = next(generator[index.typ])
-            except StopIteration:
-                logger.error("Specified index range is to small to map all occurring indices.")
-                sys.exit("STOP")
-
-        for summand in self.terms:
-            for operator in summand.tensors:
-                for index in operator.indices:
-                    index.tex = tex_indices[index.indname]
-            for operator in summand.fields:
-                for index in operator.indices:
-                    index.tex = tex_indices[index.indname]
-
         tex_expr = ""
-        for summand in self.terms:
-            # tex_expr += "+"
+        for summand in self:  # .terms
+            # tex_expr += "+"  # Sign is already include in the coefficient and thus not necessary here.
             tex_expr += f"{summand:tex}"
 
         return tex_expr

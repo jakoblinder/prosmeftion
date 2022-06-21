@@ -8,7 +8,7 @@ from pathlib import Path
 
 from yaml import safe_load
 
-from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms  # , main
+from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles  # , main
 from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
 from tioc import form_declarations, CONFIG_PATH, FORM_GENERAL_PATH, op_config
 
@@ -61,12 +61,14 @@ def main():
     single_terms = get_type(terms)
     del terms
 
+    if args.tex:
+        tex_sorted_terms(single_terms)
+
     nterms_before = 0
     for terms in single_terms.values():
         for terms_n in terms.values():
             nterms_before += len(terms_n)
 
-    single_terms_tmp = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
     # Remove double terms:
     single_terms = remove_doubles(single_terms)
 
@@ -82,16 +84,13 @@ def main():
 
     # print terms
     if args.tex:
-        tex_sorted_terms(single_terms)
+        tex_sorted_terms_wo_doubles(single_terms)
 
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, max_dim=6)
     single_terms = replace_sun_tensors_by_projected_ones(single_terms)
 
     # TODO: Consider type {nD: 0, H: 3, H+: 3} on page 11 and {nD: 1, uC: 1, H: 1, H+: 1, uC+: 1} on page 18.
-    # FIXME: Remove double terms by renaming of every index of every field in the same way for a specific termtype.
-    #  -> Just take indices of first one. Pay attention where the derivative acts on.
-    # TODO: Put those terms again inside form, to combine them there.
 
     # TODO: Substitute epsilons of terms with sun projected basis for terms which have already a sun_projection.
     #  Combine those expressions while writing sun basis tensors as TSU2[i, gauge123, gauge456, ...]

@@ -6,7 +6,7 @@ from copy import copy
 from fractions import Fraction
 from typing import Dict, List, Tuple
 
-from tioc import model, op_config
+from tioc import model, op_config, index_config
 from .operator import Tensor, Field
 from .coefficient import Coefficient
 from .indices import Indices_Summand, Indices_Operator
@@ -50,16 +50,7 @@ class Summand_Model(Tensor, Field, Coefficient):
     def __format__(self, key):
         """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
         if key == "tex":
-            mult_sign = ''  # '*'
-            tex_expr = ""
-            tensors = mult_sign.join([f"{op:tex}" for op in self.tensors])
-            fields = mult_sign.join([f"{op:tex}" for op in self.fields])
-            tex_expr += rf"{self.coeff:tex}\\" + mult_sign
-            if tensors:
-                tex_expr += f"{tensors}{mult_sign}{fields}"
-            else:
-                tex_expr += f"{fields}"
-            return tex_expr
+            return self.tex
         elif key == "complete" or key == "c":
             coeff = self.coeff
             tensor = "*".join(map(str, self.tensors))
@@ -68,16 +59,54 @@ class Summand_Model(Tensor, Field, Coefficient):
         else:
             return self.__repr__()
 
-    # @property
-    # def tex(self):
-    #     """
-    #     Tex expression of whole term, but before
-    #     tex indices are generated with created generators from the range specified in config files.
-    #     Returns
-    #     -------
-    #         Dictionary with name of index and corresponding tex expression.
-    #     """
-    #TODO
+    @property
+    def tex(self):
+        """
+        Tex expression of whole Summand, but before the tex indices are generated with created generators, where the
+        range specified in the index config file.
+        Returns
+        -------
+            LaTex expression.
+        """
+        # Instantiate an index generator for each type of index
+        generator = {}
+        for index in self.indices:
+            indrange = Indices_Summand.get_tex_range(index_config[index.typ]["tex_indices"])
+            if indrange:
+                generator[index.typ] = Indices_Summand.infinite_Indices(indrange)
+            else:
+                generator[index.typ] = Indices_Summand.infinite_numIndices(index_config[index.typ]["tex_indices"])
+
+        tex_indices = {}  # Dictionary for unique tex names of indices.
+        for index in self.indices:
+            try:
+                tex_indices[index.indname] = next(generator[index.typ])
+            except StopIteration:
+                logger.error("Specified index range is to small to map all occurring indices.")
+                sys.exit("STOP")
+
+        #write latex index for all indices:
+        for operator in self.tensors:
+            for index in operator.indices:
+                index.tex = tex_indices[index.indname]
+        for operator in self.fields:
+            for index in operator.indices:
+                index.tex = tex_indices[index.indname]
+
+        # Build tex expression:
+        mult_sign = ''  # '*'
+        tex_expr = ""
+        tensors = mult_sign.join([f"{op:tex}" for op in self.tensors])
+        fields = mult_sign.join([f"{op:tex}" for op in self.fields])
+        tex_expr += rf"{self.coeff:tex}\\" + mult_sign
+        if tensors:
+            tex_expr += f"{tensors}{mult_sign}{fields}"
+        else:
+            tex_expr += f"{fields}"
+
+        return tex_expr
+
+
     @property
     def tensors(self):
         return self._tensors

@@ -117,7 +117,6 @@ class Operator_Model(Index):
             for index in indices:
                 # use match here in order to assure that one matches the start of the index.
                 match = re.match(r"(?P<index>" + index_pattern + r")", index)
-                # TODO: Insert dummy Index handlement.
                 if match:
                     index_matched = match.group("index")
                     op_indices.append(Index(index_matched))
@@ -129,11 +128,6 @@ class Operator_Model(Index):
                     else:
                         logger.error("Index can not be identified.")
                         sys.exit("STOP")
-            # matches = list(re.finditer(r"(?P<index>" + index_pattern + r")", indices))
-            # if any(matches):
-            #     for match in matches:
-            #         index = match.group("index")
-            #         op_indices.append(Index(index))
         else:
             logger.error("No index found.")
             sys.exit("STOP")

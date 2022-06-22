@@ -59,7 +59,8 @@ def main():
 
     # Sort terms by type for the projection:
     single_terms = get_type(terms)
-    del terms
+    single_terms_debug = single_terms
+    # del terms
 
     if args.tex:
         tex_sorted_terms(single_terms)

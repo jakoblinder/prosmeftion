@@ -49,20 +49,42 @@ class Operator_Model(Index):
     def __format__(self, key):
         """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
         if key == "tex":
-            if r"_" not in self.tex and r"^" not in self.tex:
-                tex = f"{self.tex}"
-            else:
-                tex = f"({self.tex})"
-            subscript_indices= [f"{index:tex}" for index in self.indices if index.typ in ["lor", "Lsldot", "Lsl", "gauge", "colf"] and not index.derIndex]
-            superscript_indices = [f"{index:tex}" for index in self.indices if index.typ in ["Usldot", "Usl", "gaugeadj", "cola", "flav"] and not index.derIndex]
-            tex_output = f"{tex}"
-            if subscript_indices:
-                tex_output += f"_{{{', '.join(subscript_indices)}}}"
-            if superscript_indices:
-                tex_output += f"^{{{', '.join(superscript_indices)}}}"
-            return tex_output
+            return self.tex
         else:
             return self.__repr__()
+
+    @property
+    @abstractmethod
+    def tex(self):
+        """Create tex expression of operator without derivatives."""
+        return self.texed_op_wo_der(subscript_indices=("lor", "Lsldot", "Lsl", "gauge", "colf"), superscript_indices=("Usldot", "Usl", "gaugeadj", "cola", "flav"))
+
+    def texed_op_wo_der(self, subscript_indices: Tuple[str], superscript_indices: Tuple[str]):
+        """Create tex expression of operator without derivatives and with specified sub and superscript indices."""
+        # Get texed name of operator
+        tex_expr_op = self.tex_name
+
+        if isinstance(self, Tensor):
+            sub_indices = [[f"{index:tex}" for index in self.indices[ind_typ]] for ind_typ in subscript_indices]
+            super_indices = [[f"{index:tex}" for index in self.indices[ind_typ]] for ind_typ in superscript_indices]
+        elif isinstance(self, Field):
+            sub_indices = [[f"{index:tex}" for index in self.indices[ind_typ] if not index.derIndex] for ind_typ in
+                                 subscript_indices]
+            super_indices = [[f"{index:tex}" for index in self.indices[ind_typ] if not index.derIndex] for ind_typ in
+                             superscript_indices]
+        else:
+            logger.error("Class of operator unknown.")
+            sys.exit("STOP")
+
+        if r"_"  in tex_expr_op or r"^"  in tex_expr_op:
+            tex_expr_op = f"({tex_expr_op})"
+        tex_expr = tex_expr_op
+
+        if any([len(sub_index_typ) for sub_index_typ in sub_indices]):
+            tex_expr += f"_{{{', '.join([' '.join(sub_index_typ) for sub_index_typ in sub_indices if len(sub_index_typ) != 0])}}}"
+        if any([len(super_index_typ) for super_index_typ in super_indices]):
+            tex_expr += f"^{{{', '.join([' '.join(super_index_typ) for super_index_typ in super_indices if len(super_index_typ) != 0])}}}"
+        return tex_expr
 
     @staticmethod
     def read_in_operator(expression:str) -> (Tuple[str, bool, str], Tuple[Index], int, Tuple[Index]):
@@ -215,7 +237,7 @@ class Operator_Model(Index):
         self._expr = fp_expr
 
     @property
-    def tex(self):
+    def tex_name(self):
         """Create tex expression of operator."""
         all_ops = {**op_config["tensors"], **op_config["bosonfields"], **op_config["fermionfields"]}
         if self.isconj:
@@ -226,24 +248,8 @@ class Operator_Model(Index):
         else:
             tex_expr = all_ops[self.non_conj_name]["tex"]
 
-        derIndices = Indices_Operator([index for index in self.indices if index.derIndex].copy())
-        derIndices_sorted = {}
-        for derivativeIndex in derIndices:
-            try:
-                derIndices_sorted[derivativeIndex.derIndex].append(derivativeIndex)
-            except KeyError:
-                derIndices_sorted[derivativeIndex.derIndex] = [derivativeIndex]
-        tex_derivatives = ""
-        cov_tex = op_config["fermionfields"]["D"]["tex"]
-        for key, index in derIndices_sorted.items():
-            if index[0].typ == "lor":
-                tex_derivatives += cov_tex + "_{" + f"{index[0]:tex}" + "}"
-            elif index[0].typ in ["Lsldot", "Lsl"]:
-                tex_derivatives += cov_tex + "_{" + f"{index[0]:tex}" + "}" + "^{" + f"{index[1]:tex}" + "}"
-            elif index[0].typ in ["Usldot", "Usl"]:
-                tex_derivatives += cov_tex + "_{" + f"{index[1]:tex}" + "}" + "^{" + f"{index[0]:tex}" + "}"
+        return tex_expr
 
-        return tex_derivatives + tex_expr
 
     @property
     def description(self):
@@ -278,6 +284,11 @@ class Tensor(Operator_Model):
         """Specify the format the general string representation and for printing with repr()."""
         return super().__repr__()
 
+    @property
+    def tex(self):
+        """Create tex expression of operator without derivatives."""
+        return super().texed_op_wo_der(subscript_indices=("lor", "Lsldot", "Lsl", "gauge", "colf"),
+                                    superscript_indices=("Usldot", "Usl", "gaugeadj", "cola", "flav"))
 
 class Field(Operator_Model):
     expr: str
@@ -303,6 +314,36 @@ class Field(Operator_Model):
         """Specififes whether Field commutes or anticommutes."""
         ac_expr = op_config["fermionfields"][self.non_conj_name]["ac"]
         return ac_expr
+
+    @property
+    def tex(self):
+        """Create tex expression of operator with derivatives."""
+        op_texed = super().texed_op_wo_der(subscript_indices=("lor", "Lsldot", "Lsl", "gauge", "colf"),
+                                       superscript_indices=("Usldot", "Usl", "gaugeadj", "cola", "flav"))
+
+        derIndices = Indices_Operator([index for index in self.indices if index.derIndex].copy())
+        if not derIndices:
+            # no derivatives in the operator
+            return op_texed
+        else:
+            derIndices_sorted = {}
+            for derivativeIndex in derIndices:
+                try:
+                    derIndices_sorted[derivativeIndex.derIndex].append(derivativeIndex)
+                except KeyError:
+                    derIndices_sorted[derivativeIndex.derIndex] = [derivativeIndex]
+            tex_derivatives = ""
+            cov_tex = op_config["fermionfields"]["D"]["tex"]
+            for key, index in derIndices_sorted.items():
+                if index[0].typ == "lor":
+                    tex_derivatives += cov_tex + "_{" + f"{index[0]:tex}" + "}"
+                elif index[0].typ in ["Lsldot", "Lsl"]:
+                    tex_derivatives += cov_tex + "_{" + f"{index[0]:tex}" + "}" + "^{" + f"{index[1]:tex}" + "}"
+                elif index[0].typ in ["Usldot", "Usl"]:
+                    tex_derivatives += cov_tex + "_{" + f"{index[1]:tex}" + "}" + "^{" + f"{index[0]:tex}" + "}"
+
+
+            return tex_derivatives + op_texed
 
     def gaugeIndicesforProjection(self):
         """

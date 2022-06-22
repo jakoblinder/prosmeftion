@@ -24,6 +24,7 @@ from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cva
 from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
 from tioc.get_FORM_refactored.read_write import get_terms
 from tioc.get_FORM_refactored.coefficient import Factor
+from .sun_projection import equalize_field_indices
 
 logger_autoeft = logging.getLogger("autoeft")
 logger = logging.getLogger("autoeft.projection")
@@ -870,6 +871,7 @@ def tex_unsorted_terms(terms):
 
 @write_texfile_and_create_pdf("terms_sorted")
 def tex_sorted_terms(single_terms):
+    single_terms = equalize_field_indices(single_terms)
     latex = ""
     for term_type in single_terms.values():
         for term_type_nD in term_type.values():

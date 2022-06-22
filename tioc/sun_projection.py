@@ -55,17 +55,7 @@ def get_type(terms):
 
     return single_terms
 
-def remove_doubles(single_terms):
-    """
-    Remove terms which occur in the exact same way, i.e. only with a different coefficient, more than ones.
-    Parameters
-    ----------
-    single_terms
-
-    Returns
-    -------
-    """
-    def equalize_indices(ref_term: Summand, eq_term: Summand) -> (List[Index], List[Index]):
+def equalize_indices(ref_term: Summand, eq_term: Summand) -> (List[Index], List[Index]):
         """
         Renames indices of the fields for a given Summand eq_term in the same way as in the reference Summand ref_term
         and replaces them accordingly in the tensors of the eq_term.
@@ -131,6 +121,56 @@ def remove_doubles(single_terms):
         # a generator in python, respecting already setted indices.
         return ref_tensor_indices, eq_tensor_indices
 
+def equalize_field_indices(single_terms):
+    """
+    Equalize indices in expression of same fieldstructure, by comparison of the field indices.
+    Parameters
+    ----------
+    single_terms
+
+    Returns
+    -------
+        List of in tensors fully contracted and therefore not equalized indices.
+    """
+
+    for type in single_terms.values():
+        for term_mass_dim in type.values():
+            term_with_specific_field_structure = {}
+            for term in term_mass_dim:
+                try:
+                    term_with_specific_field_structure[term.fieldstructure].append(term)
+                except KeyError:
+                    term_with_specific_field_structure[term.fieldstructure] = [term]
+            for name_of_term, terms_specific in term_with_specific_field_structure.items():
+                if len(terms_specific) > 1:
+                    name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])
+                    logger.info(f"Combine {', '.join([term.name for term in terms_specific])} of type {name_form}.")
+                    for i, term in enumerate(terms_specific[1:]):
+                        if not i:
+                            # i == 0
+                            ref_tensor_indices, eq_tensor_indices = equalize_indices(terms_specific[0], term)
+                        else:
+                            _, eq_tensor_indices_tmp = equalize_indices(terms_specific[0], term)
+                            eq_tensor_indices += eq_tensor_indices_tmp
+                    sum_indices = ref_tensor_indices + eq_tensor_indices
+
+    return single_terms
+
+
+def remove_doubles(single_terms):
+    """
+    Remove terms which occur in the exact same way, i.e. only with a different coefficient, more than ones.
+    Note: The equalize_field_indices function cannot be used, since the not renamed indices in 'sum_indices' had
+    to be known at the time, when they are combined in FORM. It could be possible to save those indices for all types,
+    but this isn't done for now.
+
+    Parameters
+    ----------
+    single_terms
+
+    Returns
+    -------
+    """
     merged_terms = []
     for type in single_terms.values():
         for term_mass_dim in type.values():
@@ -225,6 +265,9 @@ def remove_doubles(single_terms):
                     # print("--------------------------")
                 else:
                     name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])
+                    logger.info(f"{terms_specific[0].name} of type {name_form} is not combined")
+                    # Rename Summand properly by their structure
+                    terms_specific[0].name = name_form
                     merged_terms.append(Term(terms_specific, name_form))
                     # print("--------------------------")
     single_terms = get_type(merged_terms)

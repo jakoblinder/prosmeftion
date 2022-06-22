@@ -116,10 +116,10 @@ class Indices_Model(Index, MutableMapping):
                 for index in self.indices:
                     if index.typ == key:
                         index_of_typ.append(index)
-            if index_of_typ:
-                return type(self)(tuple(index_of_typ), allow_uncontracted=True)
-            else:
-                return
+            # if index_of_typ:
+            return type(self)(tuple(index_of_typ), allow_uncontracted=True)
+            # else:
+            #     return []
         else:
             logger.error(f"Key is of type {type(key)}, but it should be of type int, str or slice.")
             sys.exit("STOP")
@@ -131,7 +131,7 @@ class Indices_Model(Index, MutableMapping):
         if not isinstance(value, Index):
             logger.error("The value which will be set has to be of type Index.")
             sys.exit("STOP")
-        logger.warning(f"The index {self.indices[key]:s} will be rewritten with {value:s}.")
+        logger.debug(f"The index {self.indices[key]:s} will be rewritten with {value:s}.")
         indices = list(self.indices)
         indices[key] = value
         self.indices = tuple(indices)
@@ -289,6 +289,14 @@ class Indices_Operator(Indices_Model):
 
     def __init__(self, indices: Tuple[Index], allow_uncontracted=False):
         super().__init__(indices, allow_uncontracted)
+
+    @property
+    def indices(self):
+        return self._indices
+
+    @indices.setter
+    def indices(self, fp_indices):
+        self._indices = fp_indices
 
     def __repr__(self):
         return super().__repr__()

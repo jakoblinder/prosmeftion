@@ -17,7 +17,7 @@ from .index import Index
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
-class Term_Model(Summand):
+class Term_Model():  # Summand
     """Bas class for single term consisting of an overall coefficient and a product of operators."""
     terms: List[Summand]
     name: str

@@ -143,8 +143,6 @@ def equalize_field_indices(single_terms):
                     term_with_specific_field_structure[term.fieldstructure] = [term]
             for name_of_term, terms_specific in term_with_specific_field_structure.items():
                 if len(terms_specific) > 1:
-                    name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])
-                    logger.info(f"Combine {', '.join([term.name for term in terms_specific])} of type {name_form}.")
                     for i, term in enumerate(terms_specific[1:]):
                         if not i:
                             # i == 0

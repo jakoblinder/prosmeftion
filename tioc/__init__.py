@@ -244,6 +244,12 @@ fermions = [form_field for field in op_config["fermionfields"].values() for form
 tensors = [form_field for field in op_config["tensors"].values() for form_field in field["mathematica"].values()]
 
 
+def get_SUN_name(N):
+    """Get Name of SU2_W out of model file."""
+    for group_name, group_properties in model.sun_groups.items():
+        if group_properties.N == N:
+            return group_name
+
 def factorizeCoeff():
     """
     Write FORM function which replaces dimensional constants in the coefficient by dimensionless ones.
@@ -544,4 +550,5 @@ def get_expression_from_FORM_output(output: str):
     else:
         logger.error(f"No output term has been found in {output}.")
         sys.exit("STOP")
+
 

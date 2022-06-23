@@ -254,14 +254,14 @@ class Operator_Model(Index):
     @property
     def description(self):
         """Gives description to the operator."""
-        all_ops = {**op_dict["tensors"], **op_dict["bosonfields"], **op_dict["fermionfields"]}
+        all_ops = {**op_config["tensors"], **op_config["bosonfields"], **op_config["fermionfields"]}
         description_expr = all_ops[self.non_conj_name]["description"]
         return description_expr
 
     @property
     def autoeft(self):
         """Returns autoeft name of the field/ tensor."""
-        all_ops = {**op_dict["tensors"], **op_dict["bosonfields"], **op_dict["fermionfields"]}
+        all_ops = {**op_config["tensors"], **op_config["bosonfields"], **op_config["fermionfields"]}
         if self.isconj:
             form_field = list(all_ops[self.non_conj_name]["mathematica"].values())[1]
         else:

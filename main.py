@@ -59,7 +59,7 @@ def main():
 
     # Sort terms by type for the projection:
     single_terms = get_type(terms)
-    single_terms_debug = single_terms
+    # single_terms_debug = single_terms
     # del terms
 
     if args.tex:
@@ -78,20 +78,19 @@ def main():
         for terms_n in terms.values():
             nterms_after += len(terms_n)
 
-    print(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-
-    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
+    logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
 
     # print terms
     if args.tex:
         tex_sorted_terms_wo_doubles(single_terms)
 
+    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
+    # single_terms = picklee.load(open(CONFIG_PATH / "single_terms.p", "rb"))
+
+    op = op_config
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, max_dim=6)
     single_terms = replace_sun_tensors_by_projected_ones(single_terms)
-
-    # TODO: Consider type {nD: 0, H: 3, H+: 3} on page 11 and {nD: 1, uC: 1, H: 1, H+: 1, uC+: 1} on page 18.
 
     # TODO: Substitute epsilons of terms with sun projected basis for terms which have already a sun_projection.
     #  Combine those expressions while writing sun basis tensors as TSU2[i, gauge123, gauge456, ...]

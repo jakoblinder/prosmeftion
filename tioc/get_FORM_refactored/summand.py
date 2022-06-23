@@ -6,7 +6,7 @@ from copy import copy
 from fractions import Fraction
 from typing import Dict, List, Tuple
 
-from tioc import model, op_config, index_config
+from tioc import model, op_config, index_config, get_SUN_name
 from .operator import Tensor, Field
 from .coefficient import Coefficient
 from .indices import Indices_Summand, Indices_Operator
@@ -15,7 +15,7 @@ from .index import Dummy_Index
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
-class Summand_Model(Tensor, Field, Coefficient):
+class Summand_Model():  # Tensor, Field, Coefficient
     """Base class for single term consisting of an overall coefficient and a product of operators."""
     tensors: List[Tensor]
     fields: Tuple[Field]
@@ -58,6 +58,8 @@ class Summand_Model(Tensor, Field, Coefficient):
             return f"({coeff})*{tensor:s}*{contractedOp:s}"
         else:
             return self.__repr__()
+
+
 
     @property
     def tex(self):
@@ -105,7 +107,6 @@ class Summand_Model(Tensor, Field, Coefficient):
             tex_expr += f"{fields}"
 
         return tex_expr
-
 
     @property
     def tensors(self):
@@ -229,12 +230,6 @@ class Summand(Summand_Model):
         # Gauge fields contain special projection index of the form idxF2I1, which is transmitted to the contracted tensors:
         self.gaugeIndicesforProjection_tensors()
 
-        def get_SUN_name(N):
-            """Get Name of SU2_W out of model file."""
-            for group_name, group_properties in model.sun_groups.items():
-                if group_properties.N == N:
-                    return group_name
-
         self.gaugeTensorsSUN = {get_SUN_name(2): self.get_SUN_tensors(2), get_SUN_name(3): self.get_SUN_tensors(3)}
 
     def __repr__(self):
@@ -272,14 +267,13 @@ class Summand(Summand_Model):
         """
         epsilon = f"[su{N:d}eps]"
         delta = f"[su{N:d}dK]"
-        suNeps = []
-        suNdK = []
+        suN = []
         for tensor in self.tensors:
-            if tensor.name == epsilon:
-                suNeps.append(f"e_({','.join([index.projection for index in tensor.indices])})")
-            elif tensor.name == delta:
-                suNdK.append(f"d_({','.join([index.projection for index in tensor.indices])})")
+            if tensor.name == epsilon or tensor.name == delta:
+                suN.append(f"{tensor.autoeft:s}({','.join([index.projection for index in tensor.indices])})")
+            # elif tensor.name == delta:
+            #     suNdK.append(f"{tensor.autoeft:s}({','.join([index.projection for index in tensor.indices])})")
 
-        form_tensors = "*".join(suNeps + suNdK)
+        form_tensors = "*".join(suN)
 
         return form_tensors

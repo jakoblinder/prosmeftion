@@ -38,6 +38,8 @@ tensors:
       tex: \varepsilon
       mathematica:
         su2eps: "[su2eps]"
+      autoeft:
+        "[su2eps]": "e_"
       index_structure:
         - gauge
         - gauge
@@ -46,6 +48,8 @@ tensors:
       tex: \varepsilon
       mathematica:
         su3eps: "[su3eps]"
+      autoeft:
+        "[su3eps]": "e_"
       index_structure:
         - colf
         - colf
@@ -55,6 +59,8 @@ tensors:
       tex: \varepsilon
       mathematica:
         sl2Ceps: "[sl2Ceps]"
+      autoeft:
+        "[sl2Ceps]": "e_"
       index_structure:
         -
           - Usl
@@ -73,6 +79,8 @@ tensors:
       tex: \delta
       mathematica:
         su2dK: "[su2dK]"
+      autoeft:
+        "[su2dK]": "d_"
       index_structure:
         - gauge
         - gauge
@@ -81,6 +89,8 @@ tensors:
       tex: \delta
       mathematica:
         su3dK: "[su3dK]"
+      autoeft:
+        "[su3dK]": "d_"
       index_structure:
         - colf
         - colf
@@ -89,6 +99,8 @@ tensors:
       tex: \delta
       mathematica:
         sl2CdK: "[sl2CdK]"
+      autoeft:
+        "[sl2CdK]": "d_"
       index_structure:
         -
           - Lsl

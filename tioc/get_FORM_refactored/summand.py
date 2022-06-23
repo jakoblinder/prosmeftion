@@ -11,6 +11,7 @@ from .operator import Tensor, Field
 from .coefficient import Coefficient
 from .indices import Indices_Summand, Indices_Operator
 from .index import Dummy_Index
+from .operators import Tensors, Fields
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
@@ -31,6 +32,29 @@ class Summand_Model():  # Tensor, Field, Coefficient
         self.name = fp_name
         self.tensors = tensors
         self.fields = fields
+
+        print(self.fields[0])
+        if len(self.tensors) > 1:
+            print(self.tensors[1])
+
+        # TODO: Spielfeld
+        # print(f"Fields: {self.fields['yukawa']}")
+        # print(f"Tensors: {self.tensors['yukawa']}")
+        #
+        # print(f"SU2: {self.tensors['SU2_W']}")
+        # if self.tensors['SU2_W']:
+        #     print("DELETE")
+        #     tmp = self.tensors['SU2_W'].copy()
+        #     del self.tensors['SU2_W']
+        # print(f"SU2: {self.tensors['SU2_W']}")
+        # for i, tensor in enumerate(tmp):
+        #     self.tensors.insert(i, tensor)
+        # self.tensors[0] = tmp[0]
+        # print(f"SU2: {self.tensors['SU2_W']}")
+        # print(f"SU3: {self.tensors['SU3_C']}")
+        #
+        # print("------------------------------")
+
         self.coeff = coeff
         self.nD
         self.fieldcounter
@@ -114,7 +138,7 @@ class Summand_Model():  # Tensor, Field, Coefficient
 
     @tensors.setter
     def tensors(self, value: List):
-        self._tensors = list(map(Tensor, value))
+        self._tensors = Tensors(tuple(map(Tensor, value)))
 
     @property
     def fields(self):
@@ -122,7 +146,7 @@ class Summand_Model():  # Tensor, Field, Coefficient
 
     @fields.setter
     def fields(self, fp_fields):
-        self._fields = tuple(map(Field, fp_fields, range(1, len(fp_fields)+1)))
+        self._fields = Fields(tuple(map(Field, fp_fields, range(1, len(fp_fields)+1))))
 
     @property
     def coeff(self):

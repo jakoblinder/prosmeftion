@@ -33,9 +33,9 @@ class Summand_Model():  # Tensor, Field, Coefficient
         self.tensors = tensors
         self.fields = fields
 
-        print(self.fields[0])
-        if len(self.tensors) > 1:
-            print(self.tensors[1])
+        # print(self.fields[0])
+        # if len(self.tensors) > 1:
+        #     print(self.tensors[1])
 
         # TODO: Spielfeld
         # print(f"Fields: {self.fields['yukawa']}")

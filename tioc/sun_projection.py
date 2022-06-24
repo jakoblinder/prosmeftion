@@ -322,6 +322,7 @@ def get_basis_tensors(basis, field_content, derivatives, mass_dim):
         sun_projection_tensors[sun_group.name] = {"sun_monom": sun_monom, "sun_tensor": sun_tensor}
         if len(sun_projection_tensors[sun_group.name]["sun_monom"]) == 0:
             sun_projection_tensors[sun_group.name] = False
+    # TODO: Return basis tensors as MonBasisTensors and SymBasisTensors.
     return sun_projection_tensors
 
 def sun_projection(single_terms, max_dim: int):
@@ -334,6 +335,7 @@ def sun_projection(single_terms, max_dim: int):
             derivatives = term_mass_dim.nD
             mass_dim = term_mass_dim.d
             try:
+                # get the SUN basis Tensors from autoeft for the projection
                 term_mass_dim.sun_projection_tensors = get_basis_tensors(basis, field_content, derivatives, mass_dim)
                 # There exists a term in the basis which matches the type and the projection can be done:
                 # sun_tensors = list of all sun tensors contained in all terms of the same type.
@@ -370,10 +372,7 @@ def replace_sun_tensors_by_projected_ones(single_terms):
     for type in single_terms.values():
         for term_mass_dim in type.values():
             for sun_group, projection_matrix in term_mass_dim.sun_projection_matrix.items():
-                if not projection_matrix:
-                    # no projection matrix for this group and operator there
-                    continue
-                else:
+                if projection_matrix:
                     # projection_matrix exists
                     sun_basis_tensors = term_mass_dim.sun_projection_tensors[sun_group]["sun_tensor"]
                     basis_dim = len(sun_basis_tensors)
@@ -387,5 +386,6 @@ def replace_sun_tensors_by_projected_ones(single_terms):
                             term.projected_tensors[sun_group] = "+".join(projected_tensors)
                         except AttributeError:
                             term.projected_tensors = {sun_group: "+".join(projected_tensors)}
+                # IF there isn't a projection matrix for this group and operator there - continue.
 
     return single_terms

@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 
 from tioc import CONFIG_PATH, opname, escape_regex, model, index_config
 from tioc.get_FORM_refactored.coefficient import Coefficient
+from tioc.get_FORM_refactored.basisTensors import MonBasisTensors, SymBasisTensors
 from .summand import Summand
 from .indices import Indices_Term, Indices_Summand
 from .index import Index
@@ -148,14 +149,14 @@ class Term(Term_Model):
 
 class TermType(Term_Model):
     """
-    Summand objects sorted by their type:
+    Summand objects sorted by their type.
     """
     terms: List[Summand]
     name: str
     nD: int  # Number of derivatives in the term.
     field_content: Dict
     d: int  # mass dimension
-    sun_projection_tensors: Dict[str,Dict[str,List[str]]]  # Sun_projection tensors
+    sun_projection_tensors: Dict[str,Dict[str,SymBasisTensors]]  # Sun_projection tensors
     sun_projection_matrix: Dict[str, sage.matrix.matrix_rational_dense.Matrix_rational_dense]
     def __init__(self, summand : Summand, field_content: Dict):
         self.terms = [summand]  # [Summand([tensor.expr for tensor in summand.tensors], [field.expr for field in summand.fields], summand.coeff.expr, name) for term in terms]

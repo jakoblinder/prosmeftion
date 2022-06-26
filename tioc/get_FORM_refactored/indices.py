@@ -34,7 +34,7 @@ class Indices_Model(Index, MutableMapping):
 
     @abstractmethod
     def __repr__(self):
-        return f"{','.join(map(str, self.indices))}"
+        return f"{','.join(map(repr, self.indices))}"
 
     def __str__(self):
         """Specify the format for printing with str() or print() statement function. """
@@ -42,7 +42,10 @@ class Indices_Model(Index, MutableMapping):
 
     def __format__(self, key):
         """Specify the format for "format" function in print statement: Here the same as the print statement itself."""
-        return self.__repr__()
+        if key == "projection" or key == "p":
+            return f"{','.join([f'{index:p}'for index in self]):s}"
+        else:
+            return self.__repr__()
 
     def __eq__(self, other):
         if len(self.indices) != len(other.indices):

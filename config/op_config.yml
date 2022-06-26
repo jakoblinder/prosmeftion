@@ -132,6 +132,75 @@ tensors:
         - lor
         - spin
         - spin
+    TSU2:
+      description: "Symmetrized SU2-Basistensor."
+      tex: T_{SU2}
+      mathematica:
+        TSU2: TSU2
+      autoeft:
+        TSU2: TSU2
+      index_structure:
+        -
+          - sbasis
+          - gauge
+          - gauge
+        -
+          - sbasis
+          - gauge
+          - gauge
+          - gauge
+          - gauge
+        -
+          - sbasis
+          - gauge
+          - gauge
+          - gauge
+          - gauge
+          - gauge
+          - gauge
+        -
+          - sbasis
+          - gauge
+          - gauge
+          - gauge
+          - gauge
+          - gauge
+          - gauge
+          - gauge
+          - gauge
+    TSU3:
+      description: "Symmetrized SU3-Basistensor."
+      tex: T_{SU3}
+      mathematica:
+        TSU3: TSU3
+      autoeft:
+        TSU3: TSU3
+      index_structure:
+        -
+          - sbasis
+          - colf
+          - colf
+          - colf
+        -
+          - sbasis
+          - colf
+          - colf
+          - colf
+          - colf
+          - colf
+          - colf
+        -
+          - sbasis
+          - colf
+          - colf
+          - colf
+          - colf
+          - colf
+          - colf
+          - colf
+          - colf
+          - colf
+
 bosonfields:
     H:
       description: "Higgsdublett of SU2."

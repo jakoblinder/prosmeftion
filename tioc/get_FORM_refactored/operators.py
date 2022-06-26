@@ -41,8 +41,12 @@ class Operators_Model(MutableMapping):
         if key == "tex":
             return self.tex
         elif key == "complete" or key == "c":
-            texed_operators = "*".join(map(str, self.operators))
-            return f"{texed_operators:s}"
+            operators = "*".join(map(repr, self.operators))
+            return f"{operators:s}"
+        elif key == "autoeft" or key == "a":
+            return "*".join([f"{op:a}" for op in self])
+        elif key == "projection" or key == "p":
+            return "*".join([f"{op:p}" for op in self])
         else:
             return self.__repr__()
 
@@ -120,7 +124,6 @@ class Operators_Model(MutableMapping):
             logger.error("The value which will be set has to be of type Tensor or Field.")
             sys.exit("STOP")
         logger.debug(f"The operator {self.operators[key]:s} will be rewritten with {value:s}.")
-        # FIXME: Here is something weird.
         operators = list(self.operators)
         operators[key] = value
         self.operators = tuple(operators)

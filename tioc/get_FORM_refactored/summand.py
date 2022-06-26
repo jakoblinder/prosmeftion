@@ -16,7 +16,7 @@ from .operators import Tensors, Fields
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
-class Summand_Model():  # Tensor, Field, Coefficient
+class Summand_Model(ABC):  # Tensor, Field, Coefficient
     """Base class for single term consisting of an overall coefficient and a product of operators."""
     tensors: List[Tensor]
     fields: Tuple[Field]
@@ -289,15 +289,17 @@ class Summand(Summand_Model):
         and the Kronecker delta are rewritten as the regarding tensors in FORM, i.e. e_(...) and d_(...,...).
         -------
         """
-        epsilon = f"[su{N:d}eps]"
-        delta = f"[su{N:d}dK]"
-        suN = []
-        for tensor in self.tensors:
-            if tensor.name == epsilon or tensor.name == delta:
-                suN.append(f"{tensor.autoeft:s}({','.join([index.projection for index in tensor.indices])})")
+        # epsilon = f"[su{N:d}eps]"
+        # delta = f"[su{N:d}dK]"
+        # suN = []
+
+        return self.tensors[get_SUN_name(N)]
+        # for tensor in self.tensors:
+        #     if tensor.name == epsilon or tensor.name == delta:
+        #         suN.append(f"{tensor.autoeft:s}({','.join([index.projection for index in tensor.indices])})")
             # elif tensor.name == delta:
             #     suNdK.append(f"{tensor.autoeft:s}({','.join([index.projection for index in tensor.indices])})")
 
-        form_tensors = "*".join(suN)
+        # form_tensors = "*".join(suN)
 
-        return form_tensors
+        # return form_tensors

@@ -42,3 +42,7 @@ flav:
   dimension: n
   description: "Flavor index."
   tex_indices: u...z
+sbasis:
+  dimension: N
+  description: "Index for basis tensors of SU(N)."
+  tex_indices: I...T

@@ -50,6 +50,10 @@ class Operator_Model(Index):
         """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
         if key == "tex":
             return self.tex
+        elif key == "autoeft" or key == "a":
+            return self.autoeft + f"({self.indices:s})"
+        elif key == "projection" or key == "p":
+            return self.autoeft + f"({self.indices:p})"
         else:
             return self.__repr__()
 
@@ -362,7 +366,7 @@ class Field(Operator_Model):
         for indtype in ["gauge", "colf"]:
             for index in self.indices:
                 if index.typ == indtype:
-                    index.projection = f"{pre:s}F{self.field_pos:d}I{counter[indtype]:d}"
+                    index.projection = f"{pre:s}{indtype:s}F{self.field_pos:d}I{counter[indtype]:d}"
                     counter[indtype] += 1
 
 

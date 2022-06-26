@@ -12,13 +12,17 @@ from sage.rings.rational_field import QQ
 # from tioc.get_FORM.form_read_in import Term_Model, Term_s
 from tioc.get_FORM_refactored.term import Term, TermType
 from tioc.get_FORM_refactored.summand import Summand
+from tioc.get_FORM_refactored.operator import Tensor
+from tioc.get_FORM_refactored.operators import Tensors
 from tioc.get_FORM_refactored.indices import Indices_Operator
 from tioc.get_FORM_refactored.index import Index
 from tioc.get_FORM_refactored.read_write import get_terms
+from tioc.get_FORM_refactored.basisTensors import MonBasisTensor, SymBasisTensor, MonBasisTensors, SymBasisTensors
 
 from autoeft.invariants import SUNTableau, field_projection_operator, symmetrize_tensors
 from autoeft.io import load_basis
 from autoeft.sun_projection import tensor_projection
+from autoeft.model import SUNGroup
 from . import AUTOEFT_PATH, FORM_PATH, FORM_GENERAL_PATH, model, get_antisymEps, op_config, bosons, fermions, tensors, run_form
 
 logger_autoeft = logging.getLogger("autoeft.projection")
@@ -285,17 +289,57 @@ def sun_internal_projector(op_type, group):
             # print(field_id, d)
     return projection_operator
 
-def form_basis(op_type, tensors, group):
+def yt_to_tensors(yt: SUNTableau, field_content: Dict, sun_group: SUNGroup, factor: Fraction):
+    """
+    Create Note Schreibe als gaugeF1I2,...
+    Parameters
+    ----------
+    yt
+    sun_group
+
+    Returns
+    -------
+    """
+    tensors = []
+    if sun_group.N == 2:
+        ind_prefix = "gauge"
+    elif sun_group.N == 3:
+        ind_prefix = "colf"
+    else:
+        logger.error("No index prefix defined for this group.")
+        sys.exit("STOP")
+    for column in zip(*yt.tableau):
+        expr = f"[su{sun_group.N:d}eps]("
+        expr += ",".join(f"{ind_prefix}F{index.field_num}I{index.index_num}" for index in column)
+        expr += ")"
+        tensor = Tensor(expr)
+        for index in tensor.indices:
+            index.projection = index.expr
+        tensors.append(tensor)
+
+    return MonBasisTensor(sun_group.name, field_content, Tensors(tensors), factor)
+
+def basis_tensors(op_type, field_content, tensors, group):
     """Return monomial and symmetrized tensors in FORM-readable output."""
     internal_projector = sun_internal_projector(op_type, group)
 
     monomial_basis = []
     tensor_basis = []
-    for tensor in tensors:
-        monomial_basis.append(tensor.to_form())
+    for i, tensor in enumerate(tensors):
+        # Monomial basis tensors
+        tensorI = yt_to_tensors(tensor, field_content, group, Fraction(1))
+        monomial_basis.append(tensorI)
+        # print(f"MonBasisTensor: {tensorI:a}")
+
+        # Symmetrized basis tensors
         sym_tensors = symmetrize_tensors([(tensor, Fraction(1))], internal_projector)
-        tensor_basis.append(SUNTableau.tensors_to_form(sym_tensors))
-    return monomial_basis, tensor_basis
+        sym_basis_tensor = []
+        for sym_tensor in sym_tensors:
+            sym_basis_tensor.append(yt_to_tensors(sym_tensor[0], field_content, group, sym_tensor[1]))
+        sym_basis_tensor = SymBasisTensor(sym_basis_tensor, i)
+        # print(f"SymBasisTensor: {sym_basis_tensor:a}")
+        tensor_basis.append(sym_basis_tensor)
+    return MonBasisTensors(monomial_basis), SymBasisTensors(tensor_basis)
 
 def get_basis(max_dim: int):
     """Load basis."""
@@ -318,11 +362,12 @@ def get_basis_tensors(basis, field_content, derivatives, mass_dim):
         # get the SU(N) tensors of sun_group
         sun_basis = operator.sun_tensors[sun_group]
         # convert the tensors to FORM-readable output
-        sun_monom, sun_tensor = form_basis(op_type, sun_basis, sun_group)
-        sun_projection_tensors[sun_group.name] = {"sun_monom": sun_monom, "sun_tensor": sun_tensor}
-        if len(sun_projection_tensors[sun_group.name]["sun_monom"]) == 0:
+        sun_monom, sun_tensor = basis_tensors(op_type, field_content, sun_basis, sun_group)
+        # sun_monom_test, sun_tensor_test = form_basis(op_type, sun_basis, sun_group)
+        if sun_monom:
+            sun_projection_tensors[sun_group.name] = {"sun_monom": sun_monom, "sun_tensor": sun_tensor}
+        else:
             sun_projection_tensors[sun_group.name] = False
-    # TODO: Return basis tensors as MonBasisTensors and SymBasisTensors.
     return sun_projection_tensors
 
 def sun_projection(single_terms, max_dim: int):
@@ -350,11 +395,13 @@ def sun_projection(single_terms, max_dim: int):
                         continue
                     # collect all sun tensors of the group and the tensor in one ordered list for the projection.
                     sun_field_tensors = []
-                    for term in term_mass_dim.terms:
+                    for term in term_mass_dim:
                         sun_field_tensors.append(term.gaugeTensorsSUN[sun_group])
 
                     # project all tensors simultaneously
-                    P_map, G_map = tensor_projection(N, sun_monom, sun_tensor, sun_field_tensors)
+                    sun_monomial_basis = [f"{tensor:p}" for tensor in sun_monom]
+                    sun_tensor_basis = [f"{tensor:p}" for tensor in sun_tensor]
+                    P_map, G_map = tensor_projection(N, sun_monomial_basis, sun_tensor_basis, [f"{tensor:p}" for tensor in sun_field_tensors])
                     dim = len(sun_monom)
                     n_projection_op = len(sun_field_tensors)
                     G = mx.constructor.matrix(QQ, dim, dim, G_map)
@@ -375,6 +422,10 @@ def replace_sun_tensors_by_projected_ones(single_terms):
                 if projection_matrix:
                     # projection_matrix exists
                     sun_basis_tensors = term_mass_dim.sun_projection_tensors[sun_group]["sun_tensor"]
+                    for tensor in sun_basis_tensors:
+                        print(f"{tensor:abb}")
+                    # Possible to print TSUN basis tensor in FORM compatible way with the correct indices while maintaining the epsilon expressions of them.
+                    # TODO: Substitute TSUN basis tensors while considering the projection matrix and combine terms again in FORM.
                     basis_dim = len(sun_basis_tensors)
                     assert len(term_mass_dim.terms) == projection_matrix.nrows(), "Projection matrix has the wrong shape."
                     assert basis_dim == projection_matrix.ncols(), "Projection matrix has the wrong shape."

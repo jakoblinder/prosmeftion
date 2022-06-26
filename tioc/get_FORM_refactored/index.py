@@ -179,6 +179,8 @@ class Index(Index_Model):
             return f"{self.tex}"
         if key == "debug":
             return f"{self.tex}({self.name})"
+        elif key == "projection" or key == "p":
+            return f"{self.projection:s}"
         else:
             return self.__repr__()
 

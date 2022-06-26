@@ -29,7 +29,7 @@ class Coefficient_Model(ABC):
     output_dimless = True # Specifies whether tex output contains only dimensionless variables or not
     @abstractmethod
     def __init__(self, expr):
-        self.expr = expr
+        self.expr = str(expr)
 
     @abstractmethod
     def __repr__(self):

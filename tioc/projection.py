@@ -20,7 +20,7 @@ from typing import List, Dict
 
 from tioc.get_BS.class_term import Term
 from tioc.get_FORM.form_read_in import Term_form, Term_Model, Term_s
-from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values, model
+from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values, model, get_SUN_name
 from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
 from tioc.get_FORM_refactored.read_write import get_terms
 from tioc.get_FORM_refactored.coefficient import Factor
@@ -812,7 +812,6 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
                 print(f"{term:s}\n")
     return form_terms
 
-
 def write_texfile_and_create_pdf(pdfname="terms"):
     """
     Define Decorator to generat tex files of given latex expression and name of pdf.
@@ -898,17 +897,43 @@ def tex_sorted_terms_wo_doubles(single_terms):
                 latex += f"{term:tex}\n"
                 latex += r"\end{dmath}" + "\n"
 
-        # for term_type_nD in term_type.values():
-        #     latex += r"\section*{" + re.sub(r"'", "", term_type_nD.name) + "}\n"
-        #     # try:
-        #     # for term in term_type_nD:
-        #     print(term_type_nD)
-        #     # latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
-        #     latex += r"\begin{dmath}" + "\n"
-        #     latex += f"{term_type_nD:tex}\n"
-        #     latex += r"\end{dmath}" + "\n"
-        #     # except AttributeError:
-        #     #     print("-----")
+    return latex
+
+@write_texfile_and_create_pdf("terms_sorted_sun_projection")
+def tex_terms_sorted_sun_projection(single_terms, tensors_for_fieldstructure):
+    latex = ""
+    for term_type in single_terms.values():
+        for term_mass_dim in term_type.values():
+            latex += r"\section*{" + re.sub(r"'", "", term_mass_dim.name) + "}\n"
+            term_with_specific_field_structure = {}
+            for term in term_mass_dim:
+                try:
+                    term_with_specific_field_structure[term.fieldstructure].append(term)
+                except KeyError:
+                    term_with_specific_field_structure[term.fieldstructure] = [term]
+            for name_of_term, terms_specific in term_with_specific_field_structure.items():
+                name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])
+                latex += r"\subsection*{" + f"{name_form:s}" + "}\n"
+                try:
+                    tensors_for_fieldstructure[name_form]
+                    for n in range(2,3+1):
+                        sun = get_SUN_name(n)
+                        try:
+                            tensors_fieldstructure = tensors_for_fieldstructure[name_form][sun]
+                            if tensors_fieldstructure:
+                                latex += r"\paragraph{" + f"{sun:s}-Basis Tensors" + "}\n"
+                                # TODO: write tex indices and print
+                        except KeyError:
+                            # This Term doesn't have Basis tensors for this group
+                            continue
+                except KeyError:
+                    # No SUN-tensors exist for this fieldstructure
+                    pass
+                latex += r"\paragraph{" + f"Summands" + "}\n"
+                for term in terms_specific:
+                    latex += r"\begin{dmath}" + "\n"
+                    latex += f"{term:tex}\n"
+                    latex += r"\end{dmath}" + "\n"
 
     return latex
 

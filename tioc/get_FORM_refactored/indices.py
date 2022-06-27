@@ -346,6 +346,8 @@ class Indices_Summand(Indices_Model):
                 uncontractedInd.remove(Index(f"Lsldot{index.id}"))
         if len(uncontractedInd) == 0 and all(contract):
             contracted = True
+        elif all([index.typ == "sbasis" for index in uncontractedInd]):
+            contracted = True
 
         if contracted:
             'Remove double occuring indices'

@@ -1,5 +1,5 @@
 *--#[ tensors :
-CFunction yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [su2dK], [su3dK], [sl2CdK], T, gamma;
+CFunction yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [su2dK], [su3dK], [sl2CdK], T, gamma, TSU2, TSU3;
 * Indices and functions for derivatives in SL2C notation.
 CFunction sigma, sigmabar;
 CFunction sigma2, sigmabar2;
@@ -40,21 +40,18 @@ Set spinorsAllc: lc, ec, [e_Cc], uc, [u_Cc], bc, [d_Cc], qc, lbarc, ebarc, [e_C+
 *--#] operators :
 
 *--#[ indices :
-AutoDeclare Indices lor      = 4; * 4d Lorentz index
-AutoDeclare Indices lorA     = 4; * Auxiliary 4d Lorentz index
-AutoDeclare Indices spin     = 4; * Index for Gamma matrices/ spinor index
-AutoDeclare Indices spinA    = 2; * Auxiliary index for Gamma matrices/ spinor index
-AutoDeclare Indices gauge    = 2; * SU(2)-index in fundamental
-AutoDeclare Indices gaugeA   = 2; * Auxiliary SU(2)-index in fundamental
-AutoDeclare Indices gaugeadj = 3; * SU(2)-index in adjoint
-AutoDeclare Indices colf     = 3; * SU(3)-index in fundamental
-AutoDeclare Indices colfA    = 3; * Auxiliary SU(3)-index in fundamental
-AutoDeclare Indices cola     = 8; * SU(3)-index in adjoint
-AutoDeclare Indices flav     = n; * flavor index
-AutoDeclare Indices Lsl      = 2; * SL2C Index
-AutoDeclare Indices Usl      = 2; * SL2C Index
-AutoDeclare Indices Lsldot   = 2; * SL2C Index
-AutoDeclare Indices Usldot   = 2; * SL2C Index
+AutoDeclare Indices lor      = 4; * 4d Lorentz index.
+AutoDeclare Indices Lsl      = 2; * Subscript and undotted SL2C-Index.
+AutoDeclare Indices Usl      = 2; * Superscripted and undotted SL2C-Index.
+AutoDeclare Indices Lsldot   = 2; * Subscript and dotted SL2C-Index.
+AutoDeclare Indices Usldot   = 2; * Superscripted and dotted SL2C-Index.
+AutoDeclare Indices spin     = 2; * 4 dimensional Spin index, which is summed over 2 Weyl spinors.
+AutoDeclare Indices gauge    = 2; * Fundamental index of SU2.
+AutoDeclare Indices gaugeadj = 3; * Adjoint index of SU2.
+AutoDeclare Indices colf     = 3; * Fundamental index of SU3.
+AutoDeclare Indices cola     = 8; * Adjoint index of SU3.
+AutoDeclare Indices flav     = n; * Flavor index.
+AutoDeclare Indices sbasis   = N; * Index for basis tensors of SU(N).
 
 AutoDeclare Indices op; * auxiliary index for converting between commuting and noncommuting operators.
 

@@ -29,7 +29,7 @@ class Operators_Model(MutableMapping):
     @abstractmethod
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""
-        repr_operators = "*".join(map(str, self.operators))
+        repr_operators = "*".join(map(repr, self.operators))
         return f"{repr_operators:s}"
 
     def __str__(self):
@@ -136,12 +136,8 @@ class Operators_Model(MutableMapping):
         logger.debug(f"The operator(s) {self[key]:s} will be deleted.")
         operators = list(self.operators)
         if isinstance(key, str) or isinstance(key, slice):
-            ind_list = []
             for op in self[key]:
-                ind_list.append(self.index(op))
-            assert all([ind_list.count(i) == 1 for i in ind_list]), "Some operators wasn't found or was found to often."
-            for i in ind_list:
-                del operators[i]
+                del operators[type(self).index(operators, op)]
         else:
             del operators[key]
         self.operators = tuple(operators)
@@ -149,9 +145,10 @@ class Operators_Model(MutableMapping):
     def __iter__(self):
         return iter(self.operators)
 
-    def index(self, op):
+    @staticmethod
+    def index(operators, op):
         """Returns index of searched operator op."""
-        for i, ref_op in enumerate(self):
+        for i, ref_op in enumerate(operators):
             if op == ref_op:
                 return i
 

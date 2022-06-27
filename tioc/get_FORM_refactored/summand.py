@@ -79,7 +79,10 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
             coeff = self.coeff
             tensor = "*".join(map(str, self.tensors))
             contractedOp = "*".join(map(str, self.fields))
-            return f"({coeff})*{tensor:s}*{contractedOp:s}"
+            if tensor:
+                return f"({coeff})*{tensor:s}*{contractedOp:s}"
+            else:
+                return f"({coeff})*{contractedOp:s}"
         else:
             return self.__repr__()
 
@@ -106,7 +109,11 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         tex_indices = {}  # Dictionary for unique tex names of indices.
         for index in self.indices:
             try:
-                tex_indices[index.indname] = next(generator[index.typ])
+                if index.typ == "sbasis":
+                    ind = index_config
+                    tex_indices[index.indname] = f"{index_config['sbasis']['tex_indices']}_{{{index.id}}}"
+                else:
+                    tex_indices[index.indname] = next(generator[index.typ])
             except StopIteration:
                 logger.error("Specified index range is to small to map all occurring indices.")
                 sys.exit("STOP")

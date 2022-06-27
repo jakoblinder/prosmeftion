@@ -8,7 +8,7 @@ from pathlib import Path
 
 from yaml import safe_load
 
-from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles  # , main
+from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection  # , main
 from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
 from tioc import form_declarations, CONFIG_PATH, FORM_GENERAL_PATH, op_config
 
@@ -90,7 +90,9 @@ def main():
     op = op_config
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, max_dim=6)
-    single_terms = replace_sun_tensors_by_projected_ones(single_terms)
+    single_terms, tensors_for_fieldstructure = replace_sun_tensors_by_projected_ones(single_terms)
+    if args.tex:
+        tex_terms_sorted_sun_projection(single_terms, tensors_for_fieldstructure)
 
     # TODO: Substitute epsilons of terms with sun projected basis for terms which have already a sun_projection.
     #  Combine those expressions while writing sun basis tensors as TSU2[i, gauge123, gauge456, ...]

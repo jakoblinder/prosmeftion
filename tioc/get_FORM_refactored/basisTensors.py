@@ -56,7 +56,6 @@ class SymBasisTensor():
     def __init__(self, monoms: List[MonBasisTensor], tensorIndex: int):
         self.monoms = monoms
         self.tensorIndex = Index(f"sbasis{tensorIndex:d}")
-        self.indices = self.get_indices()
 
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""
@@ -124,6 +123,32 @@ class SymBasisTensor():
 
         return Indices_Operator(basis_tensor_index + tensor_indices)
 
+    @property
+    def indices(self):
+        basis_tensor_index = [self.tensorIndex]
+        def sort_indices(indices: List[Index]):
+            """
+            Sort indices with id F1I2 in given list of indices by their order in fields, i.e. for example:
+            gaugeF2I1, gaugeF1I1 -> gaugeF1I1, gaugeF2I1
+            Parameters
+            ----------
+            indices
+
+            Returns
+            -------
+            """
+            indices_aux = []
+            for index in indices:
+                match = re.match(r"(gauge|colf)F(?P<field>\d{1,2})I\d{1,2}", index.projection)
+                f_number = int(match.group("field"))
+                indices_aux.append((f_number, index))
+            indices_aux = sorted(indices_aux, key=lambda tup: tup[0])
+            return [index[1] for index in indices_aux]
+
+        tensor_indices = sort_indices([index for tensor in self.monoms[0].tensors for index in tensor.indices])
+
+        return Indices_Operator(basis_tensor_index + tensor_indices)
+
 
 class Model_BasisTensors(ABC, MutableMapping):
     """
@@ -186,7 +211,7 @@ class Model_BasisTensors(ABC, MutableMapping):
         logger.debug(f"The basis Tensor {self.basisTensors[key]:s} will be rewritten with {value:s}.")
         basisTensors = list(self.basisTensors)
         basisTensors[key] = value
-        self.basisTensors[key] = tuple(basisTensors)
+        self.basisTensors = tuple(basisTensors)
 
     def __delitem__(self, key):
         type_check = [isinstance(key, int), key > 0 if isinstance(key, int) else False, isinstance(key, slice)]
@@ -204,6 +229,12 @@ class Model_BasisTensors(ABC, MutableMapping):
 
     def __iter__(self):
         return iter(self.basisTensors)
+
+    def clear(self):
+        return self.basisTensors.clear()
+
+    def copy(self):
+        return type(self)(list(self.basisTensors).copy())
 
     @property
     def group(self):

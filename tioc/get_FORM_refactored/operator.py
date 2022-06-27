@@ -163,7 +163,7 @@ class Operator_Model(Index):
     def expr(self):
         if type(self) == Tensor:
             expr = self.name
-            expr += f"({','.join(map(str, self.indices))})"
+            expr += f"({','.join(map(repr, self.indices))})"
         elif type(self) == Field:
             cov = op_config['fermionfields']['D']['mathematica']['cov']
             expr = ""
@@ -292,7 +292,7 @@ class Tensor(Operator_Model):
     def tex(self):
         """Create tex expression of operator without derivatives."""
         return super().texed_op_wo_der(subscript_indices=("lor", "Lsldot", "Lsl", "gauge", "colf"),
-                                    superscript_indices=("Usldot", "Usl", "gaugeadj", "cola", "flav"))
+                                    superscript_indices=("sbasis", "Usldot", "Usl", "gaugeadj", "cola", "flav"))
 
 class Field(Operator_Model):
     expr: str

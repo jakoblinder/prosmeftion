@@ -44,59 +44,62 @@ logger.info(timestamp.replace(microsecond=0).isoformat())
 
 
 def main():
-    # bs_file = args.matched.resolve()  # "exampleOutputBS.m"
-    #
-    # with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
-    #     file.write(form_declarations())
-    #
-    # terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
-    # del bs_file
-    # # pickle.dump(terms, open(CONFIG_PATH / "terms.p", "wb"))
-    # # terms = pickle.load(open(CONFIG_PATH / "terms.p", "rb"))
-    #
-    # if args.tex:
-    #     tex_unsorted_terms(terms)
-    #
-    # # Sort terms by type for the projection:
-    # single_terms = get_type(terms)
-    # # single_terms_debug = single_terms
-    # # del terms
-    #
-    # if args.tex:
-    #     tex_sorted_terms(single_terms)
-    #
-    # nterms_before = 0
-    # for terms in single_terms.values():
-    #     for terms_n in terms.values():
-    #         nterms_before += len(terms_n)
-    #
-    # # Remove double terms:
-    # single_terms = remove_doubles(single_terms)
-    #
-    # nterms_after = 0
-    # for terms in single_terms.values():
-    #     for terms_n in terms.values():
-    #         nterms_after += len(terms_n)
-    #
-    # logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-    #
-    # # print terms
-    # if args.tex:
-    #     tex_sorted_terms_wo_doubles(single_terms)
-    #
-    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
-    single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
+    bs_file = args.matched.resolve()  # "exampleOutputBS.m"
 
-    op = op_config
+    with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
+        file.write(form_declarations())
+
+    terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
+    del bs_file
+    # pickle.dump(terms, open(CONFIG_PATH / "terms.p", "wb"))
+    # terms = pickle.load(open(CONFIG_PATH / "terms.p", "rb"))
+
+    if args.tex:
+        tex_unsorted_terms(terms)
+
+    # Sort terms by type for the projection:
+    single_terms = get_type(terms)
+    # single_terms_debug = single_terms
+    # del terms
+
+    if args.tex:
+        tex_sorted_terms(single_terms)
+
+    nterms_before = 0
+    for terms in single_terms.values():
+        for terms_n in terms.values():
+            nterms_before += len(terms_n)
+
+    # Remove double terms:
+    single_terms = remove_doubles(single_terms)
+
+    nterms_after = 0
+    for terms in single_terms.values():
+        for terms_n in terms.values():
+            nterms_after += len(terms_n)
+
+    logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+
+    # print terms
+    if args.tex:
+        tex_sorted_terms_wo_doubles(single_terms)
+
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, max_dim=6)
-    single_terms, tensors_for_fieldstructure = replace_sun_tensors_by_projected_ones(single_terms)
-    if args.tex:
-        tex_terms_sorted_sun_projection(single_terms, tensors_for_fieldstructure)
+    single_terms = replace_sun_tensors_by_projected_ones(single_terms)
 
-    # TODO: Substitute epsilons of terms with sun projected basis for terms which have already a sun_projection.
-    #  Combine those expressions while writing sun basis tensors as TSU2[i, gauge123, gauge456, ...]
-    #  -> Need new read in method for those kind of tensors.
+    nterms_after_sun_projection = 0
+    for terms in single_terms.values():
+        for terms_n in terms.values():
+            nterms_after_sun_projection += len(terms_n)
+
+    print(f"Terms after SUN projection: {nterms_after_sun_projection:d}")
+
+    if args.tex:
+        tex_terms_sorted_sun_projection(single_terms)
+
+    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
+    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
     return single_terms
 

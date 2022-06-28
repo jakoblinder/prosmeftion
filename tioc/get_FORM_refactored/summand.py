@@ -32,29 +32,6 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         self.name = fp_name
         self.tensors = tensors
         self.fields = fields
-
-        # print(self.fields[0])
-        # if len(self.tensors) > 1:
-        #     print(self.tensors[1])
-
-        # TODO: Spielfeld
-        # print(f"Fields: {self.fields['yukawa']}")
-        # print(f"Tensors: {self.tensors['yukawa']}")
-        #
-        # print(f"SU2: {self.tensors['SU2_W']}")
-        # if self.tensors['SU2_W']:
-        #     print("DELETE")
-        #     tmp = self.tensors['SU2_W'].copy()
-        #     del self.tensors['SU2_W']
-        # print(f"SU2: {self.tensors['SU2_W']}")
-        # for i, tensor in enumerate(tmp):
-        #     self.tensors.insert(i, tensor)
-        # self.tensors[0] = tmp[0]
-        # print(f"SU2: {self.tensors['SU2_W']}")
-        # print(f"SU3: {self.tensors['SU3_C']}")
-        #
-        # print("------------------------------")
-
         self.coeff = coeff
         self.nD
         self.fieldcounter
@@ -251,6 +228,23 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         else:
             return Indices_Summand(indices_expr.indices)
 
+    def replace_SUN_indices_by_projection_indices(self):
+        """
+        Replace all SUN-indices by the corresponding projection indices, which should be saved at this time in the
+        projection attribute of each index.
+        E.g.: [su2eps](gauge1,gauge2)*H(gauge1)*[H+](gauge2) -> [su2eps](gaugeF1I1,gaugeF2I1)*H(gaugeF1I1)*[H+](gaugeF2I1)
+        Returns
+        -------
+        """
+        for sun_group in ["gauge", "colf"]:
+            for tensor in self.tensors:
+                for index in tensor.indices[sun_group]:
+                    index.expr = index.projection
+            for field in self.fields:
+                for index in field.indices[sun_group]:
+                    index.expr = index.projection
+
+
 class Summand(Summand_Model):
     """Single term consisting of an overall coefficient and a product of operators."""
     fieldcounter: Dict[str, int]
@@ -261,7 +255,9 @@ class Summand(Summand_Model):
         # Gauge fields contain special projection index of the form idxF2I1, which is transmitted to the contracted tensors:
         self.gaugeIndicesforProjection_tensors()
 
-        self.gaugeTensorsSUN = {get_SUN_name(2): self.get_SUN_tensors(2), get_SUN_name(3): self.get_SUN_tensors(3)}
+        su2 = get_SUN_name(2)
+        su3 = get_SUN_name(3)
+        self.gaugeTensorsSUN = {su2: self.tensors[su2], su3: self.tensors[su3]}
 
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""
@@ -289,24 +285,3 @@ class Summand(Summand_Model):
                 for indtype in ["gauge", "colf"]:
                     if index.typ == indtype:
                         index.projection = self.get_projectionIndex_from_Field(index.id)
-
-    def get_SUN_tensors(self, N):
-        """
-        Returns coefficient tensors (i.e. epsilon and Kronecker delta) of the group SU("N") where the epsilontensor
-        and the Kronecker delta are rewritten as the regarding tensors in FORM, i.e. e_(...) and d_(...,...).
-        -------
-        """
-        # epsilon = f"[su{N:d}eps]"
-        # delta = f"[su{N:d}dK]"
-        # suN = []
-
-        return self.tensors[get_SUN_name(N)]
-        # for tensor in self.tensors:
-        #     if tensor.name == epsilon or tensor.name == delta:
-        #         suN.append(f"{tensor.autoeft:s}({','.join([index.projection for index in tensor.indices])})")
-            # elif tensor.name == delta:
-            #     suNdK.append(f"{tensor.autoeft:s}({','.join([index.projection for index in tensor.indices])})")
-
-        # form_tensors = "*".join(suN)
-
-        # return form_tensors

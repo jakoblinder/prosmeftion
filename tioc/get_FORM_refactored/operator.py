@@ -69,8 +69,14 @@ class Operator_Model(Index):
         tex_expr_op = self.tex_name
 
         if isinstance(self, Tensor):
-            sub_indices = [[f"{index:tex}" for index in self.indices[ind_typ]] for ind_typ in subscript_indices]
-            super_indices = [[f"{index:tex}" for index in self.indices[ind_typ]] for ind_typ in superscript_indices]
+            sub_indices = [[f"{index:tex}" for index in self.indices[ind_typ]] for ind_typ in subscript_indices if ind_typ != "sbasis"]
+            super_indices = [[f"{index:tex}" for index in self.indices[ind_typ]] for ind_typ in superscript_indices if ind_typ != "sbasis"]
+            if "sbasis" in subscript_indices:
+                sbasis_index = [f"{index.id}" for index in self.indices["sbasis"]]
+                sub_indices = [sbasis_index] + sub_indices
+            elif "sbasis" in superscript_indices:
+                sbasis_index = [f"{index.id}" for index in self.indices["sbasis"]]
+                super_indices = [sbasis_index] + super_indices
         elif isinstance(self, Field):
             sub_indices = [[f"{index:tex}" for index in self.indices[ind_typ] if not index.derIndex] for ind_typ in
                                  subscript_indices]
@@ -79,6 +85,7 @@ class Operator_Model(Index):
         else:
             logger.error("Class of operator unknown.")
             sys.exit("STOP")
+
 
         if r"_"  in tex_expr_op or r"^"  in tex_expr_op:
             tex_expr_op = f"({tex_expr_op})"
@@ -196,7 +203,6 @@ class Operator_Model(Index):
         self.name, self.isconj, self.non_conj_name = names # names[0], names[1], names[2]
         # self.indices = Indices_Operator(der_indices + op_indices)
         # Indexstructure of the operator only without the derivative.
-        ind_structure = [index.typ for index in op_indices]
         def assertion(der_indices, op_indices, fieldtype, non_conj_name):
             indices = Indices_Operator(der_indices + op_indices)
             # Indexstructure of the operator only without the derivative.

@@ -10,7 +10,6 @@ from tioc import CONFIG_PATH, index_pattern
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
-#TODO: Index range could be read from the modelfile
 with open(CONFIG_PATH / "index.yml", "r") as file:
     index_config = safe_load(file)
 

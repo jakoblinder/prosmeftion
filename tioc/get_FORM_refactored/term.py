@@ -19,7 +19,7 @@ logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
 class Term_Model():  # Summand
-    """Bas class for single term consisting of an overall coefficient and a product of operators."""
+    """Base class for single term consisting of an overall coefficient and a product of operators."""
     terms: List[Summand]
     name: str
     # indices: Indices
@@ -59,7 +59,19 @@ class Term_Model():  # Summand
     def __getitem__(self, ii):
         """Get a list item"""
         if isinstance(ii, slice):
-            return type(self)(self.terms[ii])
+            if isinstance(self, Term):
+                return Term(self.terms[ii], self.name)
+            if isinstance(self, TermType):
+                terms = TermType(self.terms[ii], self.field_content)
+                try:
+                    terms.sun_projection_tensors = self.sun_projection_tensors
+                except AttributeError:
+                    pass
+                try:
+                    terms.sun_projection_matrix = self.sun_projection_matrix
+                except AttributeError:
+                    pass
+                return terms
         else:
             return self.terms[ii]
 
@@ -159,8 +171,12 @@ class TermType(Term_Model):
     sun_projection_tensors: Dict[str,Dict[str,SymBasisTensors]]  # Sun_projection tensors
     sun_projection_matrix: Dict[str, sage.matrix.matrix_rational_dense.Matrix_rational_dense]
     def __init__(self, summand : Summand, field_content: Dict):
-        self.terms = [summand]  # [Summand([tensor.expr for tensor in summand.tensors], [field.expr for field in summand.fields], summand.coeff.expr, name) for term in terms]
-        self.name = str({"nD": self.nD, **field_content})
+        if isinstance(summand, list):
+            self.terms = summand
+        elif isinstance(summand, Summand):
+            self.terms = [summand]  # [Summand([tensor.expr for tensor in summand.tensors], [field.expr for field in summand.fields], summand.coeff.expr, name) for term in terms]
+        if len(self.terms) != 0:
+            self.name = str({"nD": self.nD, **field_content})
         self.field_content = field_content
 
         # SUN-projection:

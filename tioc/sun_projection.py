@@ -444,121 +444,99 @@ def replace_sun_tensors_by_projected_ones(single_terms):
 
     # Combine terms in FORM:
     merged_terms = []
-    tensors_for_fieldstructure = {}
+    tensors_for_field_content = {}
     for type in single_terms.values():
         for term_mass_dim in type.values():
             term_with_specific_field_structure = {}
+            if term_mass_dim.sun_projection_tensors:
+                sun_proj_tensors = {group_name: tensors["sun_tensor"] if tensors else False for group_name, tensors in term_mass_dim.sun_projection_tensors.items()}
+                tensors_for_field_content[term_mass_dim.name] = sun_proj_tensors
+            else:
+                sun_proj_tensors = False
+            # Sort terms by explicit field structure
             for term in term_mass_dim:
+                term.replace_SUN_indices_by_projection_indices()
                 try:
                     term_with_specific_field_structure[term.fieldstructure].append(term)
                 except KeyError:
                     term_with_specific_field_structure[term.fieldstructure] = [term]
+
             for name_of_term, terms_specific in term_with_specific_field_structure.items():
                 for i, term in enumerate(terms_specific[1:]):
                     if not i:
                         # i == 0
-                        ref_tensor_indices, eq_tensor_indices = equalize_indices(terms_specific[0],
-                                                                                 term)
+                        ref_tensor_indices, eq_tensor_indices = equalize_indices(terms_specific[0], term)
                     else:
                         _, eq_tensor_indices_tmp = equalize_indices(terms_specific[0], term)
                         eq_tensor_indices += eq_tensor_indices_tmp
 
                 sum_indices = ref_tensor_indices + eq_tensor_indices
                 assert not sum_indices
-
-                try:
-                    # If the following call works, there exists a projection matrix for this fieldstructure typ.
-                    if terms_specific[0].projected_tensors:
-                        # projection matrix exists
-                        sun_proj_tensors = {}
-                        for sun_group in term_mass_dim.sun_projection_matrix.keys():
-                            if not term_mass_dim.sun_projection_tensors[sun_group]:
-                                continue
-                            sun_projection_tensors = term_mass_dim.sun_projection_tensors[sun_group]["sun_tensor"].copy()
-
-                            def equalize_basisTensor_indices(ref_tensors: Tensors, basis_tensor: SymBasisTensor):
-                                ref_indices = [index for tensor in ref_tensors for index in tensor.indices]
-                                for monom in basis_tensor.monoms:
-                                    for i, index in enumerate(ref_indices):
-                                        index_tensor_found = False
-                                        for tensor in monom.tensors:
-                                            for j, tensor_index in enumerate(tensor.indices):
-                                                if tensor_index.projection == index.projection:
-                                                    index_tensor_found = True
-                                                    tensor.indices[j] = index
-                                                    break
-                                            if index_tensor_found: break
-
-                                return basis_tensor
-
-                            for i, sun_projection_tensor in enumerate(sun_projection_tensors):
-                                sun_projection_tensors[i] = equalize_basisTensor_indices(terms_specific[0].tensors[sun_group],
-                                                                                     sun_projection_tensor)
-                            sun_proj_tensors[sun_group] = sun_projection_tensors
-
-                        exprs = []
-                        for term in terms_specific:
-                            sun_tensors = {}
-                            for sun_group in term_mass_dim.sun_projection_matrix.keys():
-                                try:
-                                    del term.tensors[sun_group]
-                                    sun_tensors[sun_group] = [f"({str(proj_coeff)})*{sun_proj_tensors[sun_group][i]:abb}" for i, proj_coeff in enumerate(term.projected_tensors[sun_group]) if proj_coeff]
-                                except KeyError:
-                                    continue
-                            all_tensors = [f"({'+'.join(sui_tensors)})" for sui_tensors in sun_tensors.values()]
-                            exprs.append(f"{'*'.join(all_tensors)}*{term:c}")
-                        name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])
-                        logger.info(f"Substitute SUN projection tensors in {', '.join([term.name for term in terms_specific])} of type {name_form}.")
-                        form = "Off statistics;\n"
-                        form += "#include declarations_general.h # coefficient\n"
-                        form += "#include declarations_general.h # indices\n"
-                        form += "#include declarations_general.h # tensors\n"
-                        form += "#include declarations_general.h # operators\n"
-                        form += "\n"
-                        for i, expr in enumerate(exprs):
-                            form += f"Local expr{i:d} = {expr};\n"  #
-                        form += "\n"
-                        list_expr_names = [f"expr{i:d}" for i in range(len(exprs))]
-                        form += f"Local expr = {' + '.join(list_expr_names)};\n"
+                if sun_proj_tensors:
+                    exprs = []
+                    for term in terms_specific:
+                        sun_tensors = {}
+                        for sun_group in [group for group in sun_proj_tensors.keys() if sun_proj_tensors[group]] :  # term_mass_dim.sun_projection_matrix.keys():
+                            del term.tensors[sun_group]
+                            sun_tensors[sun_group] = [f"({str(proj_coeff)})*{sun_proj_tensors[sun_group][i]:abb}" for i, proj_coeff in enumerate(term.projected_tensors[sun_group]) if proj_coeff]
+                        all_tensors = [f"({'+'.join(sui_tensors)})" for sui_tensors in sun_tensors.values()]
+                        exprs.append(f"{'*'.join(all_tensors)}*{term:c}")
+                    name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])
+                    logger.info(f"Substitute SUN projection tensors in {', '.join([term.name for term in terms_specific])} of type {name_form}.")
+                    form = "Off statistics;\n"
+                    form += "#include declarations_general.h # coefficient\n"
+                    form += "#include declarations_general.h # indices\n"
+                    form += "#include declarations_general.h # tensors\n"
+                    form += "#include declarations_general.h # operators\n"
+                    form += "\n"
+                    for i, expr in enumerate(exprs):
+                        form += f"Local expr{i:d} = {expr};\n"  #
+                    form += "\n"
+                    list_expr_names = [f"expr{i:d}" for i in range(len(exprs))]
+                    form += f"Local expr = {' + '.join(list_expr_names)};\n"
+                    form += ".sort\n"
+                    form += f"Drop {', '.join(list_expr_names)};\n"
+                    form += "\n"
+                    form += "* Bring indices of sl2C-epsilons in order:\n"
+                    epss = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in
+                            op_config["tensors"].items() if
+                            "sl2Ceps" in tensor_name]
+                    for eps in epss:
+                        antisymeps = get_antisymEps(eps)
+                        form += f"Multiply replace_({eps},{antisymeps});\n"
                         form += ".sort\n"
-                        form += f"Drop {', '.join(list_expr_names)};\n"
-                        form += "\n"
-                        form += "* Bring indices of sl2C-epsilons in order:\n"
-                        epss = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in
-                                op_config["tensors"].items() if
-                                "sl2Ceps" in tensor_name]
-                        for eps in epss:
-                            antisymeps = get_antisymEps(eps)
-                            form += f"Multiply replace_({eps},{antisymeps});\n"
-                            form += ".sort\n"
-                            form += f"Multiply replace_({antisymeps},{eps});\n"
-                            form += ".sort\n"
-                        form += "\n"
-                        form += f"Bracket {', '.join(tensors + bosons + fermions)};\n\n"
+                        form += f"Multiply replace_({antisymeps},{eps});\n"
+                        form += ".sort\n"
+                    form += "\n"
+                    form += f"Bracket {', '.join(tensors + bosons + fermions)};\n\n"
 
-                        TERM_PATH = FORM_PATH / name_form
+                    TERM_PATH = FORM_PATH / name_form
 
-                        form += f'#write <{TERM_PATH / "substituted_T-SUN_tensors.h"}> "%E", expr\n'
+                    form += f'#write <{TERM_PATH / "substituted_T-SUN_tensors.h"}> "%E", expr\n'
 
-                        form += "Print +ss;\n"
-                        form += ".end\n"
+                    form += "Print +ss;\n"
+                    form += ".end\n"
 
-                        TERM_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
-                        with open(TERM_PATH / f"{name_form}.frm", "w") as file:
-                            file.write(form)
+                    TERM_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
+                    with open(TERM_PATH / f"{name_form}.frm", "w") as file:
+                        file.write(form)
 
-                        run_form(fp_cwd=TERM_PATH, filename=f"{name_form}.frm", fp_p=FORM_GENERAL_PATH)
+                    run_form(fp_cwd=TERM_PATH, filename=f"{name_form}.frm", fp_p=FORM_GENERAL_PATH)
 
-                        terms = get_terms(TERM_PATH / "substituted_T-SUN_tensors.h", as_one=True, name=name_form)
-                        merged_terms.append(terms)
-                        tensors_for_fieldstructure[name_form] = sun_proj_tensors
-                except AttributeError:
+                    terms = get_terms(TERM_PATH / "substituted_T-SUN_tensors.h", as_one=True, name=name_form)
+                    merged_terms.append(terms)
+                else:
                     # IF there isn't a projection matrix for this group and operator there - continue.
                     name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])
                     logger.info(f"{terms_specific[0].name} of type {name_form} doesn't has a projection matrix.")
                     # Rename Summand properly by their structure
                     terms_specific[0].name = name_form
                     merged_terms.append(Term(terms_specific, name_form))
-                    continue
     single_terms = get_type(merged_terms)
-    return single_terms, tensors_for_fieldstructure
+    for type in single_terms.values():
+        for term_mass_dim in type.values():
+            del term_mass_dim.sun_projection_matrix
+            for type_name, sun_tensors in tensors_for_field_content.items():
+                if term_mass_dim.name == type_name:
+                    term_mass_dim.sun_projection_tensors = sun_tensors
+    return single_terms

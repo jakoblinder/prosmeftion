@@ -46,7 +46,11 @@ class MonBasisTensor():
     @property
     def tex(self):
         mult_sign = ""
-        tex_expr = f"{self.coeff:tex} {mult_sign} " + f"{mult_sign} ".join([f"{tensor:tex}" for tensor in self.tensors])
+        self.coeff.name = "factor"
+        if self.coeff.expr == "1":
+            tex_expr = f"{mult_sign} ".join([f"{tensor:tex}" for tensor in self.tensors])
+        else:
+            tex_expr = f"{self.coeff:tex} {mult_sign} " + f"{mult_sign} ".join([f"{tensor:tex}" for tensor in self.tensors])
         return tex_expr
 
 
@@ -88,7 +92,27 @@ class SymBasisTensor():
 
     @property
     def tex(self):
-        tex_expr = "+".join([f"{monom:tex}" for monom in self.monoms])
+        if "2" in self.group:
+            N = 2
+        elif "3" in self.group:
+            N = 3
+        else:
+            logger.error("Group not defined.")
+            sys.exit("STOP")
+
+        tex_expr = f"({op_config['tensors'][f'TSU{N:d}']['tex']})"
+        sub_indices = [f"{index:tex}" for ind_typ in ["gauge", "colf"] for index in self.indices[ind_typ]]
+        # TODO: Tex index for sbasis index and equalize sbasis index in indices with tensorIndex.
+        tex_sbasis = index_config["sbasis"]["tex_indices"]
+        # just write only the number
+        super_indices = [f"{index.id}" for ind_typ in ["sbasis"] for index in self.indices[ind_typ]]
+        assert super_indices and sub_indices
+        tex_expr += f"^{{{', '.join(super_indices)}}}"
+        tex_expr += f"_{{{' '.join(sub_indices)}}}"
+
+        tex_expr += " &= "
+
+        tex_expr += " ".join([f"{monom:tex}" for monom in self.monoms])
         return tex_expr
 
     @property
@@ -98,30 +122,6 @@ class SymBasisTensor():
     @property
     def fieldcontent(self):
         return self.monoms[0].fieldcontent
-
-    def get_indices(self):
-        basis_tensor_index = [self.tensorIndex]
-        def sort_indices(indices: List[Index]):
-            """
-            Sort indices with id F1I2 in given list of indices by their order in fields, i.e. for example:
-            gaugeF2I1, gaugeF1I1 -> gaugeF1I1, gaugeF2I1
-            Parameters
-            ----------
-            indices
-
-            Returns
-            -------
-            """
-            indices_aux = []
-            for index in indices:
-                match = re.match(r"F(?P<field>\d{1,2})I\d{1,2}", index.id)
-                f_number = int(match.group("field"))
-                indices_aux.append((f_number, index))
-            indices_aux = sorted(indices_aux, key=lambda tup: tup[0])
-            return [index[1] for index in indices_aux]
-        tensor_indices = sort_indices([index for tensor in self.monoms[0].tensors for index in tensor.indices])
-
-        return Indices_Operator(basis_tensor_index + tensor_indices)
 
     @property
     def indices(self):
@@ -139,9 +139,10 @@ class SymBasisTensor():
             """
             indices_aux = []
             for index in indices:
-                match = re.match(r"(gauge|colf)F(?P<field>\d{1,2})I\d{1,2}", index.projection)
+                match = re.match(r"(gauge|colf)F(?P<field>\d{1,2})I(?P<index>\d{1,2})", index.projection)
                 f_number = int(match.group("field"))
-                indices_aux.append((f_number, index))
+                i_number = int(match.group("index"))
+                indices_aux.append((f_number + 0.1*i_number, index))
             indices_aux = sorted(indices_aux, key=lambda tup: tup[0])
             return [index[1] for index in indices_aux]
 
@@ -171,9 +172,9 @@ class Model_BasisTensors(ABC, MutableMapping):
     def __format__(self, key):
         """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
         if key == "tex":
-            logger.error("Tex expression not defined.")
-            sys.exit("STOP")
-            # return self.tex
+            return "\\\\ \n".join([f"{basisTensor:tex}" for basisTensor in self]) + "\n"
+        elif key == "abbreviation" or key == "abb":
+            return "\n".join([f"{basisTensor:abb}" for basisTensor in self])
         else:
             return self.__repr__()
 
@@ -250,10 +251,6 @@ class SymBasisTensors(Model_BasisTensors):
 
     def __init__(self, basisTensors: Tuple[SymBasisTensor]):
         super().__init__(basisTensors)
-        # for i, tensor in enumerate(self):
-        #     tensor.tensorIndex = Index(f"sbasis{i:d}")
-        # for tensor in basisTensors:
-        #     tensor.indices
 
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""

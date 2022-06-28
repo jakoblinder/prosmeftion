@@ -93,7 +93,7 @@ def main():
         for terms_n in terms.values():
             nterms_after_sun_projection += len(terms_n)
 
-    print(f"Terms after SUN projection: {nterms_after_sun_projection:d}")
+    logger.info(f"Terms after SUN projection: {nterms_after_sun_projection:d}")
 
     if args.tex:
         tex_terms_sorted_sun_projection(single_terms)

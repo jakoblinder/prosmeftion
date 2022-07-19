@@ -9,7 +9,7 @@ from typing import Dict, List, Tuple
 from tioc import model, op_config, index_config, get_SUN_name
 from .operator import Tensor, Field
 from .coefficient import Coefficient
-from .indices import Indices_Summand, Indices_Operator
+from .indices import Indices_Summand, Indices_Operator, Possible_Indices
 from .index import Dummy_Index
 from .operators import Tensors, Fields
 
@@ -37,6 +37,9 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         self.fieldcounter
         self.fieldstructure
 
+        self.possible_indices = Possible_Indices(
+            [index for index in list(self.indices).copy() if not isinstance(index, Dummy_Index)])
+
     @abstractmethod
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""
@@ -63,13 +66,11 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         else:
             return self.__repr__()
 
-
-
     @property
     def tex(self):
         """
-        Tex expression of whole Summand, but before the tex indices are generated with created generators, where the
-        range specified in the index config file.
+        Tex expression of the entire summand. However, before this can be generated, the tex indices are generated
+        using generators, with the range specified in the index configuration file.
         Returns
         -------
             LaTex expression.
@@ -227,6 +228,7 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
             return Indices_Summand(indices_expr.indices, allow_uncontracted=True)
         else:
             return Indices_Summand(indices_expr.indices)
+
 
     def replace_SUN_indices_by_projection_indices(self):
         """

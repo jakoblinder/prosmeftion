@@ -483,6 +483,73 @@ def form_declarations():
 
     return form
 
+def declaration_SL2C_sets(indices) -> str:
+    """
+    Declare SL2C-indices of a Summand and write Sets for contraction of SL2C-indices.
+    Write also Sets of other index types.
+    Parameters
+    ----------
+    indices : Indices_Summand
+
+    Returns
+    -------
+
+    """
+    lsl, usl, lsldot, usldot = indices.get_sl2C_sets()
+
+    max_ind = 5
+    # Generate only indices if there aren't any, since the could be declared twice otherwise.
+    if not (lsl and usl):
+        lsl_aux    = [f"Lsl{i:d}" for i in range(max_ind)]
+        usl_aux    = [f"Usl{i:d}" for i in range(max_ind)]
+    else:
+        lsl_aux = []
+        usl_aux = []
+    if not (lsldot and usldot):
+        lsldot_aux = [f"Lsldot{i:d}" for i in range(max_ind)]
+        usldot_aux = [f"Usldot{i:d}" for i in range(max_ind)]
+    else:
+        lsldot_aux = []
+        usldot_aux = []
+
+    decl_lsl = ", ".join([f"{repr(index)}=2" for index in lsl_aux] + [f"{repr(index)}=2" for index in lsl])
+    decl_usl = ", ".join([f"{repr(index)}=2" for index in usl_aux] + [f"{repr(index)}=2" for index in usl])
+    decl_lsldot = ", ".join([f"{repr(index)}=2" for index in lsldot_aux] + [f"{repr(index)}=2" for index in lsldot])
+    decl_usldot = ", ".join([f"{repr(index)}=2" for index in usldot_aux] + [f"{repr(index)}=2" for index in usldot])
+
+    set_lusl = ", ".join([i for pair in list(zip(lsl_aux, usl_aux)) for i in pair] + [repr(i) for pair in list(zip(lsl, usl)) for i in pair])
+    set_ulsl = ", ".join([i for pair in list(zip(usl_aux, lsl_aux)) for i in pair] + [repr(i) for pair in list(zip(usl, lsl)) for i in pair])
+    set_lusldot = ", ".join([i for pair in list(zip(lsldot_aux, usldot_aux)) for i in pair] + [repr(i) for pair in list(zip(lsldot, usldot)) for i in pair])
+    set_ulsldot = ", ".join([i for pair in list(zip(usldot_aux, lsldot_aux)) for i in pair] + [repr(i) for pair in list(zip(usldot, lsldot)) for i in pair])
+
+    form = ""
+    # Declaration SL2C_indices
+
+    form += f"Indices {decl_lsl};\n"
+    form += f"Indices {decl_usl};\n"
+    form += f"Indices {decl_lsldot};\n"
+    form += f"Indices {decl_usldot};\n"
+
+    # Sets for contraction for SL2C-indices
+    form += f"Set Lsl: {', '.join(map(repr, lsl))};\n"
+    form += f"Set Usl: {', '.join(map(repr, usl))};\n"
+    form += f"Set Lsldot: {', '.join(map(repr, lsldot))};\n"
+    form += f"Set Usldot: {', '.join(map(repr, usldot))};\n"
+
+    form += f"Set LUsl: {set_lusl};\n"
+    form += f"Set ULsl: {set_ulsl};\n"
+    form += f"Set LUsldot: {set_lusldot};\n"
+    form += f"Set ULsldot: {set_ulsldot};\n"
+
+    # Sets for contraction for all other indices except SL2C-indices:
+    for index_name in index_config.keys():
+        if index_name not in ["Lsl", "Usl", "Lsldot", "Usldot"]:
+            indices_typ = indices[index_name]
+            if indices_typ:
+                form += f"Set {index_name}: {indices_typ};\n"
+
+    return form
+
 def run_form(fp_cwd: Path, filename: Path, fp_p: Path = None, keep_backslash = False):
     """
     Run form in linux terminal.

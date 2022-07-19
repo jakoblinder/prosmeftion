@@ -950,6 +950,7 @@ def tex_terms_sorted_sun_projection(single_terms):
             latex += latex_terms
     return latex
 
+
 # TODO: Implement progress bar: https://stackoverflow.com/questions/3160699/python-progress-bar
 # import sys
 #

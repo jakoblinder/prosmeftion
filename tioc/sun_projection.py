@@ -251,7 +251,7 @@ def remove_doubles(single_terms):
                                 for i, index in enumerate(tensor.indices):
                                     if index.is_in(dummy_indices):
                                         if contracted[index.expr] == 0:
-                                            gen_index = summand.indices.generate_index(index.will_be_typ)
+                                            gen_index = summand.possible_indices.generate_index(index.will_be_typ)
                                             dummy_to_new_index[index.expr] = next(gen_index)
 
                                             contracted[index.expr] += 1

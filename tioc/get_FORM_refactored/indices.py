@@ -2,7 +2,7 @@ import re
 from yaml import safe_load
 import logging
 import sys
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 from collections.abc import MutableMapping
 from abc import ABC, abstractmethod
 from copy import copy
@@ -28,7 +28,16 @@ class Indices_Model(Index, MutableMapping):
     def __init__(self, indices: Tuple[Index], allow_uncontracted=False):
         # assert type(indices) == tuple
         if allow_uncontracted:
-            self._indices = indices
+            # Remove double occuring indices
+            reduced_indices = list(indices)
+
+            # Remove more than one time occurring indices from self.indices.
+            for index in reduced_indices.copy():
+                while index.is_in(reduced_indices) > 1:
+                    reduced_indices.remove(index)
+
+            self._indices = tuple(reduced_indices)
+            # self._indices = indices
         else:
             self.indices = indices
 
@@ -80,8 +89,8 @@ class Indices_Model(Index, MutableMapping):
 
     def __getitem__(self, key):
         """
-        If 'key' is of type slice or int we just get a list item. If 'key' is of type str, all indices or the type indicated
-        by 'key' are returned in their occurring order.
+        If 'key' is of type slice or int we just get a list item. If 'key' is of type str, all indices of the type indicated
+        by 'key' are returned in their occurring order, except for Summand_indices where the indices are sorted by their id.
         Parameters
         ----------
         key: int, slice, str
@@ -151,27 +160,32 @@ class Indices_Model(Index, MutableMapping):
     def __iter__(self):
         return iter(self.indices)
 
-    def insert(self, ii, val):
-        if not isinstance(value, Index):
+    def insert(self, key, val):
+        if not isinstance(val, Index):
             logger.error("The value which will be inserted has to be of type Index.")
             sys.exit("STOP")
-        logger.warning(f"The index {self.indices[key]:s} will be inserted.")
+        if not isinstance(key, int):
+            logger.error("The key where the value is inserted has to be of type integer.")
+            sys.exit("STOP")
+        if key == len(self):
+            logger.warning(f"The index {val:s} will be appended.")
+        else:
+            logger.warning(f"The index {val:s} will be inserted.")
         indices = list(self.indices)
-        indices.insert(ii, val)
+        indices.insert(key, val)
         self.indices = tuple(indices)
 
     def append(self, val):
-        if not isinstance(value, Index):
+        if not isinstance(val, Index):
             logger.error("The value which will be appended has to be of type Index.")
             sys.exit("STOP")
-        logger.warning(f"The index {self.indices[key]:s} will be appended.")
         self.insert(len(self.indices), val)
 
     def clear(self):
-        return self.indices.clear()
+        return type(self)(tuple(self.indices.clear()), allow_uncontracted=True)
 
     def copy(self):
-        return self.indices.copy()
+        return type(self)(tuple(list(self.indices).copy()), allow_uncontracted=True)
 
     @staticmethod
     def infinite_Indices(finite_list, max=5):
@@ -309,11 +323,198 @@ class Indices_Operator(Indices_Model):
         indices_expr = tuple(list(self.indices) + list(other.indices))
         return type(self)(indices_expr)
 
+class Possible_Indices(Indices_Model):
+    indices: Tuple[Index]  # Tuple of all possible indices in one Summand/ Term or whatever.
+
+    def __init__(self, indices: Tuple[Index], allow_uncontracted=True):
+        super().__init__(tuple(indices), allow_uncontracted)
+
+    def __repr__(self):
+        return super().__repr__()
+
+    def __format__(self, key):
+        """Specify the format for "format" function in print statement: Here the same as the print statement itself."""
+        return super().__format__(key)
+
+    @property
+    def indices(self):
+        return self._indices
+
+    @indices.setter
+    def indices(self, fp_indices):
+        reduced_indices = list(fp_indices)
+
+        # Remove more than one time occurring indices from self.indices.
+        for index in reduced_indices.copy():
+            while index.is_in(reduced_indices) > 1:
+                reduced_indices.remove(index)
+
+        self._indices = tuple(reduced_indices)
+
+    def __len__(self):
+        """List length"""
+        return len(self.indices)
+
+    def __getitem__(self, key: Union[int, slice, str]):
+        """
+        If 'key' is of type slice or int we just get a list item. If 'key' is of type str, all indices of the type indicated
+        by 'key' are sorted by their 'id' (i.e. for example flav2, flav1 -> flav1, flav2 and so on) and returned.
+
+        The reason behind this sorting is that for further manipulation of the expression there are Sets of SL2C-indices
+        in FORM necessary, which specify the contraction of those indices. Especially these are Sets like
+        Set ULsl: Usl1, Lsl1, Usl2, Lsl2, ... ;
+        Set LUsl: Lsl1, Usl1, Lsl2, Usl2, ... ;
+        which can then be used in id-statements like for example:
+        id [sl2Ceps](Usl1?Usl, Usl2?ULsl[k]) * [sl2Ceps](Lsl1?LUsl[k], Lsl3?Lsl) = + [sl2CdK](Usl1,Lsl3);
+        where Usl2 has to be a superscript SL2C-index and Lsl1 has to be exactly the same subscript SL2C-index.
+
+        Note: The index order in the self.indices attribute is completely unimportant at this point and is only relevant
+              in the indices of an operator.
+
+        Parameters
+        ----------
+        key: int, slice, str
+
+        Returns
+        -------
+        """
+        indices = super().__getitem__(key)
+        if isinstance(indices, Possible_Indices) and isinstance(key, str):
+            # Note: sorted of a string of letters capital and non-capital and of numbers is sorted like:
+            # 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+            sort_ind = sorted(indices, key=lambda x: str(x.id))
+            return type(self)(sort_ind, allow_uncontracted=True)
+        else:
+            return indices
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+
+    def __iter__(self):
+        return super().__iter__()
+
+    def get_sl2C_sets(self):
+        """
+        Return multiple lists of SL2C-indices, which specify the Usl, Lsl, Usldot, Lsldot, ULsl, LUsl, ULsldot, LUsldot
+        lists of indices, necessary for contraction of SL2C-indices.
+
+        Ensure that for each index in the Lsl list there is the exact dual index in the same spot in the Usl list and vice versa.
+
+        Returns
+        -------
+
+        """
+        lsl    = self["Lsl"]
+        usl    = self["Usl"]
+        lsldot = self["Lsldot"]
+        usldot = self["Usldot"]
+        def complete_indices(indices, dual_indices):
+            """
+
+            Parameters
+            ----------
+            indices
+                Indices which are checked, i.e. it is checked that for each index there is the correct
+            dual_indices
+                dual index given by dual_indices in the correct position.
+            Returns
+            -------
+
+            """
+            for index in indices:
+                # check that the dual usl index is in the usl list and if not add him
+                if not index.dual_index.is_in(dual_indices):
+                    dual_indices.append(index.dual_index)
+                    # sort them again
+                    dual_indices = type(self)(sorted(dual_indices, key=lambda x: str(x.id)))
+            # check, that position are correct
+            for i, index in enumerate(indices):
+                if not index.dual_index == dual_indices[i]:
+                    logger.error(f"The index {index} doesn't have the correct dual index at the right position, but rather {dual_indices[i]}.")
+                    sys.exit("STOP")
+
+            return indices, dual_indices
+
+        lsl,    usl    = complete_indices(lsl,    usl)
+        usl,    lsl    = complete_indices(usl,    lsl)
+        lsldot, usldot = complete_indices(lsldot, usldot)
+        usldot, lsldot = complete_indices(usldot, lsldot)
+
+        return lsl, usl, lsldot, usldot
+
+    def generate_index(self, typ: str, derIndex=False, fp_min: int=1, fp_max: int=None):
+        """
+        Call with
+            gen_index = summand.possible_indices.generate_index("flav")
+            new_index = next(gen_index)
+        for non SL2C-indices and with
+            gen_index = summand.possible_indices.generate_index("Lsl")
+            new_indices = next(gen_index)
+        for the generation of two new SL2C indices, e.g. Lsl1 and Usl1. The indices have to be generated directly both,
+        due to the specific declaration and Set construction of the FORM indices.
+
+        Parameters
+        ----------
+        typ
+            typ of index
+        derIndex
+            Is this an index of a derivative or not and if yes on which derivative.
+        fp_min: int
+            Minimum number on an index.
+        fp_max: int
+            Possible maximum number on an index.
+            =>E.g.: For fp_min = 2 and fp_max=12345: flav2, flav3, ..., flav12345 would be returned.
+
+        Returns
+        -------
+        Returns a generator object, which generates unused indices of the specified typ.
+        """
+        index_types = [indextyp for indextyp in index_config.keys()]
+        if typ not in index_types:
+            logger.error(f"The type {typ} is not one of the possible types {', '.join(index_types)}")
+            sys.exit("STOP")
+
+        sentinel = object()
+        def count(min, max=None):
+            """
+            count(10) --> 10 11 12 13 14 ...
+            count(2.5, 7.5) -> 2.5 3.5 4.5 5.5 6.5 -> max itself is not printed
+            """
+            n = min
+            while True:
+                if max:
+                    if n >= max:
+                        yield sentinel
+                yield n
+                n += 1
+
+        for i in count(fp_min, fp_max):
+            index = Index(f"{typ}{i}", derIndex)
+            index_list = self[typ]
+            if index.is_in(index_list.indices):
+                continue
+            elif i is sentinel:
+                logger.error("Not possible to generate a new index, since generator is out of range.")
+                sys.exit("STOP")
+            else:
+                self.append(index)
+                if index.dual_index != index:
+                    self.append(index.dual_index)
+                    yield index, index.dual_index
+                else:
+                    yield index
+
+
 class Indices_Summand(Indices_Model):
     indices: Tuple[Index]  # Tuple of indices in one term.
+    tex_indices: Dict  # Dictionary for each index containing the unique tex name.
 
     def __init__(self, indices: Tuple[Index], allow_uncontracted=False):
         super().__init__(indices, allow_uncontracted)
+        # self.possible_indices = Possible_Indices([index for index in list(self.indices).copy() if not isinstance(index, Dummy_Index) ])
 
     @property
     def indices(self):
@@ -335,6 +536,7 @@ class Indices_Summand(Indices_Model):
         uncontractedInd_tmp = uncontractedInd.copy()
         # uncontractedInd_tmp = list(map(str, uncontractedInd_tmp))
         # Consider now the possible uncontracted indices which can only be SL2C-indices:
+        # TODO: Could be simplified a little bit by the use of the dual_index of an index.
         for index in uncontractedInd_tmp:
             if (index.typ == "Usl" and Index(f"Lsl{index.id}") in uncontractedInd) or (index.typ == "Lsl" and Index(f"Usl{index.id}") in uncontractedInd):
                 contract += [True, True]
@@ -350,7 +552,7 @@ class Indices_Summand(Indices_Model):
             contracted = True
 
         if contracted:
-            'Remove double occuring indices'
+            # 'Remove double occuring indices'
             reduced_indices = list(fp_indices)
 
             # Remove more than one time occurring indices from self.indices.
@@ -366,54 +568,54 @@ class Indices_Summand(Indices_Model):
     def __repr__(self):
         return super().__repr__()
 
-    def generate_index(self, typ: str, derIndex=False, fp_min: int=1, fp_max: int=None):
+    def __len__(self):
+        """List length"""
+        return len(self.indices)
+
+    def __getitem__(self, key: Union[int, slice, str]):
         """
-        Returns an new, unused index of the specified typ.
+        If 'key' is of type slice or int we just get a list item. If 'key' is of type str, all indices of the type indicated
+        by 'key' are sorted by their 'id' (i.e. for example flav2, flav1 -> flav1, flav2 and so on) and returned.
+
+        The reason behind this sorting is that for further manipulation of the expression there are Sets of SL2C-indices
+        in FORM necessary, which specify the contraction of those indices. Especially these are Sets like
+        Set ULsl: Usl1, Lsl1, Usl2, Lsl2, ... ;
+        Set LUsl: Lsl1, Usl1, Lsl2, Usl2, ... ;
+        which can then be used in id-statements like for example:
+        id [sl2Ceps](Usl1?Usl, Usl2?ULsl[k]) * [sl2Ceps](Lsl1?LUsl[k], Lsl3?Lsl) = + [sl2CdK](Usl1,Lsl3);
+        where Usl2 has to be a superscript SL2C-index and Lsl1 has to be exactly the same subscript SL2C-index.
+
+        Note: The index order in the self.indices attribute is completely unimportant at this point and is only relevant
+              in the indices of an operator.
+
         Parameters
         ----------
-        typ
-            typ of index
-        derIndex
-            Is this an index of a derivative or not.
-        fp_min
-        fp_max
+        key: int, slice, str
 
         Returns
         -------
-
         """
-        index_types = [indextyp for indextyp in index_config.keys()]
-        if typ not in index_types:
-            logger.error(f"The type {typ} is not one of the possible types {', '.join(index_types)}")
-            sys.exit("STOP")
+        indices = super().__getitem__(key)
+        if isinstance(indices, Indices_Summand) and isinstance(key, str):
+            # Note: sorted of a string of letters capital and non-capital and of numbers is sorted like:
+            # 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+            sort_ind = sorted(indices, key=lambda x: str(x.id))
+            return type(self)(sort_ind, allow_uncontracted=True)
+        else:
+            return indices
 
-        sentinel = object()
-        def count(min, max=None):
-            # count(10) --> 10 11 12 13 14 ...
-            # count(2.5, 0.5) -> 2.5 3.0 3.5 ..
-            n = min
-            while True:
-                if max:
-                    if n >= max:
-                        yield sentinel
-                yield n
-                n += 1
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
 
-        for i in count(fp_min, fp_max):
-            index = Index(f"{typ}{i}", derIndex)
-            index_list = self[typ]
-            if index.is_in(index_list.indices):
-                continue
-            elif i is sentinel:
-                logger.error("Not possible to generate a new index, since generator is out of range.")
-                sys.exit("STOP")
-            else:
-                yield index
+    def __delitem__(self, key):
+        super().__delitem__(key)
 
+    def __iter__(self):
+        return super().__iter__()
 
 class Indices_Term(Indices_Model):
     indices: Tuple[Index]  # Tuple of indices in one term.
-    tex_indices: Dict  # Dictionary for each index containing the unique tex name.
+
     def __init__(self, indices: Tuple[Index], allow_uncontracted=False):
         super().__init__(indices, allow_uncontracted)
 

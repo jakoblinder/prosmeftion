@@ -12,6 +12,8 @@ from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, INPUT_
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
+print("TEST")
+
 def factorizeCoeff():
     """
     Write FORM function which replaces dimensional constants in the coefficient by dimensionless ones.
@@ -261,6 +263,61 @@ def form_antisymDerivative(n_der: int):
     with open(FORM_GENERAL_PATH / "antisymDerivative.prc", "w") as file:
         file.write(form)
 
+def form_simplifySigma2():
+    """
+    Assume that only sigma2 (i.e. sigma matrices with two lorentz indices) with two upper undotted and sigmabar2
+    with two lower dotted indices exist, because this is the only relevant case for the fieldstrengthtensor replacement.
+    Returns
+    -------
+
+    """
+    form = ""
+    # TODO: See method in class_term.py an rearrange for the now possible new generation of indices. -> Cannot be done in general folder.
+
+def form_replaceSigmabyEps():
+    """
+    Replace contracted sigmas by SL2C epsilon tensors.
+    Returns
+    -------
+
+    """
+    sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]
+    sigma = "sigma"
+    sigmabar = "sigmabar"
+    form = ""
+    form += "#procedure replaceSigmabyEps\n"
+    form += "repeat;\n"
+    form += "* Replace sigmabar by sigma.\n"
+    form += "\t" + f"id {sigmabar}(?a, Lsldot1?Lsldot, Usl2?Usl, ?b) = {sigma}(?a, Usl2, Lsldot1, ?b);\n"
+    form += "\t" + f"id {sigmabar}(?a, Lsldot1?Lsldot, Lsl2?Lsl, ?b) = {sigma}(?a, Lsl2, Lsldot1, ?b);\n"
+    form += "\t" + f"id {sigmabar}(?a, Usldot1?Usldot, Usl2?Usl, ?b) = {sigma}(?a, Usl2, Usldot1, ?b);\n"
+    form += "\t" + f"id {sigmabar}(?a, Usldot1?Usldot, Lsl2?Lsl, ?b) = {sigma}(?a, Lsl2, Usldot1, ?b);\n"
+    form += "* Replace in lorentz indices contracted sigmas by SL2C epsilontensors.\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2Ceps}(Usl1, Usl2) * {sl2Ceps}(Lsldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2Ceps}(Usl1, Usl2) * {sl2Ceps}(Usldot1, Usldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2Ceps}(Lsl1, Lsl2) * {sl2Ceps}(Lsldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2Ceps}(Lsl1, Lsl2) * {sl2Ceps}(Usldot1, Usldot2);\n"
+    form += "*\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2Ceps}(Usl1, Usl2) * {sl2Ceps}(Usldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2Ceps}(Usl1, Usl2) * {sl2Ceps}(Lsldot1, Usldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2Ceps}(Lsl1, Lsl2) * {sl2Ceps}(Usldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2Ceps}(Lsl1, Lsl2) * {sl2Ceps}(Lsldot1, Usldot2);\n"
+    form += "*\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2Ceps}(Usl1, Lsl2) * {sl2Ceps}(Lsldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2Ceps}(Usl1, Lsl2) * {sl2Ceps}(Usldot1, Usldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2Ceps}(Usl1, Lsl2) * {sl2Ceps}(Usldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2Ceps}(Usl1, Lsl2) * {sl2Ceps}(Lsldot1, Usldot2);\n"
+    form += "*\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2Ceps}(Lsl1, Usl2) * {sl2Ceps}(Lsldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2Ceps}(Lsl1, Usl2) * {sl2Ceps}(Usldot1, Usldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2Ceps}(Lsl1, Usl2) * {sl2Ceps}(Usldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2Ceps}(Lsl1, Usl2) * {sl2Ceps}(Lsldot1, Usldot2);\n"
+    form += "endrepeat;\n"
+    form += "#endprocedure\n"
+
+    with open(FORM_GENERAL_PATH / "replaceSigmabyEps.prc", "w") as file:
+        file.write(form)
+
 def form_simplifySL2CEps():
     r"""
     Simplify contracted SL2C epsilon tensors:
@@ -313,6 +370,165 @@ def form_simplifySL2CEps():
     form += "#endprocedure\n"
 
     with open(FORM_GENERAL_PATH / "simplifySL2CEps.prc", "w") as file:
+        file.write(form)
+
+def form_replaceSUNGenerators(N:int):
+    """
+    Replace two in the adjoint representation contracted SUN Generators by Kronecker deltas in fundamental indices.
+    Returns
+    -------
+
+    """
+    indices_fund = {2: "gauge", 3: "colf"}
+    indices_ad = {2: "gaugeadj", 3: "cola"}
+    fund_index = indices_fund[N]
+    ad_index = indices_ad[N]
+
+    suNdK = op_config["tensors"][f"[su{N:d}dK]"]["mathematica"][f"su{N:d}dK"]
+
+    form = f"#procedure replaceSU{N:d}Generators\n"
+    form += f"* Replace two in the adjoint representation contracted SU{N:d} Generators by Kronecker deltas in fundamental indices.\n"
+    form += "repeat;\n"
+    form += f"\tid T({ad_index}1?{ad_index}, {fund_index}1?{fund_index}, {fund_index}2?{fund_index}) * T({ad_index}1?{ad_index}, {fund_index}3?{fund_index}, {fund_index}4?{fund_index})"
+    form += f" = (1 / 2) * ({suNdK}({fund_index}1, {fund_index}4) * {suNdK}({fund_index}3, {fund_index}2) - (1 / {N:d}) * {suNdK}({fund_index}1, {fund_index}2) * {suNdK}({fund_index}3, {fund_index}4));\n"
+    form += "endrepeat;\n"
+    form += "#endprocedure\n"
+    with open(FORM_GENERAL_PATH / f"replaceSU{N:d}Generators.prc", "w") as file:
+        file.write(form)
+
+# TODO: Generalise simplification of epsilon tensors for arbitrary SUN groups
+def form_simplifyEpsSU2():
+    r"""
+    Simplify contracted SU2 epsilon tensors:
+    Examples:
+    :math:`\epsilon^{a b} \epsilon_{b c} = \delta^{a}_{c}` and
+    :math:`\delta^{a}_{a} = 2`
+    Returns
+    -------
+
+    """
+    su2dK = op_config["tensors"][f"[su2dK]"]["mathematica"][f"su2dK"]
+    su2eps = op_config["tensors"][f"[su2eps]"]["mathematica"][f"su2eps"]
+    su2epsA = get_antisymEps(su2eps)
+    # fundamental index:
+    f_i = "gauge"
+
+    form = ""
+    form += "#procedure simplifyEpsSU2\n"
+    form += "repeat;\n"
+    form += "* Replace epsilons by Kronecker deltas [sl2CdK](,):\n"
+    form += "\t" + f"id {su2eps}({f_i}1?{f_i}, {f_i}2?{f_i}) * {su2eps}({f_i}2?{f_i}, {f_i}3?{f_i}) = + {su2dK}({f_i}1,{f_i}3);\n"
+    form += "\t" + f"id {su2eps}({f_i}1?{f_i}, {f_i}2?{f_i}) * {su2eps}({f_i}1?{f_i}, {f_i}3?{f_i}) = - {su2dK}({f_i}2,{f_i}3);\n"
+    form += "\t" + f"id {su2eps}({f_i}1?{f_i}, {f_i}2?{f_i}) * {su2eps}({f_i}3?{f_i}, {f_i}1?{f_i}) = + {su2dK}({f_i}2,{f_i}3);\n"
+    form += "\t" + f"id {su2eps}({f_i}1?{f_i}, {f_i}2?{f_i}) * {su2eps}({f_i}3?{f_i}, {f_i}2?{f_i}) = - {su2dK}({f_i}1,{f_i}3);\n"
+    form += "* Replace only contracted Kronecker-deltas which are contracted with eps and Kronecker-deltas themself, because contractions inside one building block are not wanted:\n"
+    form += "\t" + f"id {su2eps}?" + "{" + f"{su2eps},{su2dK}" + "}" + f"(?a,{f_i}1?{f_i},?b)*{su2dK}(?c,{f_i}1?{f_i},?d) = {su2eps}(?a,?c,?d,?b);\n"  # [su2eps]?
+    form += "* Replace self-contracted Kronecker-deltas by the dimension (=2):\n"
+    form += "\t" + f"id {su2dK}({f_i}1?{f_i},{f_i}1?{f_i}) = d_({f_i}1,{f_i}1);\n"
+    form += "endrepeat;\n"
+    form += "* Bring indices of epsilons in order:\n"
+    form += f"Multiply replace_({su2eps},{su2epsA});\n"
+    form += ".sort\n"
+    form += f"Multiply replace_({su2epsA},{su2eps});\n"
+    form += "#endprocedure\n"
+    with open(FORM_GENERAL_PATH / f"simplifyEpsSU2.prc", "w") as file:
+        file.write(form)
+
+def form_simplifyEpsSU3():
+    """
+    Simplify SU3, i.e. 3 component epsilon tensor.
+    #call simplifyEpsSU3
+    Returns
+    -------
+
+    """
+    su3dK = op_config["tensors"][f"[su3dK]"]["mathematica"][f"su3dK"]
+    su3eps = op_config["tensors"][f"[su3eps]"]["mathematica"][f"su3eps"]
+    su3epsA = get_antisymEps(su3eps)
+    #fundamental index:
+    f_i = "colf"
+
+    form = ""
+    form += "#procedure simplifyEpsSU3\n"
+    form += "repeat;"
+    form += "* Replace epsilons by Kronecker deltas [sl2CdK](,):\n"
+    # 3 Cyclic permutations of first eps and first cyclic permutation of second eps.
+    form +="* 3 Cyclic permutations of first eps and first cyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}2?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}4?{f_i}, {f_i}5?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}1?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}4?{f_i}, {f_i}5?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}3?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}4?{f_i}, {f_i}5?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    # 3 Antiyclic permutations of first eps and first cyclic permutation of second eps.
+    form +="* 3 Antiyclic permutations of first eps and first cyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}3?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}4?{f_i}, {f_i}5?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}1?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}4?{f_i}, {f_i}5?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}2?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}4?{f_i}, {f_i}5?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    # 3 Cyclic permutations of first eps and second cyclic permutation of second eps.
+    form +="* 3 Cyclic permutations of first eps and second cyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}2?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}1?{f_i}, {f_i}4?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}1?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}1?{f_i}, {f_i}4?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}3?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}1?{f_i}, {f_i}4?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    # 3 Antiyclic permutations of first eps and second cyclic permutation of second eps.
+    form +="* 3 Antiyclic permutations of first eps and second cyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}3?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}1?{f_i}, {f_i}4?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}1?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}1?{f_i}, {f_i}4?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}2?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}1?{f_i}, {f_i}4?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    # 3 Cyclic permutations of first eps and third cyclic permutation of second eps.
+    form +="* 3 Cyclic permutations of first eps and third cyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}2?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}5?{f_i}, {f_i}1?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}1?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}5?{f_i}, {f_i}1?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}3?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}5?{f_i}, {f_i}1?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    # 3 Antiyclic permutations of first eps and third cyclic permutation of second eps.
+    form +="* 3 Antiyclic permutations of first eps and third cyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}3?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}5?{f_i}, {f_i}1?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}1?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}5?{f_i}, {f_i}1?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}2?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}5?{f_i}, {f_i}1?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    #
+    # 3 Cyclic permutations of first eps and first anticyclic permutation of second eps.
+    form +="* 3 Cyclic permutations of first eps and first anticyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}2?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}5?{f_i}, {f_i}4?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}1?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}5?{f_i}, {f_i}4?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}3?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}5?{f_i}, {f_i}4?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    # 3 Antiyclic permutations of first eps and first anticyclic permutation of second eps.
+    form +="* 3 Antiyclic permutations of first eps and first anticyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}3?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}5?{f_i}, {f_i}4?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}1?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}5?{f_i}, {f_i}4?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}2?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}1?{f_i}, {f_i}5?{f_i}, {f_i}4?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    # 3 Cyclic permutations of first eps and second anticyclic permutation of second eps.
+    form +="* 3 Cyclic permutations of first eps and second anticyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}2?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}1?{f_i}, {f_i}5?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}1?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}1?{f_i}, {f_i}5?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}3?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}1?{f_i}, {f_i}5?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    # 3 Antiyclic permutations of first eps and second anticyclic permutation of second eps.
+    form +="* 3 Antiyclic permutations of first eps and second anticyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}3?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}1?{f_i}, {f_i}5?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}1?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}1?{f_i}, {f_i}5?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}2?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}4?{f_i}, {f_i}1?{f_i}, {f_i}5?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    # 3 Cyclic permutations of first eps and third anticyclic permutation of second eps.
+    form +="* 3 Cyclic permutations of first eps and third anticyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}2?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}4?{f_i}, {f_i}1?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}1?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}4?{f_i}, {f_i}1?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}3?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}4?{f_i}, {f_i}1?{f_i}) = - ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    # 3 Antiyclic permutations of first eps and third anticyclic permutation of second eps.
+    form +="* 3 Antiyclic permutations of first eps and third anticyclic permutation of second eps.\n"
+    form += "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}3?{f_i}, {f_i}2?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}4?{f_i}, {f_i}1?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}2?{f_i}, {f_i}1?{f_i}, {f_i}3?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}4?{f_i}, {f_i}1?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+    form += "\t" + f"id {su3eps}({f_i}3?{f_i}, {f_i}2?{f_i}, {f_i}1?{f_i}) * {su3eps}({f_i}5?{f_i}, {f_i}4?{f_i}, {f_i}1?{f_i}) = + ({su3dK}({f_i}2,{f_i}4)*{su3dK}({f_i}3,{f_i}5) - {su3dK}({f_i}2,{f_i}5)*{su3dK}({f_i}3,{f_i}4));\n"
+
+    form += "* Replace only contracted Kronecker-deltas which are contracted with eps and Kronecker-deltas themself, because contractions inside one building block are not wanted:\n"
+    form += "\t" + f"id {su3eps}?" + "{" + f"{su3eps},{su3dK}" + "}" + f"(?a,{f_i}1?{f_i},?b)*{su3dK}(?c,{f_i}1?{f_i},?d) = {su3eps}(?a,?c,?d,?b);\n"  # [su3eps]?
+    form += "* Replace self-contracted Kronecker-deltas by the dimension (=3):\n"
+    form += "\t" + f"id {su3dK}({f_i}1?{f_i},{f_i}1?{f_i}) = d_({f_i}1,{f_i}1);\n"
+    form += "endrepeat;\n"
+    form += "* Bring indices of epsilons in order:\n"
+    form += f"Multiply replace_({su3eps},{su3epsA});\n"
+    form += ".sort\n"
+    form += f"Multiply replace_({su3epsA},{su3eps});\n"
+    # form += 1 * "\t" + f"id {su3eps}({f_i}1?{f_i}, {f_i}2?{f_i}, {f_i}3?{f_i}) = e_({f_i}1, {f_i}2, {f_i}3);\n"
+    # form += "contract 0;\n"
+    # form += 1 * "\t" + f"id e_({f_i}1?{f_i}, {f_i}2?{f_i}, {f_i}3?{f_i}) = {su3eps}({f_i}1, {f_i}2, {f_i}3);\n"
+    # form += 1 * "\t" + f"id d_({f_i}1?{f_i}, {f_i}2?{f_i}) = {su3dK}({f_i}1, {f_i}2);\n"
+    form += "#endprocedure"
+    with open(FORM_GENERAL_PATH / f"simplifyEpsSU3.prc", "w") as file:
         file.write(form)
 
 def form_declarations(n_der: int):
@@ -434,7 +650,13 @@ def form_declarations(n_der: int):
     form += "*--#] indices :\n"  # trailing "\n" important otherwise form will not find the "fold" declarations
 
     form_coefficient_handling()
+
+    # form_replaceSigmabyEps()
     form_simplifySL2CEps()
+    # form_replaceSUNGenerators(N=2)
+    # form_replaceSUNGenerators(N=3)
+    # form_simplifyEpsSU2()
+    # form_simplifyEpsSU3()
     form_antisymDerivative(n_der)
 
     return form

@@ -1,29 +1,28 @@
 import logging
-import re
 import sys
 from fractions import Fraction
 from pathlib import Path
 from typing import List, Dict
-from copy import copy
 
 import sage.all
 import sage.matrix as mx
 from sage.rings.rational_field import QQ
-# from tioc.get_FORM.form_read_in import Term_Model, Term_s
-from tioc.get_FORM_refactored.term import Term, TermType
-from tioc.get_FORM_refactored.summand import Summand
+from tioc.get_FORM_refactored.basisTensors import MonBasisTensor, SymBasisTensor, MonBasisTensors, SymBasisTensors
+from tioc.get_FORM_refactored.index import Index
+from tioc.get_FORM_refactored.indices import Indices_Operator
 from tioc.get_FORM_refactored.operator import Tensor
 from tioc.get_FORM_refactored.operators import Tensors
-from tioc.get_FORM_refactored.indices import Indices_Operator
-from tioc.get_FORM_refactored.index import Index
 from tioc.get_FORM_refactored.read_write import get_terms
-from tioc.get_FORM_refactored.basisTensors import MonBasisTensor, SymBasisTensor, MonBasisTensors, SymBasisTensors
+from tioc.get_FORM_refactored.summand import Summand
+# from tioc.get_FORM.form_read_in import Term_Model, Term_s
+from tioc.get_FORM_refactored.term import Term, TermType
 
 from autoeft.invariants import SUNTableau, field_projection_operator, symmetrize_tensors
 from autoeft.io import load_basis
-from autoeft.sun_projection import tensor_projection
 from autoeft.model import SUNGroup
-from . import AUTOEFT_PATH, FORM_PATH, FORM_GENERAL_PATH, model, get_antisymEps, op_config, bosons, fermions, tensors, run_form, get_SUN_name
+from autoeft.sun_projection import tensor_projection
+from . import AUTOEFT_PATH, FORM_PATH, FORM_GENERAL_PATH, model, get_antisymEps, op_config, bosons, fermions, tensors, \
+    run_form
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)

@@ -26,6 +26,7 @@ Function D, l, lbar, L, [L+], e, ebar, [e_C], [e_C+], u, ubar, [u_C], [u_C+], b,
 CFunction Dc, lc, lbarc, Lc, [L+c], ec, ebarc, [e_Cc], [e_C+c], uc, ubarc, [u_Cc], [u_C+c], bc, bbarc, [d_Cc], [d_C+c], qc, qbarc, Qc, [Q+c];
 
 Set Fieldc: WLc, WRc, BLc, BRc;
+Set Field: WL, WR, BL, BR;
 
 CFunction xi, [xi+], chi, [chi+];
 
@@ -36,6 +37,11 @@ Set spinorsAll: l, e, [e_C], u, [u_C], b, [d_C], q, lbar, ebar, [e_C+], ubar, [u
 Set spinorsc: lc, ec, [e_Cc], uc, [u_Cc], bc, [d_Cc], qc;
 Set spinorsAdjc: lbarc, ebarc, [e_C+c], ubarc, [u_C+c], bbarc, [d_C+c], qbarc;
 Set spinorsAllc: lc, ec, [e_Cc], uc, [u_Cc], bc, [d_Cc], qc, lbarc, ebarc, [e_C+c], ubarc, [u_C+c], bbarc, [d_C+c], qbarc;
+
+* D2 = D_mu * D^mu ;
+Function D2;
+* Total field strength tensor, necessary for EOM substitutions:
+Function FL, FR;
 
 *--#] operators :
 
@@ -56,5 +62,6 @@ AutoDeclare Indices sbasis   = N; * Index for basis tensors of SU(N).
 AutoDeclare Indices op; * auxiliary index for converting between commuting and noncommuting operators.
 
 * Declare some Symbols for pattern matching
-Symbols k,m;
+Symbols k, m;
+Autodeclare Symbols i;
 *--#] indices :

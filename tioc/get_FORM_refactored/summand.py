@@ -1,16 +1,14 @@
 import logging.config
-import re
 import sys
 from abc import ABC, abstractmethod
-from copy import copy
-from fractions import Fraction
 from typing import Dict, List, Tuple
 
 from tioc import model, op_config, index_config, get_SUN_name
-from .operator import Tensor, Field
+
 from .coefficient import Coefficient
-from .indices import Indices_Summand, Indices_Operator, Possible_Indices
 from .index import Dummy_Index
+from .indices import Indices_Summand, Indices_Operator, Possible_Indices
+from .operator import Tensor, Field
 from .operators import Tensors, Fields
 
 logger_autoeft = logging.getLogger("autoeft.projection")

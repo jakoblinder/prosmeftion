@@ -1,19 +1,16 @@
-import re
 import logging
 import sys
+from abc import abstractmethod
+from typing import Dict, List
+
 import sage.all
 import sage.matrix as mx
 from sage.rings.rational_field import QQ
-from yaml import safe_load
-from typing import Dict, List, Tuple
-from abc import ABC, abstractmethod
+from tioc import model
+from tioc.get_FORM_refactored.basisTensors import SymBasisTensors
 
-from tioc import CONFIG_PATH, opname, escape_regex, model, index_config
-from tioc.get_FORM_refactored.coefficient import Coefficient
-from tioc.get_FORM_refactored.basisTensors import MonBasisTensors, SymBasisTensors
-from .summand import Summand
 from .indices import Indices_Term, Indices_Summand
-from .index import Index
+from .summand import Summand
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)

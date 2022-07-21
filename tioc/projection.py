@@ -8,19 +8,15 @@ import os
 import subprocess
 import sys
 import re
-import logging
 import logging.config
-import timeit
 import multiprocessing as mp
 
 from itertools import chain
 from pathlib import Path
-from yaml import safe_load, YAMLError
-from typing import List, Dict
+from typing import List
 
 from tioc.get_BS.class_term import Term
-from tioc.get_FORM.form_read_in import Term_form, Term_Model, Term_s
-from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values, model, get_SUN_name
+from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values
 from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
 from tioc.get_FORM_refactored.read_write import get_terms
 from tioc.get_FORM_refactored.coefficient import Factor

@@ -531,8 +531,8 @@ class Term(Operator, Coefficient):
             # remove last comma
             form = form[:-1]
             form += "}\n"
-            form += "\tid once [HC+]?{[HC+], " + f"{spinorsSL2C_c['[L+]']}, {spinorsSL2C_c['[Q+]']}, {spinorsSL2C_c['[e_C]']}" + "}(?c, 'gaugeindex', ?d) = [su2eps]('gaugeindex', 'gaugeindex'a) * [HC+](?c, 'gaugeindex'a, ?d);\n"
-            form += "\tid once [HC+]?{[HC+], " + f"{spinorsSL2C_c['[L+]']}, {spinorsSL2C_c['[Q+]']}, {spinorsSL2C_c['[e_C]']}" + "}(?c, 'gaugeindex', ?d) = [su2eps]('gaugeindex', 'gaugeindex'b) * [HC+](?c, 'gaugeindex'b, ?d);\n"
+            form += "\tid once [HC+]?{[HC+], " + f"{spinorsSL2C_c['[L+]']}, {spinorsSL2C_c['[Q+]']}" + "}(?c, 'gaugeindex', ?d) = [su2eps]('gaugeindex', 'gaugeindex'a) * [HC+](?c, 'gaugeindex'a, ?d);\n"
+            form += "\tid once [HC+]?{[HC+], " + f"{spinorsSL2C_c['[L+]']}, {spinorsSL2C_c['[Q+]']}" + "}(?c, 'gaugeindex', ?d) = [su2eps]('gaugeindex', 'gaugeindex'b) * [HC+](?c, 'gaugeindex'b, ?d);\n"
             # form += "\tid HC('gaugeindex')*[HC+]('gaugeindex') = [su2eps]('gaugeindex'a, 'gaugeindex'b) * [HC+]('gaugeindex'b) * HC('gaugeindex'a);\n"
             form += "#enddo\n"
 

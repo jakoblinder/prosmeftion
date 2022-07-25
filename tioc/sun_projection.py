@@ -372,7 +372,7 @@ def get_basis_tensors(basis, field_content, derivatives, mass_dim):
 def sun_projection(single_terms, max_dim: int):
     basis = get_basis(max_dim)
     logger.info(f"Project all terms for a specific type onto the {'-, '.join(list(model.sun_groups.keys()))}-group "
-                f"basis when their exist aready one for the specific type.")
+                f"basis when their exist already one for the specific type.")
     for type in single_terms.values():
         for term_mass_dim in type.values():
             field_content = term_mass_dim.field_content

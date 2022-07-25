@@ -12,7 +12,48 @@ from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, INPUT_
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
-print("TEST")
+def create_procedure(function_path=Path(".")):
+    """
+    Define Decorator to write and save the procedure by identifying the name of the function:
+    form_testfunction
+    wrapped by this decorator will generate a procedure of the name
+    testfunction.
+    The bodz of the procedure will be indented.
+    Parameters of the decorator
+    ----------
+    function_path: str
+        Path where the function should be stored.
+    Returns
+    -------
+    """
+    function_path = Path(function_path)
+    def decorator(func):
+        def wrapper_with_func_args(*args, **kwargs):
+            procedure_name = func.__name__[5:]
+            # Do something before the wrapped function is called.
+            form = f"#procedure {procedure_name:s}\n"
+            # Call wrapped function:
+            func_output = func(*args, **kwargs)
+            func_output_lines = func_output.split("\n")
+            for i, line in enumerate(func_output_lines):
+                if not line or line[0] == "*":
+                    # Empty lines or lines which contain a comment are not indented.
+                    continue
+                else:
+                    func_output_lines[i] = "\t" + line
+            form += "\n".join(func_output_lines)
+            # Do something with the output of the wrapped function.
+            form += "\n#endprocedure"
+
+            # Save the function in .prc file at the desired location.
+            procedure_path = Path(function_path / f"{procedure_name}.prc")
+            with open(procedure_path, "w") as file:
+                file.write(form)
+            # print(procedure_path)
+            # return form
+        return wrapper_with_func_args
+
+    return decorator
 
 def factorizeCoeff():
     """
@@ -123,6 +164,7 @@ def form_coefficient_handling():
     with open(FORM_GENERAL_PATH / "positiveTerm.prc", "w") as file:
         file.write(form_positiveTerm)
 
+@create_procedure(FORM_GENERAL_PATH)
 def form_antisymDerivative(n_der: int):
     """
     Replace derivatives with 2 antisymmetric SL2C indices, e.g.
@@ -146,7 +188,149 @@ def form_antisymDerivative(n_der: int):
     -------
 
     """
-    form = "#procedure antisymDerivative\n"
+    # form = "#procedure antisymDerivative\n"
+    form = ""
+    assert n_der >= 2
+    cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
+    sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
+    # Replace dotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n
+    id_statements = []
+    form += "* Replace dotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n"
+    for der in range(2, n_der + 1):
+        # permutation of numbers 1,2,...,der:
+        p = list(permutations(range(1, der + 1)))
+        for per in p:
+            if per.index(1) > per.index(2):
+                minus_one_RHS = True
+            else:
+                minus_one_RHS = False
+
+            def except_dotted_eps(fp_per, fp_minus_one_RHS):
+                # Derivatives
+                func = " * "
+                for i in fp_per:
+                    if i in (1,2):
+                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?ULsldot[i{i:d}sldot], "
+                    else:
+                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
+                func += f"{'H'}?!" + "{" + f"{cov:s}" + "}(?a)"
+                func += der * ")"
+                func += " = "
+                if fp_minus_one_RHS:
+                    func += "(-1)*("
+                # extract remaining indices, i.e. without 1 and 2 in the same order they occurred in the permutation.
+                red_per = [i for i in fp_per if i not in (1,2)]
+                red_der = [f"{cov:s}(Lsl{i:d}, Usldot{i:d}, " for i in red_per]
+                func += f"{sl2Ceps:s}(Lsl1, Lsl2)"
+                func += " * "
+                func += f"{''.join(red_der)}D2(H(?a)){len(red_per)*')'}"
+                func += f" - "
+                func += f"i_ * FL(Lsl1, Lsl2, {''.join(red_der)}H(?a){len(red_per)*')'})"
+                if fp_minus_one_RHS:
+                    func += ")"
+                return func
+
+            id_statement1  = f"{sl2Ceps:s}(Lsldot1?LUsldot[i1sldot], Lsldot2?LUsldot[i2sldot])"
+            id_statement1 += except_dotted_eps(per, minus_one_RHS)
+            id_statement2 = f"{sl2Ceps:s}(Lsldot2?LUsldot[i2sldot], Lsldot1?LUsldot[i1sldot])"
+            id_statement2 += except_dotted_eps(per, not minus_one_RHS)
+
+            id_statements.append(f"id once ifmatch -> 2 {id_statement1:s};\n")
+            id_statements.append(f"id once ifmatch -> 2 {id_statement2:s};\n")
+            id_statements.append("\n")
+
+    for id in id_statements:
+        form += f"{id:s}"
+
+    # Replace undotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n
+    id_statements = []
+    form += "* Replace undotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n"
+    for der in range(2, n_der + 1):
+        # permutation of numbers 1,2,...,der:
+        p = list(permutations(range(1, der + 1)))
+        for per in p:
+            if per.index(1) > per.index(2):
+                minus_one_RHS = True
+            else:
+                minus_one_RHS = False
+
+            def except_unddotted_eps(fp_per, fp_minus_one_RHS):
+                # Derivatives
+                func = " * "
+                for i in fp_per:
+                    if i in (1, 2):
+                        func += f"{cov:s}(Lsl{i:d}?LUsl[i{i:d}sl], Usldot{i:d}?Usldot, "
+                    else:
+                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
+                func += f"{'H'}?!" + "{" + f"{cov:s}" + "}(?a)"
+                func += der * ")"
+                func += " = "
+                if fp_minus_one_RHS:
+                    func += "(-1)*("
+                # extract remaining indices, i.e. without 1 and 2 in the same order they occurred in the permutation.
+                red_per = [i for i in fp_per if i not in (1, 2)]
+                red_der = [f"{cov:s}(Lsl{i:d}, Usldot{i:d}, " for i in red_per]
+                func += f"{sl2Ceps:s}(Usldot1, Usldot2)"
+                func += " * "
+                func += f"{''.join(red_der)}D2(H(?a)){len(red_per) * ')'}"
+                func += f" + "
+                func += f"i_ * FR(Usldot1, Usldot2, {''.join(red_der)}H(?a){len(red_per) * ')'})"
+                if fp_minus_one_RHS:
+                    func += ")"
+                return func
+
+            id_statement1 = f"{sl2Ceps:s}(Usl1?ULsl[i1sl], Usl2?ULsl[i2sl])"
+            id_statement1 += except_unddotted_eps(per, minus_one_RHS)
+            id_statement2 = f"{sl2Ceps:s}(Usl2?ULsl[i2sl], Usl1?ULsl[i1sl])"
+            id_statement2 += except_unddotted_eps(per, not minus_one_RHS)
+
+            id_statements.append(f"id once ifmatch -> 2 {id_statement1:s};\n")
+            id_statements.append(f"id once ifmatch -> 2 {id_statement2:s};\n")
+            id_statements.append("\n")
+
+    for id in id_statements:
+        form += f"{id:s}"
+
+    form += "label 2;\n"
+
+    form += "\n"
+    form += "* Discard fieldstrengthtensor which are contracted with an SL2C epsilontensor, because the SL2C indices are symmetric:\n"
+    form += f"id FL(Lsl1?LUsl[i1], Lsl2?LUsl[i2], ?a) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
+    form += f"id FL(Lsl2?LUsl[i2], Lsl1?LUsl[i1], ?a) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
+    form += f"id FR(Usldot1?ULsldot[i1], Usldot2?ULsldot[i2], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
+    form += f"id FR(Usldot2?ULsldot[i2], Usldot1?ULsldot[i1], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
+
+    return form
+    # form += "#endprocedure"
+    #
+    # with open(FORM_GENERAL_PATH / "antisymDerivative.prc", "w") as file:
+    #     file.write(form)
+
+@create_procedure(FORM_GENERAL_PATH)
+def form_spinorEOMidentification(n_der: int):
+    """
+    Replace derivatives acting on spinors, where on SL2C index of the derivative and one of the spinor
+    are contracted by an epsilon tensor, e.g.
+    eps^{a,b}*D^{adot}_{a}*L_b
+    by the equation of motion of the lepton dublett.
+    The D^2 could when acting on the Higgs be the EOM of the Higgs.
+    In a first step, abbreviate the EOM by
+    EOM(L,adot,?x),
+    where "?x" abbreviate all remaining indices of L, beginning first with super and then with subscript indices.
+    Second example: Derivative acting on EOM
+    eps^{a,b}*D^{cdot}_{c}*D^{adot}_{a}*D^{edot}_{e}*L_b
+    would be abbreviated by
+    D^{cdot}_{c}*D^{edot}_{e}*EOM(L,adot,?x)
+
+    Parameters
+    ----------
+    n_der
+
+    Returns
+    -------
+
+    """
+    form = ""
 
     assert n_der >= 2
     cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
@@ -198,7 +382,7 @@ def form_antisymDerivative(n_der: int):
             id_statements.append("\n")
 
     for id in id_statements:
-        form += f"\t{id:s}"
+        form += f"{id:s}"
 
     # Replace undotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n
     id_statements = []
@@ -247,21 +431,18 @@ def form_antisymDerivative(n_der: int):
             id_statements.append("\n")
 
     for id in id_statements:
-        form += f"\t{id:s}"
+        form += f"{id:s}"
 
     form += "label 2;\n"
 
     form += "\n"
     form += "* Discard fieldstrengthtensor which are contracted with an SL2C epsilontensor, because the SL2C indices are symmetric:\n"
-    form += f"\tid FL(Lsl1?LUsl[i1], Lsl2?LUsl[i2], ?a) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
-    form += f"\tid FL(Lsl2?LUsl[i2], Lsl1?LUsl[i1], ?a) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
-    form += f"\tid FR(Usldot1?ULsldot[i1], Usldot2?ULsldot[i2], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
-    form += f"\tid FR(Usldot2?ULsldot[i2], Usldot1?ULsldot[i1], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
+    form += f"id FL(Lsl1?LUsl[i1], Lsl2?LUsl[i2], ?a) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
+    form += f"id FL(Lsl2?LUsl[i2], Lsl1?LUsl[i1], ?a) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
+    form += f"id FR(Usldot1?ULsldot[i1], Usldot2?ULsldot[i2], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
+    form += f"id FR(Usldot2?ULsldot[i2], Usldot1?ULsldot[i1], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
 
-    form += "#endprocedure"
-
-    with open(FORM_GENERAL_PATH / "antisymDerivative.prc", "w") as file:
-        file.write(form)
+    return form
 
 def form_simplifySigma2():
     """
@@ -616,8 +797,10 @@ def form_declarations(n_der: int):
     form += f"Set spinorsAdjc: {', '.join(map(get_commuting_op, adjspinors))};\n"
     form += f"Set spinorsAllc: {', '.join(map(get_commuting_op, spinors + adjspinors))};\n"
     form += "\n"
-    form += "* D2 = D_mu * D^mu ;\n"
+    form += "* D2 = D_mu * D^mu:\n"
     form += "Function D2;\n"
+    form += "* Intern abbreviation for equation of motion:\n"
+    form += "Function EOM;\n"
     form += "* Total field strength tensor, necessary for EOM substitutions:\n"
     form += "Function FL, FR;\n"
     form += "\n"

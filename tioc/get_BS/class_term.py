@@ -642,6 +642,7 @@ class Term(Operator, Coefficient):
                                              f"Usl{ind2_1:d}",
                                              f"Usl{ind2_2:d}"]
                     elif fieldstrengthtensor == opname["V"]:
+                        # TODO: Change index order, so that SL2C-indices are always the first.
                         for j in range(0, nDer + 1):
                             form_temp = "id once " + Term.derivativesLorentz(f"{fieldstrengthtensor:s}({','.join([gaugeadj] + lor):s})", n=j)
                             form_temp += " = " + Term.derivativesLorentz(auxfield, n=j, questionmark=False)

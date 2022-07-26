@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple
 
 from tioc import model, op_config, index_config, get_SUN_name
+from tioc.general import create_procedure
 
 from .coefficient import Coefficient
 from .index import Dummy_Index
@@ -285,3 +286,66 @@ class Summand(Summand_Model):
                 for indtype in ["gauge", "colf"]:
                     if index.typ == indtype:
                         index.projection = self.get_projectionIndex_from_Field(index.id)
+
+    #########################
+    ### EOM Substitutions ###
+    #########################
+
+    def form_higgsEOM(self, form_path: Path):
+        """
+        Replace D2(H(gauge1)) and D2([H+](gauge1)) by the SM equation of motion.
+        Parameters
+        -------
+        form_path
+            Path where the form file is stored
+        Returns
+        -------
+
+        """
+        sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
+        # Higgs field
+        higgs = op_config["bosonfields"]["H"]["mathematica"]["H"]  # 'H'
+        higgs_dagger = op_config["bosonfields"]["H"]["mathematica"]["conj[H]"]  # 'H'
+        # Fermions
+        l = op_config["fermionfields"]["L"]["mathematica"]["L"]               # L
+        l_dagger = op_config["fermionfields"]["L"]["mathematica"]["conj[L]"]  # [L+]
+        q = op_config["fermionfields"]["Q"]["mathematica"]["Q"]
+        q_dagger = op_config["fermionfields"]["Q"]["mathematica"]["conj[Q]"]
+        d = op_config["fermionfields"]["[d_C]"]["mathematica"]["dC"]               # [d_C]
+        d_dagger = op_config["fermionfields"]["[d_C]"]["mathematica"]["conj[dC]"]  # [d_C+]
+        u = op_config["fermionfields"]["[u_C]"]["mathematica"]["uC"]
+        u_dagger = op_config["fermionfields"]["[u_C]"]["mathematica"]["conj[uC]"]
+        e = op_config["fermionfields"]["[e_C]"]["mathematica"]["eC"]
+        e_dagger = op_config["fermionfields"]["[e_C]"]["mathematica"]["conj[eC]"]
+        # Coefficients
+        Mu = op_config["coefficients"]["Mu"]["mathematica"]["Mu"]
+        lambdah= op_config["coefficients"]["lambdah"]["mathematica"]["lambdah"]
+        # Yukawa matrices
+        yu = op_config["tensors"]["yu"]["mathematica"]["yu"]
+        yu_dagger = op_config["tensors"]["yu"]["mathematica"]["conj[yu]"]
+        yd = op_config["tensors"]["yd"]["mathematica"]["yd"]
+        yd_dagger = op_config["tensors"]["yd"]["mathematica"]["conj[yd]"]
+        ye = op_config["tensors"]["ye"]["mathematica"]["ye"]
+        ye_dagger = op_config["tensors"]["ye"]["mathematica"]["conj[ye]"]
+
+        @create_procedure(form_path, "higgsEOM")
+        def create_form():
+            form = ""
+            id_statements = []
+            gen_index_gauge = self.possible_indices.generate_index("gauge")  # get a new, i.e. unused SU2 index with 'next(gen_index_gauge)'
+            gen_index_colf = self.possible_indices.generate_index("colf")
+            gen_index_flav = self.possible_indices.generate_index("flav")
+            gen_index_sl = self.possible_indices.generate_index("Lsl")  # next(gen_index_sl) will generate new Lsl and new Usl index
+            gen_index_sldot = self.possible_indices.generate_index("Lsldot")
+            form += f""
+            id_statement1 = ""  # TODO: Write EOM of Higgs and generate for each new possible contraction an new index.
+
+            id_statements.append(f"\tid once ifmatch -> 3 {id_statement1:s};\n")
+
+            for id in id_statements:
+                form += f"{id:s}"
+
+            return form
+
+        create_form()
+

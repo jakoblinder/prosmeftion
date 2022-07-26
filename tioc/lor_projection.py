@@ -16,7 +16,7 @@ from tioc.get_FORM_refactored.index import Index
 
 from autoeft.io import load_basis
 from autoeft.sun_projection import tensor_projection
-from . import AUTOEFT_PATH, FORM_PATH, FORM_GENERAL_PATH, model, get_antisymEps, op_config, bosons, fermions, tensors, run_form, get_SUN_name
+from . import AUTOEFT_PATH, FORM_PATH, FORM_GENERAL_PATH, model, get_antisymEps, op_config, bosons, fermions, tensors, bosons_non_conj, fermions_non_conj, run_form, get_SUN_name
 from .general import declaration_SL2C_sets
 
 logger_autoeft = logging.getLogger("autoeft.projection")
@@ -37,12 +37,30 @@ def replace_eoms(single_terms):
     """
     for type in single_terms.values():
         for term_mass_dim in type.values():
+            if term_mass_dim.d != 6: continue
             for summand in term_mass_dim:
+                check_derivatives = []
+                if any([field.nD > 2 for field in summand.fields["H"]]): continue
+                q = summand.fields[f"{op_config['fermionfields']['Q']['mathematica']['Q']}"]
+                l = summand.fields[f"{op_config['fermionfields']['L']['mathematica']['L']}"]
+                u = summand.fields[f"{op_config['fermionfields']['[u_C]']['mathematica']['uC']}"]
+                d = summand.fields[f"{op_config['fermionfields']['[d_C]']['mathematica']['dC']}"]
+                e = summand.fields[f"{op_config['fermionfields']['[e_C]']['mathematica']['eC']}"]
+                bl = summand.fields[f"{op_config['bosonfields']['BL']['mathematica']['BL']}"]
+                wl = summand.fields[f"{op_config['bosonfields']['WL']['mathematica']['WL']}"]
+
+                fields_max_1_derivative = q + l + u + d + e + bl + wl
+                if any([field.nD > 2 for field in fields_max_1_derivative]): continue
+
+                a, b = bosons_non_conj, fermions_non_conj
                 name_form = summand.name  # "".join([f"{name}{nD}" for name, nD in name_of_term])
                 TERM_PATH = FORM_PATH / name_form
                 TERM_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
 
                 logger.info(f"Find EOMs in term {name_form}.")
+                # The function which subsitute the EOMs should already be run here, so that all necessary indices are then declared afterwards.
+                summand.form_higgsEOM(TERM_PATH)
+
                 # Write SL2C and set FORM-file:
                 form_SL2C = declaration_SL2C_sets(summand.possible_indices)
                 with open(TERM_PATH / "declaration_SL2C.h", "w") as file:
@@ -65,6 +83,7 @@ def replace_eoms(single_terms):
                 form += "#call fieldstrengthtensorEOMidentification;\n"
                 form += "label 2;\n"
 
+                # TODO: Here the function calls for all EOM substitutions should be
 
                 # form += "* Bring indices of epsilons in order:\n"
                 # epss = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in

@@ -7,7 +7,7 @@ from fractions import Fraction
 from typing import Dict, List, Tuple
 from collections.abc import MutableMapping
 
-from tioc import model, op_config, index_config, get_SUN_name
+from tioc import model, op_config, bosons_non_conj, fermions_non_conj, index_config, get_SUN_name
 from .operator import Tensor, Field, Operator_Model
 from .coefficient import Coefficient
 from .indices import Indices_Summand, Indices_Operator
@@ -77,9 +77,11 @@ class Operators_Model(MutableMapping):
             return type(self)(self.operators[key])
         elif isinstance(key, str):
             op_SUN_typ = {get_SUN_name(group): index_name for group, index_name in zip([2,3], ["gauge", "colf"])} ##[indextyp for indextyp in index_config.keys()]
-            op_SUN_typ_check = list(op_SUN_typ.keys())
-            op_other_typ = ["sl2C", "yukawa"]
-            if key not in (op_SUN_typ_check + op_other_typ):
+            op_SUN_typ_check = list(op_SUN_typ.keys())  # Fields which have SUN, i.e. SU2-, or SU3-indices
+            op_other_typ = ["sl2C", "yukawa"]  # Fields which have SL2C- or Yukawa-indices
+            field_type = bosons_non_conj + fermions_non_conj  # Fields of specific kind, i.e. "H" would return ALL Higgs fields, also the conjugate (H+) ones.
+            possible_op_typ = op_SUN_typ_check + op_other_typ + field_type
+            if key not in possible_op_typ:
                 logger.error(f"Key {key:s} is not a possible operator typ.")
                 sys.exit("STOP")
             elif key in op_SUN_typ_check:
@@ -90,7 +92,7 @@ class Operators_Model(MutableMapping):
                         # Indices of the requested typ exist in the operator.
                         operator_of_typ.append(operator)
             elif key == "yukawa":
-                # Look for Yukawa matrices.
+                # Look for Yukawa matrices and fields which carry flavour indices.
                 operator_of_typ = []
                 for operator in self.operators:
                     if operator.indices["flav"]:
@@ -108,6 +110,16 @@ class Operators_Model(MutableMapping):
                         sl2C_indices = operator.indices["sl"] + operator.indices["sldot"]
                         if [index for index in sl2C_indices if not index.derIndex]:
                             # Sl2C Indices exist in the operator, which don't come from a derivative.
+                            operator_of_typ.append(operator)
+            elif key in field_type:
+                # Look for operators of the type key
+                operator_of_typ = []
+                for operator in self.operators:
+                    if type(operator) == Tensor:
+                        logger.warning("A tensor will never match a specific field type. Thus asking for it doesn't make any sense.")
+                        break
+                    elif type(operator) == Field:
+                        if operator.non_conj_name == key:
                             operator_of_typ.append(operator)
             return type(self)(tuple(operator_of_typ))
         else:
@@ -144,6 +156,11 @@ class Operators_Model(MutableMapping):
 
     def __iter__(self):
         return iter(self.operators)
+
+    def __add__(self, other):
+        """Combine lists of operators."""
+        assert type(self.operators) == type(other.operators)
+        return type(self)(self.operators + other.operators)
 
     @staticmethod
     def index(operators, op):

@@ -55,7 +55,7 @@ def create_procedure(function_path=Path(".")):
 
     return decorator
 
-def factorizeCoeff():
+def form_factorizeCoeff():
     """
     Write FORM function which replaces dimensional constants in the coefficient by dimensionless ones.
     Example
@@ -91,6 +91,7 @@ def factorizeCoeff():
     form = "#procedure factorizeCoeff\n"
     for idStatement in idStatements:
         form += f"\t{idStatement:s};\n"
+
     form += "#endprocedure\n"
     with open(FORM_GENERAL_PATH / "factorizeCoeff.prc", "w") as file:
         file.write(form)
@@ -322,10 +323,27 @@ def form_spinorEOMidentification(n_der: int):
     would be abbreviated by
     D^{cdot}_{c}*D^{edot}_{e}*EOM(L,adot,?x)
 
+    Note: The substituted expression EOM(L,adot,?x) ignores any signs that may occur. Like for example in
+        \tensor{\eps}{^{\alpha \beta }} \tensor*{\cov}{_{\alpha} ^{\dot{\alpha}}} Q_{\beta, i, a, u}
+		= - \tensor*{(\slashed{\cov} q_{\mathrm{L}})}{_{i, a, u} ^{\dot{\alpha}}}
+		\equiv EOM(L,adot,?x)
+	so that EOM(L,adot,?x) can directly substituted by the RHS
+		+ \mi \tensor*{(y^{\mathrm{u}})}{_{u v}} H^{\dagger}_{i} u_{\mathbb{C} a, v}^{\dagger \dot{\alpha}}
+		+ \mi \tensor*{(y^{\mathrm{d}})}{_{u v}} H_{i} d_{\mathbb{C} a, v}^{\dagger \dot{\alpha}}
+	without introducing some kind of double signs.
+
+    Permute all indices among the derivatives and take for the field just the next one. Further, contract with the
+    epsilontensor in both permutations while considering the correct sign.
+
+    Call by
+        #call spinorEOMidentification
+    after including the SL2C-indices and groups:
+        #include declaration_SL2C.h
+
     Parameters
     ----------
     n_der
-
+        Number of maximum derivatives before the spinor.
     Returns
     -------
 
@@ -335,112 +353,148 @@ def form_spinorEOMidentification(n_der: int):
     assert n_der >= 2
     cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
     sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
-    # Replace dotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n
+    l = op_config["fermionfields"]["L"]["mathematica"]["L"]
+    l_dagger = op_config["fermionfields"]["L"]["mathematica"]["conj[L]"]
+    q = op_config["fermionfields"]["Q"]["mathematica"]["Q"]
+    q_dagger = op_config["fermionfields"]["Q"]["mathematica"]["conj[Q]"]
+
+    d = op_config["fermionfields"]["[d_C]"]["mathematica"]["dC"]
+    d_dagger = op_config["fermionfields"]["[d_C]"]["mathematica"]["conj[dC]"]
+    u = op_config["fermionfields"]["[u_C]"]["mathematica"]["uC"]
+    u_dagger = op_config["fermionfields"]["[u_C]"]["mathematica"]["conj[uC]"]
+    e = op_config["fermionfields"]["[e_C]"]["mathematica"]["eC"]
+    e_dagger = op_config["fermionfields"]["[e_C]"]["mathematica"]["conj[eC]"]
+
+    # Replace epsilon contracted with derivative and Q, L, d, u or e by EOM:
     id_statements = []
-    form += "* Replace dotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n"
-    for der in range(2, n_der + 1):
+    form += "* Replace epsilon contracted with derivative and Q, L, d, u or e by EOM:\n"
+    form += "#do field = {" + f"{l}, {q}, {d}, {u}, {e}" + "}\n"
+    # L(Lslspin64762,gaugeF1I1,flav6474)
+    # Q(Lslspin647912,gaugeF1I1,colfF1I1,flav6477)
+    # [d_C](Lslspin27682,colfF2I1,colfF2I2,flav2767)
+    # [u_C](Lslspin648111,colfF1I1,colfF1I2,flav7031)
+    # [e_C](Lslspin27662,flav2765)
+    for der in range(1, n_der + 1):
+        field_ind = der + 1
         # permutation of numbers 1,2,...,der:
         p = list(permutations(range(1, der + 1)))
         for per in p:
-            if per.index(1) > per.index(2):
-                minus_one_RHS = True
-            else:
-                minus_one_RHS = False
+            def except_undotted_eps(fp_per: List, fp_minus_one_RHS: bool):
+                """
+                
+                Parameters
+                ----------
+                fp_per
+                    specific permutation
+                fp_minus_one_RHS
+                    RHS get a minus or not.
+                Returns
+                    List of id statements
+                -------
 
-            def except_dotted_eps(fp_per, fp_minus_one_RHS):
+                """
                 # Derivatives
                 func = " * "
+                der_ind = 1
                 for i in fp_per:
-                    if i in (1,2):
-                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?ULsldot[i{i:d}sldot], "
-                    else:
-                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
-                func += f"{'H'}?!" + "{" + f"{cov:s}" + "}(?a)"
-                func += der * ")"
-                func += " = "
-                if fp_minus_one_RHS:
-                    func += "(-1)*("
-                # extract remaining indices, i.e. without 1 and 2 in the same order they occurred in the permutation.
-                red_per = [i for i in fp_per if i not in (1,2)]
-                red_der = [f"{cov:s}(Lsl{i:d}, Usldot{i:d}, " for i in red_per]
-                func += f"{sl2Ceps:s}(Lsl1, Lsl2)"
-                func += " * "
-                func += f"{''.join(red_der)}D2(H(?a)){len(red_per)*')'}"
-                func += f" - "
-                func += f"i_ * FL(Lsl1, Lsl2, {''.join(red_der)}H(?a){len(red_per)*')'})"
-                if fp_minus_one_RHS:
-                    func += ")"
-                return func
-
-            id_statement1  = f"{sl2Ceps:s}(Lsldot1?LUsldot[i1sldot], Lsldot2?LUsldot[i2sldot])"
-            id_statement1 += except_dotted_eps(per, minus_one_RHS)
-            id_statement2 = f"{sl2Ceps:s}(Lsldot2?LUsldot[i2sldot], Lsldot1?LUsldot[i1sldot])"
-            id_statement2 += except_dotted_eps(per, not minus_one_RHS)
-
-            id_statements.append(f"id once ifmatch -> 2 {id_statement1:s};\n")
-            id_statements.append(f"id once ifmatch -> 2 {id_statement2:s};\n")
-            id_statements.append("\n")
-
-    for id in id_statements:
-        form += f"{id:s}"
-
-    # Replace undotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n
-    id_statements = []
-    form += "* Replace undotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n"
-    for der in range(2, n_der + 1):
-        # permutation of numbers 1,2,...,der:
-        p = list(permutations(range(1, der + 1)))
-        for per in p:
-            if per.index(1) > per.index(2):
-                minus_one_RHS = True
-            else:
-                minus_one_RHS = False
-
-            def except_unddotted_eps(fp_per, fp_minus_one_RHS):
-                # Derivatives
-                func = " * "
-                for i in fp_per:
-                    if i in (1, 2):
+                    if i == der_ind:
+                        #  Index on contracted derivative
                         func += f"{cov:s}(Lsl{i:d}?LUsl[i{i:d}sl], Usldot{i:d}?Usldot, "
                     else:
                         func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
-                func += f"{'H'}?!" + "{" + f"{cov:s}" + "}(?a)"
+                func += f"`field'(Lsl{field_ind:d}?LUsl[i{field_ind:d}sl], ?a)"
                 func += der * ")"
                 func += " = "
                 if fp_minus_one_RHS:
                     func += "(-1)*("
                 # extract remaining indices, i.e. without 1 and 2 in the same order they occurred in the permutation.
-                red_per = [i for i in fp_per if i not in (1, 2)]
+                red_per = [i for i in fp_per if i not in (1,)]
                 red_der = [f"{cov:s}(Lsl{i:d}, Usldot{i:d}, " for i in red_per]
-                func += f"{sl2Ceps:s}(Usldot1, Usldot2)"
-                func += " * "
-                func += f"{''.join(red_der)}D2(H(?a)){len(red_per) * ')'}"
-                func += f" + "
-                func += f"i_ * FR(Usldot1, Usldot2, {''.join(red_der)}H(?a){len(red_per) * ')'})"
+                func += f"{''.join(red_der)}EOM(`field', Usldot{der_ind:d}, ?a){len(red_per)*')'}"
                 if fp_minus_one_RHS:
                     func += ")"
                 return func
 
-            id_statement1 = f"{sl2Ceps:s}(Usl1?ULsl[i1sl], Usl2?ULsl[i2sl])"
-            id_statement1 += except_unddotted_eps(per, minus_one_RHS)
-            id_statement2 = f"{sl2Ceps:s}(Usl2?ULsl[i2sl], Usl1?ULsl[i1sl])"
-            id_statement2 += except_unddotted_eps(per, not minus_one_RHS)
+            id_statement1  = f"{sl2Ceps:s}(Usl1?ULsl[i1sl], Usl{field_ind:d}?ULsl[i{field_ind:d}sl])"
+            id_statement1 += except_undotted_eps(per, fp_minus_one_RHS=False)
+            id_statement2 = f"{sl2Ceps:s}(Usl{field_ind:d}?ULsl[i{field_ind:d}sl], Usl1?ULsl[i1sl])"
+            id_statement2 += except_undotted_eps(per, fp_minus_one_RHS=True)
 
-            id_statements.append(f"id once ifmatch -> 2 {id_statement1:s};\n")
-            id_statements.append(f"id once ifmatch -> 2 {id_statement2:s};\n")
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement1:s};\n")
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement2:s};\n")
             id_statements.append("\n")
 
     for id in id_statements:
         form += f"{id:s}"
 
-    form += "label 2;\n"
+    form += "#enddo\n\n"
 
+    # Replace dotted epsilon contracted with derivative and Q+, L+, d+, u+ or e+ by EOM:
+    id_statements = []
+    form += "* Replace dotted epsilon contracted with derivative and Q+, L+, d+, u+ or e+ by EOM:\n"
+    form += "#do field = {" + f"{l_dagger}, {q_dagger}, {d_dagger}, {u_dagger}, {e_dagger}" + "}\n"
+    # [Q+](Usldotspin64781,gaugeF4I1,colfF4I1,colfF4I2,flav7010)
+    # [L+](Usldotspin64751,gaugeF4I1,flav6978)
+    # [d_C+](Usldotspin60452,colfF4I1,flav6044)
+    # [u_C+](Usldotspin64822,colfF4I1,flav6480)
+    # [e_C+](Usldotspin649512,flav6493)
+    for der in range(1, n_der + 1):
+        field_ind = der + 1
+        # permutation of numbers 1,2,...,der:
+        p = list(permutations(range(1, der + 1)))
+        for per in p:
+            def except_dotted_eps(fp_per: List, fp_minus_one_RHS: bool):
+                """
+
+                Parameters
+                ----------
+                fp_per
+                    specific permutation
+                fp_minus_one_RHS
+                    RHS get a minus or not.
+                Returns
+                    List of id statements
+                -------
+
+                """
+                # Derivatives
+                func = " * "
+                der_ind = 1
+                for i in fp_per:
+                    if i == der_ind:
+                        #  Index on contracted derivative
+                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?ULsldot[i{i:d}sldot], "
+                    else:
+                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
+                func += f"`field'(Usldot{field_ind:d}?ULsldot[i{field_ind:d}sldot], ?a)"
+                func += der * ")"
+                func += " = "
+                if fp_minus_one_RHS:
+                    func += "(-1)*("
+                # extract remaining indices, i.e. without 1 and 2 in the same order they occurred in the permutation.
+                red_per = [i for i in fp_per if i not in (1,)]
+                red_der = [f"{cov:s}(Lsl{i:d}, Usldot{i:d}, " for i in red_per]
+                func += f"{''.join(red_der)}EOM(`field', Lsl{der_ind:d}, ?a){len(red_per) * ')'}"
+                if fp_minus_one_RHS:
+                    func += ")"
+                return func
+
+            id_statement1 = f"{sl2Ceps:s}(Lsldot1?LUsldot[i1sldot], Lsldot{field_ind:d}?LUsldot[i{field_ind:d}sldot])"
+            id_statement1 += except_dotted_eps(per, fp_minus_one_RHS=False)
+            id_statement2 = f"{sl2Ceps:s}(Lsldot{field_ind:d}?LUsldot[i{field_ind:d}sldot], Lsldot1?LUsldot[i1sldot])"
+            id_statement2 += except_dotted_eps(per, fp_minus_one_RHS=True)
+
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement1:s};\n")
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement2:s};\n")
+            id_statements.append("\n")
+
+    for id in id_statements:
+        form += f"{id:s}"
+
+    form += "#enddo\n\n"
+
+    form += "label 2;\n"
     form += "\n"
-    form += "* Discard fieldstrengthtensor which are contracted with an SL2C epsilontensor, because the SL2C indices are symmetric:\n"
-    form += f"id FL(Lsl1?LUsl[i1], Lsl2?LUsl[i2], ?a) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
-    form += f"id FL(Lsl2?LUsl[i2], Lsl1?LUsl[i1], ?a) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
-    form += f"id FR(Usldot1?ULsldot[i1], Usldot2?ULsldot[i2], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
-    form += f"id FR(Usldot2?ULsldot[i2], Usldot1?ULsldot[i1], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
 
     return form
 
@@ -455,6 +509,7 @@ def form_simplifySigma2():
     form = ""
     # TODO: See method in class_term.py an rearrange for the now possible new generation of indices. -> Cannot be done in general folder.
 
+@create_procedure(FORM_GENERAL_PATH)
 def form_replaceSigmabyEps():
     """
     Replace contracted sigmas by SL2C epsilon tensors.
@@ -466,7 +521,7 @@ def form_replaceSigmabyEps():
     sigma = "sigma"
     sigmabar = "sigmabar"
     form = ""
-    form += "#procedure replaceSigmabyEps\n"
+    # form += "#procedure replaceSigmabyEps\n"
     form += "repeat;\n"
     form += "* Replace sigmabar by sigma.\n"
     form += "\t" + f"id {sigmabar}(?a, Lsldot1?Lsldot, Usl2?Usl, ?b) = {sigma}(?a, Usl2, Lsldot1, ?b);\n"
@@ -494,11 +549,14 @@ def form_replaceSigmabyEps():
     form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2Ceps}(Lsl1, Usl2) * {sl2Ceps}(Usldot1, Lsldot2);\n"
     form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2Ceps}(Lsl1, Usl2) * {sl2Ceps}(Lsldot1, Usldot2);\n"
     form += "endrepeat;\n"
-    form += "#endprocedure\n"
 
-    with open(FORM_GENERAL_PATH / "replaceSigmabyEps.prc", "w") as file:
-        file.write(form)
+    return form
+    # form += "#endprocedure\n"
+    #
+    # with open(FORM_GENERAL_PATH / "replaceSigmabyEps.prc", "w") as file:
+    #     file.write(form)
 
+@create_procedure(FORM_GENERAL_PATH)
 def form_simplifySL2CEps():
     r"""
     Simplify contracted SL2C epsilon tensors:
@@ -515,7 +573,7 @@ def form_simplifySL2CEps():
     sigma = "sigma"
     sigmabar = "sigmabar"
     form = ""
-    form += "#procedure simplifySL2CEps\n"
+    # form += "#procedure simplifySL2CEps\n"
     form += "repeat;\n"
     form += "* Replace epsilons by Kronecker deltas [sl2CdK](,):\n"
     # TODO: Naming could be done more systematically like for example:
@@ -548,10 +606,12 @@ def form_simplifySL2CEps():
     form += f"Multiply replace_({sl2Ceps},{sl2CepsA});\n"
     form += ".sort\n"
     form += f"Multiply replace_({sl2CepsA},{sl2Ceps});\n"
-    form += "#endprocedure\n"
 
-    with open(FORM_GENERAL_PATH / "simplifySL2CEps.prc", "w") as file:
-        file.write(form)
+    return form
+    # form += "#endprocedure\n"
+    #
+    # with open(FORM_GENERAL_PATH / "simplifySL2CEps.prc", "w") as file:
+    #     file.write(form)
 
 def form_replaceSUNGenerators(N:int):
     """
@@ -578,6 +638,7 @@ def form_replaceSUNGenerators(N:int):
         file.write(form)
 
 # TODO: Generalise simplification of epsilon tensors for arbitrary SUN groups
+@create_procedure(FORM_GENERAL_PATH)
 def form_simplifyEpsSU2():
     r"""
     Simplify contracted SU2 epsilon tensors:
@@ -595,7 +656,7 @@ def form_simplifyEpsSU2():
     f_i = "gauge"
 
     form = ""
-    form += "#procedure simplifyEpsSU2\n"
+    # form += "#procedure simplifyEpsSU2\n"
     form += "repeat;\n"
     form += "* Replace epsilons by Kronecker deltas [sl2CdK](,):\n"
     form += "\t" + f"id {su2eps}({f_i}1?{f_i}, {f_i}2?{f_i}) * {su2eps}({f_i}2?{f_i}, {f_i}3?{f_i}) = + {su2dK}({f_i}1,{f_i}3);\n"
@@ -611,10 +672,14 @@ def form_simplifyEpsSU2():
     form += f"Multiply replace_({su2eps},{su2epsA});\n"
     form += ".sort\n"
     form += f"Multiply replace_({su2epsA},{su2eps});\n"
-    form += "#endprocedure\n"
-    with open(FORM_GENERAL_PATH / f"simplifyEpsSU2.prc", "w") as file:
-        file.write(form)
 
+    return form
+
+    # form += "#endprocedure\n"
+    # with open(FORM_GENERAL_PATH / f"simplifyEpsSU2.prc", "w") as file:
+    #     file.write(form)
+
+@create_procedure(FORM_GENERAL_PATH)
 def form_simplifyEpsSU3():
     """
     Simplify SU3, i.e. 3 component epsilon tensor.
@@ -630,7 +695,7 @@ def form_simplifyEpsSU3():
     f_i = "colf"
 
     form = ""
-    form += "#procedure simplifyEpsSU3\n"
+    # form += "#procedure simplifyEpsSU3\n"
     form += "repeat;"
     form += "* Replace epsilons by Kronecker deltas [sl2CdK](,):\n"
     # 3 Cyclic permutations of first eps and first cyclic permutation of second eps.
@@ -708,9 +773,12 @@ def form_simplifyEpsSU3():
     # form += "contract 0;\n"
     # form += 1 * "\t" + f"id e_({f_i}1?{f_i}, {f_i}2?{f_i}, {f_i}3?{f_i}) = {su3eps}({f_i}1, {f_i}2, {f_i}3);\n"
     # form += 1 * "\t" + f"id d_({f_i}1?{f_i}, {f_i}2?{f_i}) = {su3dK}({f_i}1, {f_i}2);\n"
-    form += "#endprocedure"
-    with open(FORM_GENERAL_PATH / f"simplifyEpsSU3.prc", "w") as file:
-        file.write(form)
+
+    return form
+
+    # form += "#endprocedure"
+    # with open(FORM_GENERAL_PATH / f"simplifyEpsSU3.prc", "w") as file:
+    #     file.write(form)
 
 def form_declarations(n_der: int):
     """
@@ -757,7 +825,7 @@ def form_declarations(n_der: int):
     #         else:
     #             dimlessC = f"[{form_coeff:s}/{ms:s}^{constant['massdim']:d}]"
     #             dimlessConst.append(dimlessC)
-    dimlessConst = factorizeCoeff()
+    dimlessConst = form_factorizeCoeff()
     form += f"Symbols {', '.join(dimlessConst):s};\n"  # Symbols [At/Ms], [mu/Ms], [Mu/Ms], [muM/Ms];
     form += "*--#] coefficient :\n"
     form += "\n"
@@ -841,6 +909,7 @@ def form_declarations(n_der: int):
     # form_simplifyEpsSU2()
     # form_simplifyEpsSU3()
     form_antisymDerivative(n_der)
+    form_spinorEOMidentification(n_der)
 
     return form
 

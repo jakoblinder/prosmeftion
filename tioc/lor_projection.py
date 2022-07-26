@@ -60,6 +60,12 @@ def replace_eoms(single_terms):
                 form += ".sort\n"
                 form += "\n"
 
+                form += "#call antisymDerivative;\n"
+                form += "#call spinorEOMidentification;\n"
+                form += "#call fieldstrengthtensorEOMidentification;\n"
+                form += "label 2;\n"
+
+
                 # form += "* Bring indices of epsilons in order:\n"
                 # epss = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in
                 #         op_config["tensors"].items() if
@@ -72,7 +78,7 @@ def replace_eoms(single_terms):
                 #     form += ".sort\n"
                 # form += "\n"
 
-                form += f"Bracket {', '.join(tensors + bosons + fermions)};\n\n"
+                form += f"Bracket {', '.join(tensors + bosons + fermions)}, D2, EOM;\n\n"
                 # form += f'#write <{TERM_PATH / "combined_term.h"}> "%E", expr\n'
 
                 form += "Print +ss;\n"
@@ -84,7 +90,7 @@ def replace_eoms(single_terms):
                 # run_form(fp_cwd=TERM_PATH, filename=f"{name_form}.frm", fp_p=FORM_GENERAL_PATH)
 
                 # terms = get_terms(TERM_PATH / "combined_term.h", as_one=True, name=name_form)
-
+                op = op_config
                 print("---------------")
 
 

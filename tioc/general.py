@@ -181,6 +181,13 @@ def form_antisymDerivative(n_der: int):
     tensor for those groups under which the Higgsfield is charged are relavant, i.e. the SU(3) is for example not
     relevant for the Higgsfield.
 
+    Call by
+        #call antisymDerivative
+    after including the SL2C-indices and groups:
+        #include declaration_SL2C.h
+    Also the label 2 has to be declared after all EOM finding functions:
+        label 2;
+
     Parameters
     ----------
     n_der
@@ -236,8 +243,8 @@ def form_antisymDerivative(n_der: int):
             id_statement2 = f"{sl2Ceps:s}(Lsldot2?LUsldot[i2sldot], Lsldot1?LUsldot[i1sldot])"
             id_statement2 += except_dotted_eps(per, not minus_one_RHS)
 
-            id_statements.append(f"id once ifmatch -> 2 {id_statement1:s};\n")
-            id_statements.append(f"id once ifmatch -> 2 {id_statement2:s};\n")
+            id_statements.append(f"id once ifmatch -> 1 {id_statement1:s};\n")
+            id_statements.append(f"id once ifmatch -> 1 {id_statement2:s};\n")
             id_statements.append("\n")
 
     for id in id_statements:
@@ -285,14 +292,14 @@ def form_antisymDerivative(n_der: int):
             id_statement2 = f"{sl2Ceps:s}(Usl2?ULsl[i2sl], Usl1?ULsl[i1sl])"
             id_statement2 += except_unddotted_eps(per, not minus_one_RHS)
 
-            id_statements.append(f"id once ifmatch -> 2 {id_statement1:s};\n")
-            id_statements.append(f"id once ifmatch -> 2 {id_statement2:s};\n")
+            id_statements.append(f"id once ifmatch -> 1 {id_statement1:s};\n")
+            id_statements.append(f"id once ifmatch -> 1 {id_statement2:s};\n")
             id_statements.append("\n")
 
     for id in id_statements:
         form += f"{id:s}"
 
-    form += "label 2;\n"
+    form += "label 1;\n"
 
     form += "\n"
     form += "* Discard fieldstrengthtensor which are contracted with an SL2C epsilontensor, because the SL2C indices are symmetric:\n"
@@ -300,6 +307,9 @@ def form_antisymDerivative(n_der: int):
     form += f"id FL(Lsl2?LUsl[i2], Lsl1?LUsl[i1], ?a) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
     form += f"id FR(Usldot1?ULsldot[i1], Usldot2?ULsldot[i2], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
     form += f"id FR(Usldot2?ULsldot[i2], Usldot1?ULsldot[i1], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
+
+    form += "goto 2;\n"
+    # form += "label 2;\n"
 
     return form
     # form += "#endprocedure"
@@ -310,11 +320,10 @@ def form_antisymDerivative(n_der: int):
 @create_procedure(FORM_GENERAL_PATH)
 def form_spinorEOMidentification(n_der: int):
     """
-    Replace derivatives acting on spinors, where on SL2C index of the derivative and one of the spinor
+    Replace derivatives acting on spinors, where one SL2C index of the derivative and one of the spinor
     are contracted by an epsilon tensor, e.g.
     eps^{a,b}*D^{adot}_{a}*L_b
     by the equation of motion of the lepton dublett.
-    The D^2 could when acting on the Higgs be the EOM of the Higgs.
     In a first step, abbreviate the EOM by
     EOM(L,adot,?x),
     where "?x" abbreviate all remaining indices of L, beginning first with super and then with subscript indices.
@@ -339,6 +348,8 @@ def form_spinorEOMidentification(n_der: int):
         #call spinorEOMidentification
     after including the SL2C-indices and groups:
         #include declaration_SL2C.h
+    Also the label 2 has to be declared after all EOM finding functions:
+        label 2;
 
     Parameters
     ----------
@@ -493,7 +504,202 @@ def form_spinorEOMidentification(n_der: int):
 
     form += "#enddo\n\n"
 
-    form += "label 2;\n"
+    # form += "label 2;\n"
+    form += "\n"
+
+    return form
+
+@create_procedure(FORM_GENERAL_PATH)
+def form_fieldstrengthtensorEOMidentification(n_der: int):
+    """
+    Replace derivatives acting on field strength tensors, where one SL2C index of the derivative and one of
+    the field strength tensor are contracted by an epsilon tensor, e.g.
+    eps^{a,b}*D^{adot}_{a}*BL_bc
+    by the equation of motion of the field strength tensor.
+    In a first step, abbreviate the EOM by
+    EOM(BL,b,adot,?x),
+    where "?x" abbreviate all remaining indices of BL, beginning first with super and then with subscript indices.
+    Second example: Derivative acting on EOM
+    eps^{a,b}*D^{cdot}_{c}*D^{adot}_{a}*D^{edot}_{e}*BL_bf
+    would be abbreviated by
+    D^{cdot}_{c}*D^{edot}_{e}*EOM(L,f, adot,?x)
+
+    Permute all indices among the derivatives and take for the field just the next two. Further, contract with the
+    epsilon tensor in both permutations while considering the correct sign.
+
+    Call by
+        #call fieldstrengthtensorEOMidentification
+    after including the SL2C-indices and groups:
+        #include declaration_SL2C.h
+    Also the label 2 has to be declared after all EOM finding functions:
+        label 2;
+
+    Parameters
+    ----------
+    n_der
+        Number of maximum derivatives before the spinor.
+    Returns
+    -------
+
+    """
+    form = ""
+
+    assert n_der >= 2
+    cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
+    sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
+    bl = op_config["bosonfields"]["BL"]["mathematica"]["BL"]
+    br = op_config["bosonfields"]["BL"]["mathematica"]["conj[BL]"]
+    wl = op_config["bosonfields"]["WL"]["mathematica"]["WL"]
+    wr = op_config["bosonfields"]["WL"]["mathematica"]["conj[WL]"]
+
+    # Replace epsilon contracted with derivative and Q, L, d, u or e by EOM:
+    id_statements = []
+    form += "* Replace epsilon contracted with derivative and BL or WL by EOM:\n"
+    form += "#do field = {" + f"{bl}, {wl}" + "}\n"
+    # BL(Lsl1,Lsl2)
+    # WL(gaugeF2I1,gaugeF2I2,Lsl10,Lsl11)
+    for der in range(1, n_der + 1):
+        field_ind1 = der + 1
+        field_ind2 = der + 2
+        # permutation of numbers 1,2,...,der:
+        p = list(permutations(range(1, der + 1)))
+        for per in p:
+            def except_undotted_eps(fp_per: List, fp_minus_one_RHS: bool, fst_permutation: int):
+                """
+
+                Parameters
+                ----------
+                fp_per
+                    specific permutation
+                fp_minus_one_RHS
+                    RHS get a minus or not.
+                fst_permutation
+                    Since the field strength tensor SL2C-indices are symmetric, those need to be written in all permutations.
+                Returns
+                    List of id statements
+                -------
+
+                """
+                # Derivatives
+                func = " * "
+                der_ind = 1
+                for i in fp_per:
+                    if i == der_ind:
+                        #  Index on contracted derivative
+                        func += f"{cov:s}(Lsl{i:d}?LUsl[i{i:d}sl], Usldot{i:d}?Usldot, "
+                    else:
+                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
+                if fst_permutation == 1:
+                    func += f"`field'(?a, Lsl{field_ind1:d}?LUsl[i{field_ind1:d}sl], Lsl{field_ind2:d}?, ?b)"
+                elif fst_permutation == 2:
+                    func += f"`field'(?a, Lsl{field_ind2:d}?, Lsl{field_ind1:d}?LUsl[i{field_ind1:d}sl], ?b)"
+                func += der * ")"
+                func += " = "
+                if fp_minus_one_RHS:
+                    func += "(-1)*("
+                # extract remaining indices, i.e. without 1 in the same order they occurred in the permutation.
+                red_per = [i for i in fp_per if i not in (1,)]
+                red_der = [f"{cov:s}(Lsl{i:d}, Usldot{i:d}, " for i in red_per]
+                # TODO: Change index order, so that SL2C-indices are always the first (change in get_BS folder first.
+                func += f"{''.join(red_der)}EOM(`field', Lsl{field_ind2:d}, Usldot{der_ind:d}, ?a, ?b){len(red_per) * ')'}"
+                if fp_minus_one_RHS:
+                    func += ")"
+                return func
+
+            id_statement1 = f"{sl2Ceps:s}(Usl1?ULsl[i1sl], Usl{field_ind1:d}?ULsl[i{field_ind1:d}sl])"
+            id_statement1 += except_undotted_eps(per, fp_minus_one_RHS=False, fst_permutation=1)
+            id_statement2 = f"{sl2Ceps:s}(Usl1?ULsl[i1sl], Usl{field_ind1:d}?ULsl[i{field_ind1:d}sl])"
+            id_statement2 += except_undotted_eps(per, fp_minus_one_RHS=False, fst_permutation=2)
+            id_statement3 = f"{sl2Ceps:s}(Usl{field_ind1:d}?ULsl[i{field_ind1:d}sl], Usl1?ULsl[i1sl])"
+            id_statement3 += except_undotted_eps(per, fp_minus_one_RHS=True, fst_permutation=1)
+            id_statement4 = f"{sl2Ceps:s}(Usl{field_ind1:d}?ULsl[i{field_ind1:d}sl], Usl1?ULsl[i1sl])"
+            id_statement4 += except_undotted_eps(per, fp_minus_one_RHS=True, fst_permutation=2)
+
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement1:s};\n")
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement2:s};\n")
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement3:s};\n")
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement4:s};\n")
+            id_statements.append("\n")
+
+    for id in id_statements:
+        form += f"{id:s}"
+
+    form += "#enddo\n\n"
+
+    # Replace dotted epsilon contracted with derivative and Q+, L+, d+, u+ or e+ by EOM:
+    id_statements = []
+    form += "* Replace dotted epsilon contracted with derivative and BR or WR by EOM:\n"
+    form += "#do field = {" + f"{br}, {wr}" + "}\n"
+    # BR(Usldot1,Usldot2)
+    # WR(gaugeA10,gaugeA12,Usldot10,Usldot11)
+    for der in range(1, n_der + 1):
+        field_ind1 = der + 1
+        field_ind2 = der + 2
+        # permutation of numbers 1,2,...,der:
+        p = list(permutations(range(1, der + 1)))
+        for per in p:
+            def except_dotted_eps(fp_per: List, fp_minus_one_RHS: bool, fst_permutation: int):
+                """
+
+                Parameters
+                ----------
+                fp_per
+                    specific permutation
+                fp_minus_one_RHS
+                    RHS get a minus or not.
+                fst_permutation
+                    Since the field strength tensor SL2C-indices are symmetric, those need to be written in all permutations.
+                Returns
+                    List of id statements
+                -------
+
+                """
+                # Derivatives
+                func = " * "
+                der_ind = 1
+                for i in fp_per:
+                    if i == der_ind:
+                        #  Index on contracted derivative
+                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?ULsldot[i{i:d}sldot], "
+                    else:
+                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
+                if fst_permutation == 1:
+                    func += f"`field'(?a, Usldot{field_ind1:d}?ULsldot[i{field_ind1:d}sldot], Usldot{field_ind2:d}?Usldot, ?b)"
+                elif fst_permutation == 2:
+                    func += f"`field'(?a, Usldot{field_ind2:d}?Usldot, Usldot{field_ind1:d}?ULsldot[i{field_ind1:d}sldot], ?b)"
+                func += der * ")"
+                func += " = "
+                if fp_minus_one_RHS:
+                    func += "(-1)*("
+                # extract remaining indices, i.e. without 1 and 2 in the same order they occurred in the permutation.
+                red_per = [i for i in fp_per if i not in (1,)]
+                red_der = [f"{cov:s}(Lsl{i:d}, Usldot{i:d}, " for i in red_per]
+                func += f"{''.join(red_der)}EOM(`field', Lsl{der_ind:d}, Usldot{field_ind2:d}, ?a, ?b){len(red_per) * ')'}"
+                if fp_minus_one_RHS:
+                    func += ")"
+                return func
+
+            id_statement1 = f"{sl2Ceps:s}(Lsldot1?LUsldot[i1sldot], Lsldot{field_ind1:d}?LUsldot[i{field_ind1:d}sldot])"
+            id_statement1 += except_dotted_eps(per, fp_minus_one_RHS=False, fst_permutation=1)
+            id_statement2 = f"{sl2Ceps:s}(Lsldot1?LUsldot[i1sldot], Lsldot{field_ind1:d}?LUsldot[i{field_ind1:d}sldot])"
+            id_statement2 += except_dotted_eps(per, fp_minus_one_RHS=False, fst_permutation=2)
+            id_statement3 = f"{sl2Ceps:s}(Lsldot{field_ind1:d}?LUsldot[i{field_ind1:d}sldot], Lsldot1?LUsldot[i1sldot])"
+            id_statement3 += except_dotted_eps(per, fp_minus_one_RHS=True, fst_permutation=1)
+            id_statement4 = f"{sl2Ceps:s}(Lsldot{field_ind1:d}?LUsldot[i{field_ind1:d}sldot], Lsldot1?LUsldot[i1sldot])"
+            id_statement4 += except_dotted_eps(per, fp_minus_one_RHS=True, fst_permutation=2)
+
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement1:s};\n")
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement2:s};\n")
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement3:s};\n")
+            id_statements.append(f"\tid once ifmatch -> 2 {id_statement4:s};\n")
+            id_statements.append("\n")
+
+    for id in id_statements:
+        form += f"{id:s}"
+
+    form += "#enddo\n\n"
+
+    # form += "label 2;\n"
     form += "\n"
 
     return form
@@ -910,6 +1116,7 @@ def form_declarations(n_der: int):
     # form_simplifyEpsSU3()
     form_antisymDerivative(n_der)
     form_spinorEOMidentification(n_der)
+    form_fieldstrengthtensorEOMidentification(n_der)
 
     return form
 
@@ -927,7 +1134,7 @@ def declaration_SL2C_sets(indices) -> str:
     """
     lsl, usl, lsldot, usldot = indices.get_sl2C_sets()
 
-    max_ind = 5
+    max_ind = n_der + 4
     # Generate only indices if there aren't any, since the could be declared twice otherwise.
     def id_indices(typ: str, reference: List, max_index: int):
         return [f"{typ:s}{i:d}" for i in range(max_index) if f"{typ:s}{i:d}" not in [repr(index) for index in reference]]
@@ -949,6 +1156,11 @@ def declaration_SL2C_sets(indices) -> str:
     decl_lsldot = ", ".join([f"{index}=2" for index in lsldot_aux] + [f"{repr(index)}=2" for index in lsldot])
     decl_usldot = ", ".join([f"{index}=2" for index in usldot_aux] + [f"{repr(index)}=2" for index in usldot])
 
+    set_lsl = ", ".join([f"{index}" for index in lsl_aux] + [f"{repr(index)}" for index in lsl])
+    set_usl = ", ".join([f"{index}" for index in usl_aux] + [f"{repr(index)}" for index in usl])
+    set_lsldot = ", ".join([f"{index}" for index in lsldot_aux] + [f"{repr(index)}" for index in lsldot])
+    set_usldot = ", ".join([f"{index}" for index in usldot_aux] + [f"{repr(index)}" for index in usldot])
+
     set_lusl = ", ".join([i for pair in list(zip(lsl_aux, usl_aux)) for i in pair] + [repr(i) for pair in list(zip(lsl, usl)) for i in pair])
     set_ulsl = ", ".join([i for pair in list(zip(usl_aux, lsl_aux)) for i in pair] + [repr(i) for pair in list(zip(usl, lsl)) for i in pair])
     set_lusldot = ", ".join([i for pair in list(zip(lsldot_aux, usldot_aux)) for i in pair] + [repr(i) for pair in list(zip(lsldot, usldot)) for i in pair])
@@ -963,10 +1175,10 @@ def declaration_SL2C_sets(indices) -> str:
     form += f"Indices {decl_usldot};\n"
 
     # Sets for contraction for SL2C-indices
-    form += f"Set Lsl: {', '.join(map(repr, lsl))};\n"
-    form += f"Set Usl: {', '.join(map(repr, usl))};\n"
-    form += f"Set Lsldot: {', '.join(map(repr, lsldot))};\n"
-    form += f"Set Usldot: {', '.join(map(repr, usldot))};\n"
+    form += f"Set Lsl: {', '.join(map(repr, set_lsl))};\n"
+    form += f"Set Usl: {', '.join(map(repr, set_usl))};\n"
+    form += f"Set Lsldot: {', '.join(map(repr, set_lsldot))};\n"
+    form += f"Set Usldot: {', '.join(map(repr, set_usldot))};\n"
 
     form += f"Set LUsl: {set_lusl};\n"
     form += f"Set ULsl: {set_ulsl};\n"

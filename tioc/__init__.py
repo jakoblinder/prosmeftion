@@ -243,7 +243,9 @@ del negative_Assertion
 coeff = [form_field for field in op_config["coefficients"].values() for form_field in field["mathematica"].values() if form_field != "i_"]
 coeff += [form_field for field in op_config["abbreviation"].values() for form_field in field["mathematica"].values()]
 bosons = [form_field for field in op_config["bosonfields"].values() for form_field in field["mathematica"].values()]
+bosons_non_conj = [list(field["mathematica"].values())[0] for field in op_config["bosonfields"].values()]
 fermions = [form_field for field in op_config["fermionfields"].values() for form_field in field["mathematica"].values()]
+fermions_non_conj = [list(field["mathematica"].values())[0] for field in op_config["fermionfields"].values()]
 tensors = [form_field for field in op_config["tensors"].values() for form_field in field["mathematica"].values()]
 
 

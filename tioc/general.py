@@ -12,7 +12,7 @@ from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, INPUT_
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
-def create_procedure(function_path=Path(".")):
+def create_procedure(function_path=Path("."), function_name=""):
     """
     Define Decorator to write and save the procedure by identifying the name of the function:
     form_testfunction
@@ -23,13 +23,19 @@ def create_procedure(function_path=Path(".")):
     ----------
     function_path: str
         Path where the function should be stored.
+    function_name
+        Name of the function in FORM. If no name is given, the nam of the python function, i.e. testfunction
+        in the above example is taken.
     Returns
     -------
     """
     function_path = Path(function_path)
     def decorator(func):
         def wrapper_with_func_args(*args, **kwargs):
-            procedure_name = func.__name__[5:]
+            if not function_name:
+                procedure_name = func.__name__[5:]
+            else:
+                procedure_name = function_name
             # Do something before the wrapped function is called.
             form = f"#procedure {procedure_name:s}\n"
             # Call wrapped function:
@@ -201,6 +207,7 @@ def form_antisymDerivative(n_der: int):
     assert n_der >= 2
     cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
     sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
+    higgs = op_config["bosonfields"]["H"]["mathematica"]["H"]  # 'H'
     # Replace dotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n
     id_statements = []
     form += "* Replace dotted epsilon contracted with 2 derivatives by Fieldstrengthtensor and D^2:\n"
@@ -221,7 +228,7 @@ def form_antisymDerivative(n_der: int):
                         func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?ULsldot[i{i:d}sldot], "
                     else:
                         func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
-                func += f"{'H'}?!" + "{" + f"{cov:s}" + "}(?a)"
+                func += f"{higgs}?!" + "{" + f"{cov:s}" + "}(?a)"
                 func += der * ")"
                 func += " = "
                 if fp_minus_one_RHS:
@@ -231,9 +238,9 @@ def form_antisymDerivative(n_der: int):
                 red_der = [f"{cov:s}(Lsl{i:d}, Usldot{i:d}, " for i in red_per]
                 func += f"{sl2Ceps:s}(Lsl1, Lsl2)"
                 func += " * "
-                func += f"{''.join(red_der)}D2(H(?a)){len(red_per)*')'}"
+                func += f"{''.join(red_der)}D2({higgs}(?a)){len(red_per)*')'}"
                 func += f" - "
-                func += f"i_ * FL(Lsl1, Lsl2, {''.join(red_der)}H(?a){len(red_per)*')'})"
+                func += f"i_ * FL(Lsl1, Lsl2, {''.join(red_der)}{higgs}(?a){len(red_per)*')'})"
                 if fp_minus_one_RHS:
                     func += ")"
                 return func
@@ -270,7 +277,7 @@ def form_antisymDerivative(n_der: int):
                         func += f"{cov:s}(Lsl{i:d}?LUsl[i{i:d}sl], Usldot{i:d}?Usldot, "
                     else:
                         func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
-                func += f"{'H'}?!" + "{" + f"{cov:s}" + "}(?a)"
+                func += f"{higgs}?!" + "{" + f"{cov:s}" + "}(?a)"
                 func += der * ")"
                 func += " = "
                 if fp_minus_one_RHS:
@@ -280,9 +287,9 @@ def form_antisymDerivative(n_der: int):
                 red_der = [f"{cov:s}(Lsl{i:d}, Usldot{i:d}, " for i in red_per]
                 func += f"{sl2Ceps:s}(Usldot1, Usldot2)"
                 func += " * "
-                func += f"{''.join(red_der)}D2(H(?a)){len(red_per) * ')'}"
+                func += f"{''.join(red_der)}D2({higgs}(?a)){len(red_per) * ')'}"
                 func += f" + "
-                func += f"i_ * FR(Usldot1, Usldot2, {''.join(red_der)}H(?a){len(red_per) * ')'})"
+                func += f"i_ * FR(Usldot1, Usldot2, {''.join(red_der)}{higgs}(?a){len(red_per) * ')'})"
                 if fp_minus_one_RHS:
                     func += ")"
                 return func

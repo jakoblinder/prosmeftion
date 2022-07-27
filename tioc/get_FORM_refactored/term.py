@@ -138,7 +138,7 @@ class Term_Model():  # Summand
 
 class Term(Term_Model):
     """
-    A term from the form output can consist of many summand. The term ist therefore split in Term_s objects
+    A term from the form output can consist of many summand. The term ist therefore split in Summand objects
     consisting of only one summand.
     """
     name: str

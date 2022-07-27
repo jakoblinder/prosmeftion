@@ -249,6 +249,14 @@ fermions_non_conj = [list(field["mathematica"].values())[0] for field in op_conf
 tensors = [form_field for field in op_config["tensors"].values() for form_field in field["mathematica"].values()]
 
 
+fields_sorted = {}
+transl_autoeft_projection = {autoeft: proj for name, field in {**op_config["bosonfields"], **op_config["fermionfields"]}.items() if name != "D" for proj, autoeft in field["autoeft"].items()}
+for name, field in model.fields.items():
+    proj_name = transl_autoeft_projection[name]
+    field.form_name = proj_name
+    fields_sorted[proj_name] = field
+del transl_autoeft_projection
+
 def get_SUN_name(N):
     """Get Name of SU2_W out of model file."""
     for group_name, group_properties in model.sun_groups.items():

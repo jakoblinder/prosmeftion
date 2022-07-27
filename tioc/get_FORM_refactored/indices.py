@@ -43,7 +43,7 @@ class Indices_Model(Index, MutableMapping):
 
     @abstractmethod
     def __repr__(self):
-        return f"{','.join(map(repr, self.indices))}"
+        return f"{', '.join(map(repr, self.indices))}"
 
     def __str__(self):
         """Specify the format for printing with str() or print() statement function. """

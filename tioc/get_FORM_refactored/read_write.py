@@ -59,7 +59,7 @@ def mathematica_to_form(inputfile: Path, outputfile: Path, header: int = 0):
     yukawa = ["yu", "yd", "ye"]
     yukawa_conj = r'|'.join(escape_regex(list(op_config["tensors"][y]["mathematica"].keys())[1]) for y in yukawa)
     line = re.sub(r"(?P<op>" + yukawa_conj + r")\[\{(?P<index1>flav" + index_number_pattern + r"),(?P<index2>flav" + index_number_pattern + r")\}\]",
-                  "\g<op>[{\g<index2>,\g<index1>}]", line)
+                  r"\g<op>[{\g<index2>,\g<index1>}]", line)
 
     sub_mathematica = {key: value for typ in mathematica.values() for key, value in typ.items()}
     placeholder = {}
@@ -75,15 +75,15 @@ def mathematica_to_form(inputfile: Path, outputfile: Path, header: int = 0):
 
     # print(placeholder)
     # Remove curly braces around indices
-    line = re.sub(r"\{(?P<index>[a-zA-Z0-9,]+)\}", "\g<index>", line)
+    line = re.sub(r"\{(?P<index>[a-zA-Z0-9,]+)\}", r"\g<index>", line)
     D = sub_mathematica["cov"]
     while re.search(D + r"\[(?P<squarebrackets>([a-zA-Z0-9,<>\[\]])+)\]", line):
         # cov[...] -> cov(...) by remembering that regex always tries to match the largest pattern
         line = re.sub(D + r"\[(?P<squarebrackets>([a-zA-Z0-9,<>\[\]])+)\]",
-            D + "(\g<squarebrackets>)", line)
+            D + r"(\g<squarebrackets>)", line)
     # Replace [Index,Index,...] -> (Index,Index,...)
     line = re.sub(r"\[(?P<Index>([a-zA-Z0-9,])+)\]",
-                  "(\g<Index>)", line)
+                  r"(\g<Index>)", line)
 
     # replace double product symbol "**" by "*"
     line = re.sub(r"\*\*", r"*", line)
@@ -112,10 +112,10 @@ def read_form_1d_table(table_file: Path, table_label: str) -> Tuple[str]:
                 # Remove additional brackets: D(lor1,(D(lor2,(H(gauge1234))))) -> D(lor1,D(lor2,H(gauge1234)))
                 cov = escape_regex(op_config["fermionfields"]["D"]["mathematica"]["cov"])
                 while re.search(r"(" + cov + r"\(lor" + inp + r",\()+", op):
-                    op = re.sub(cov + r"\((?P<index>lor" + inp + r"),\((?P<actedOnStuff>" + op_pattern + ")\)\)", cov + "(\g<index>,\g<actedOnStuff>)", op)
+                    op = re.sub(cov + r"\((?P<index>lor" + inp + r"),\((?P<actedOnStuff>" + op_pattern + r")\)\)", cov + r"(\g<index>,\g<actedOnStuff>)", op)
                 # D(Lsl1, Usldot1, (D(Lsl2, Usldot2 (H(gauge1234))))) -> D(Lsl1, Usldot1, D(Lsl2, Usldot2, H(gauge1234)))
                 while re.search(r"(" + cov + r"\(Lsl" + inp + r",Usl" + inp + r",\()+", op):
-                    op = re.sub(cov + r"\((?P<index1>Lsl" + inp + r"),(?P<index2>Usl" + inp + r"),\((?P<actedOnStuff>" + op_pattern + ")\)\)", cov + "(\g<index1>,\g<index2>,\g<actedOnStuff>)", op)
+                    op = re.sub(cov + r"\((?P<index1>Lsl" + inp + r"),(?P<index2>Usl" + inp + r"),\((?P<actedOnStuff>" + op_pattern + r")\)\)", cov + r"(\g<index1>,\g<index2>,\g<actedOnStuff>)", op)
                 op_list.append(op)
             elif line.strip():
                 raise ValueError
@@ -280,18 +280,18 @@ def get_terms(filepath: Path, as_one=False, name:str=""):
         # terms = [Term([term], f"term{i:d}") for i, term in enumerate(sorted_terms)]
         terms = list(map(Term, [[term] for term in sorted_terms], [f"term{i:d}" for i in range(len(sorted_terms))]))
 
-    latex = ""
-    if type(terms) == list:
-        for term in terms:
-            latex += r"\paragraph{" + f"{term.name}" + "}\n"
-            latex += r"\begin{dmath}" + "\n"
-            latex += f"{term:tex} \n"
-            latex += r"\end{dmath}" + "\n"
-        # with open(LATEX_PATH / "terms_all.tex", "w") as file:
-        #     file.write(latex)
-    else:
-        pass
-        # print(f"{terms:tex}")
+    # latex = ""
+    # if type(terms) == list:
+    #     for term in terms:
+    #         latex += r"\paragraph{" + f"{term.name}" + "}\n"
+    #         latex += r"\begin{dmath}" + "\n"
+    #         latex += f"{term:tex} \n"
+    #         latex += r"\end{dmath}" + "\n"
+    #     # with open(LATEX_PATH / "terms_all.tex", "w") as file:
+    #     #     file.write(latex)
+    # else:
+    #     pass
+    #     # print(f"{terms:tex}")
 
     return terms
 

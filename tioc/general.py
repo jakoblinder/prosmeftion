@@ -6,7 +6,7 @@ from typing import List, Dict
 from itertools import permutations
 
 from . import op_config, bosons, fermions, tensors, coeff, index_config, n_der
-from . import get_antisymEps
+from . import get_antisymEps, fields_sorted
 from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
 
 logger_autoeft = logging.getLogger("autoeft.projection")
@@ -993,6 +993,129 @@ def form_simplifyEpsSU3():
     # with open(FORM_GENERAL_PATH / f"simplifyEpsSU3.prc", "w") as file:
     #     file.write(form)
 
+@create_procedure(FORM_GENERAL_PATH)
+def form_derivativeasIndex(n_der: int=4):
+    """
+    Write derivative which act on any field as indices of that field.
+    E.g.: D(a, adot, H(gauge1)) -> H(a,adot,gauge)
+
+    This is done to sort the fields easily by their helicity.
+
+    Parameters
+    ----------
+    n_der
+
+    Returns
+    -------
+
+    """
+    cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
+    l = op_config["fermionfields"]["L"]["mathematica"]["L"]  # 'L'
+    def derivativestoInd(argumentLeft, n):
+        """
+        Write for example: id D(?a, D(?b, L?(?x))) = L(?a, ?b, ?x);
+        Note: 'x', 'y', 'z' are free to use them for internal field indices.
+        Parameters
+        ----------
+        argumentLeft
+        argumentRight
+        n
+
+        Returns
+        -------
+        lHS
+        rHS_indices
+        """
+        abc = "abcdefghijklmnopqrstuvw"
+        lHS = ""
+        rHS_indices = ""
+        for a in abc[:n]:
+            lHS += f"{cov}(?{a:s}, "
+        lHS += argumentLeft
+        lHS += n * ")"
+
+        for a in abc[:n]:
+            rHS_indices += f"?{a:s}, "
+        return lHS, rHS_indices
+
+    form = "repeat;\n"
+    for i in range(1, n_der + 1):
+        lHS, rHS_Indices = derivativestoInd(f"{l}?(?x)", n=i)
+        form += f"\tid {lHS} = {l}({rHS_Indices}?x);\n"
+    form += "endrepeat;"
+    return form
+
+@create_procedure(FORM_GENERAL_PATH)
+def form_indexasDerivative(n_der: int=4):
+    """
+    Since, derivatives are the only objects that have always the index structure [Lsl, Usldot], it is always uniquely
+    possible to extract the derivatives of a fields by the indices:
+    E.g.: H(a,adot,gauge) -> D(a, adot, H(gauge1))
+    """
+    cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
+    l = op_config["fermionfields"]["L"]["mathematica"]["L"]  # 'L'
+    def indtoDerivatives(n):
+        """
+        'x', 'y', 'z' are free to use them for internal field indices.
+        Parameters
+        ----------
+        n
+
+        Returns
+        -------
+        lHS_indices
+        rHS
+        brackets
+        """
+        abc = "abcdefghijklmnopqrstuvw"
+        lHS_indices = []
+        rHS = []
+        for i in range(1, n+1):
+            lHS_indices.append(f"Lsl{i:d}?Lsl, Usldot{i:d}?Usldot")
+            rHS.append(f"{cov}(Lsl{i:d}, Usldot{i:d}")
+        rHS = ", ".join(rHS)
+        rHS += ", "
+        brackets = n * ")"
+
+        lHS_indices = ", ".join(lHS_indices)
+
+        return lHS_indices, rHS, brackets
+
+    form = "repeat;\n"
+    for i in reversed(range(1, n_der + 1)):
+        lHS_Indices, rHS, brackets = indtoDerivatives(n=i)
+        form += f"\tid {l}?!" + "{" + f"{cov}" + "}" + f"({lHS_Indices}, ?x) = {rHS}{l}(?x){brackets};\n"
+    form += "endrepeat;"
+
+    return form
+
+@create_procedure(FORM_GENERAL_PATH)
+def form_sortfields(order: Dict):
+    """
+
+    Parameters
+    ----------
+    order : Dict[Field]
+
+    Returns
+    -------
+
+    """
+    form = ""
+    form += "repeat;\n"
+    ordered_fields = list(order.values())[::-1]  # Reversed list
+    for i in range(len(ordered_fields)):
+        for j in range(len(ordered_fields)):
+            if j > i:
+                if ordered_fields[i].ac and ordered_fields[j].ac:
+                    sign = "-"
+                else:
+                    sign = "+"
+                form += f"\tid {ordered_fields[i].form_name}(?a)*{ordered_fields[j].form_name}(?b) = {sign}{ordered_fields[j].form_name}(?b)*{ordered_fields[i].form_name}(?a);\n"
+        form += "\n"
+    form += "endrepeat;"
+    return form
+
 def form_declarations(n_der: int):
     """
     Contains all general declarations valid for any term, i.e. for example the declaration of all fields and indices.
@@ -1119,11 +1242,16 @@ def form_declarations(n_der: int):
     form_simplifySL2CEps()
     # form_replaceSUNGenerators(N=2)
     # form_replaceSUNGenerators(N=3)
-    # form_simplifyEpsSU2()
-    # form_simplifyEpsSU3()
+    form_simplifyEpsSU2()
+    form_simplifyEpsSU3()
     form_antisymDerivative(n_der)
     form_spinorEOMidentification(n_der)
     form_fieldstrengthtensorEOMidentification(n_der)
+    form_derivativeasIndex(n_der)
+    form_indexasDerivative(n_der)
+
+    form_sortfields(fields_sorted)
+
 
     return form
 
@@ -1147,7 +1275,7 @@ def declaration_SL2C_sets(indices) -> str:
         return [f"{typ:s}{i:d}" for i in range(max_index) if f"{typ:s}{i:d}" not in [repr(index) for index in reference]]
     # if not (lsl and usl):
     lsl_aux    = id_indices("Lsl", lsl, max_ind)
-    usl_aux    = id_indices("Usl", lsl, max_ind) #[f"Usl{i:d}" for i in range(max_ind)]
+    usl_aux    = id_indices("Usl", usl, max_ind) #[f"Usl{i:d}" for i in range(max_ind)]
     # else:
     #     lsl_aux = []
     #     usl_aux = []
@@ -1182,10 +1310,10 @@ def declaration_SL2C_sets(indices) -> str:
     form += f"Indices {decl_usldot};\n"
 
     # Sets for contraction for SL2C-indices
-    form += f"Set Lsl: {', '.join(map(repr, set_lsl))};\n"
-    form += f"Set Usl: {', '.join(map(repr, set_usl))};\n"
-    form += f"Set Lsldot: {', '.join(map(repr, set_lsldot))};\n"
-    form += f"Set Usldot: {', '.join(map(repr, set_usldot))};\n"
+    form += f"Set Lsl: {set_lsl};\n"
+    form += f"Set Usl: {set_usl};\n"
+    form += f"Set Lsldot: {set_lsldot};\n"
+    form += f"Set Usldot: {set_usldot};\n"
 
     form += f"Set LUsl: {set_lusl};\n"
     form += f"Set ULsl: {set_ulsl};\n"

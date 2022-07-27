@@ -44,6 +44,12 @@ logging.config.dictConfig(logconfig)
 
 logger.info(timestamp.replace(microsecond=0).isoformat())
 
+def number_terms(single_terms):
+    nterms = 0
+    for terms in single_terms.values():
+        for terms_n in terms.values():
+            nterms += len(terms_n)
+    return nterms
 
 def main():
     bs_file = args.matched.resolve()  # "exampleOutputBS.m"
@@ -51,40 +57,58 @@ def main():
     with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
         file.write(form_declarations(n_der))
 
-    terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
-    del bs_file
-    # pickle.dump(terms, open(CONFIG_PATH / "terms.p", "wb"))
-    # terms = pickle.load(open(CONFIG_PATH / "terms.p", "rb"))
+    # terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
+    # del bs_file
+    # # pickle.dump(terms, open(CONFIG_PATH / "terms.p", "wb"))
+    # # terms = pickle.load(open(CONFIG_PATH / "terms.p", "rb"))
+    #
+    # if args.tex:
+    #     tex_unsorted_terms(terms)
+    #
+    # # Sort terms by type for the projection:
+    # single_terms = get_type(terms)
+    # # single_terms_debug = single_terms
+    # # del terms
+    #
+    # if args.tex:
+    #     tex_sorted_terms(single_terms)
+    #
+    # # nterms_before = 0
+    # # for terms in single_terms.values():
+    # #     for terms_n in terms.values():
+    # #         nterms_before += len(terms_n)
+    #
+    # nterms_before = number_terms(single_terms)
+    # # Remove double terms:
+    # single_terms = remove_doubles(single_terms)
+    #
+    # nterms_after = number_terms(single_terms)
+    # # for terms in single_terms.values():
+    # #     for terms_n in terms.values():
+    # #         nterms_after += len(terms_n)
+    #
+    # logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+    #
+    # # print terms
+    # if args.tex:
+    #     tex_sorted_terms_wo_doubles(single_terms)
+    #
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
+    single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
-    if args.tex:
-        tex_unsorted_terms(terms)
+    nterms_before = number_terms(single_terms)
 
-    # Sort terms by type for the projection:
-    single_terms = get_type(terms)
-    # single_terms_debug = single_terms
-    # del terms
-
-    if args.tex:
-        tex_sorted_terms(single_terms)
-
-    nterms_before = 0
-    for terms in single_terms.values():
-        for terms_n in terms.values():
-            nterms_before += len(terms_n)
+    single_terms = replace_eoms(single_terms)
+    # single_terms = replace_eoms(single_terms)
+    # FIXME: In term "H0H0H+0L+0eC+0" at least the flavor indices are messed up, i.e. more than two are equal.
+    # TODO: Fix maybe by summing over all flavor indices and assigning all new.
 
     # Remove double terms:
     single_terms = remove_doubles(single_terms)
 
-    nterms_after = 0
-    for terms in single_terms.values():
-        for terms_n in terms.values():
-            nterms_after += len(terms_n)
+    nterms_after = number_terms(single_terms)
 
     logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-
-    # print terms
-    if args.tex:
-        tex_sorted_terms_wo_doubles(single_terms)
 
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, max_dim=6)
@@ -100,10 +124,10 @@ def main():
     if args.tex:
         tex_terms_sorted_sun_projection(single_terms)
 
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
-    single_terms = replace_eoms(single_terms)
+
 
     return single_terms
 

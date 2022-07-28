@@ -445,7 +445,7 @@ class Possible_Indices(Indices_Model):
 
         return lsl, usl, lsldot, usldot
 
-    def generate_index(self, typ: str, derIndex=False, fp_min: int=1, fp_max: int=None):
+    def generate_index(self, typ: str, derIndex=False, fp_min: int=1, fp_max: int=None, exclude_indices: List[Index] = []):
         """
         Call with
             gen_index = summand.possible_indices.generate_index("flav")
@@ -467,6 +467,8 @@ class Possible_Indices(Indices_Model):
         fp_max: int
             Possible maximum number on an index.
             =>E.g.: For fp_min = 2 and fp_max=12345: flav2, flav3, ..., flav12345 would be returned.
+        exclude_indices
+            Optional parameter, which allows to specify additional indices which should not be taken in the generation of new indices.
 
         Returns
         -------
@@ -493,7 +495,10 @@ class Possible_Indices(Indices_Model):
 
         for i in count(fp_min, fp_max):
             index = Index(f"{typ}{i}", derIndex)
-            index_list = self[typ]
+            if exclude_indices:
+                index_list = self[typ] + exclude_indices[typ]
+            else:
+                index_list = self[typ]
             if index.is_in(index_list.indices):
                 continue
             elif i is sentinel:
@@ -529,6 +534,9 @@ class Indices_Summand(Indices_Model):
         for i in fp_indices:
             if fp_indices.count(i) == 2:
                 contract.append(True)
+            elif fp_indices.count(i) > 2:
+                logger.error(f"At least the index {i} occurs more then two times.")
+                sys.exit("STOP")
             else:
                 uncontractedInd.append(i)
         # Copy list for iteration in such away that only elements from "uncontractedInd" are removed in an

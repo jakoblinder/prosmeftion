@@ -73,19 +73,11 @@ def main():
     # if args.tex:
     #     tex_sorted_terms(single_terms)
     #
-    # # nterms_before = 0
-    # # for terms in single_terms.values():
-    # #     for terms_n in terms.values():
-    # #         nterms_before += len(terms_n)
-    #
     # nterms_before = number_terms(single_terms)
     # # Remove double terms:
     # single_terms = remove_doubles(single_terms)
     #
     # nterms_after = number_terms(single_terms)
-    # # for terms in single_terms.values():
-    # #     for terms_n in terms.values():
-    # #         nterms_after += len(terms_n)
     #
     # logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
     #
@@ -94,24 +86,39 @@ def main():
     #     tex_sorted_terms_wo_doubles(single_terms)
     #
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
-    single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
-
-    nterms_before = number_terms(single_terms)
-
-    single_terms = replace_eoms(single_terms)
+    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
+    #
+    # nterms_before = number_terms(single_terms)
+    #
     # single_terms = replace_eoms(single_terms)
-    # FIXME: In term "H0H0H+0L+0eC+0" at least the flavor indices are messed up, i.e. more than two are equal.
-    # TODO: Fix maybe by summing over all flavor indices and assigning all new.
-
-    # Remove double terms:
-    single_terms = remove_doubles(single_terms)
-
-    nterms_after = number_terms(single_terms)
-
-    logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+    # single_terms = replace_eoms(single_terms)
+    #
+    #
+    # nterms_after = number_terms(single_terms)
+    #
+    # logger.info(f"#Terms with EOMs: {nterms_before:d} <-> #Terms with less EOMs: {nterms_after:d}")
+    #
+    #
+    # # FIXME: In term "H0H0H+0L+0eC+0" at least the flavor indices are messed up, i.e. more than two are equal.
+    # # TODO: Fix maybe by summing over all flavor indices and assigning all new.
+    #
+    # # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
+    # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
+    #
+    # nterms_before = number_terms(single_terms)
+    # # Remove double terms:
+    # single_terms = remove_doubles(single_terms)
+    #
+    # nterms_after = number_terms(single_terms)
+    #
+    # logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+    #
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
+    single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, max_dim=6)
+
     single_terms = replace_sun_tensors_by_projected_ones(single_terms)
 
     nterms_after_sun_projection = 0

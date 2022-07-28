@@ -138,10 +138,10 @@ def replace_eoms(single_terms):
                 form += "Print +ss;\n"
                 form += ".end\n"
 
-                with open(TERM_PATH / f"{name_form}.frm", "w") as file:
+                with open(TERM_PATH / f"{name_form}eom.frm", "w") as file:
                     file.write(form)
 
-                run_form(fp_cwd=TERM_PATH, filename=f"{name_form}.frm", fp_p=FORM_GENERAL_PATH)
+                run_form(fp_cwd=TERM_PATH, filename=f"{name_form}eom.frm", fp_p=FORM_GENERAL_PATH)
 
                 terms = get_terms(TERM_PATH / "term_with_less_eom.h", as_one=False)
                 term_list.append(terms)

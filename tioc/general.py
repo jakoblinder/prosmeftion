@@ -203,7 +203,7 @@ def form_antisymDerivative(n_der: int):
 
     """
     # form = "#procedure antisymDerivative\n"
-    form = ""
+    form = "$found = 0;\n"
     assert n_der >= 2
     cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
     sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
@@ -222,14 +222,16 @@ def form_antisymDerivative(n_der: int):
 
             def except_dotted_eps(fp_per, fp_minus_one_RHS):
                 # Derivatives
-                func = " * "
+                lHS = " * "
+                func = ""
                 for i in fp_per:
                     if i in (1,2):
-                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?ULsldot[i{i:d}sldot], "
+                        lHS += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?ULsldot[i{i:d}sldot], "
                     else:
-                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
-                func += f"{higgs}?!" + "{" + f"{cov:s}" + "}(?a)"
-                func += der * ")"
+                        lHS += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
+                lHS += f"{higgs}?!" + "{" + f"{cov:s}" + "}(?a)"
+                lHS += der * ")"
+                func += lHS
                 func += " = "
                 if fp_minus_one_RHS:
                     func += "(-1)*("
@@ -243,14 +245,21 @@ def form_antisymDerivative(n_der: int):
                 func += f"i_ * FL(Lsl1, Lsl2, {''.join(red_der)}{higgs}(?a){len(red_per)*')'})"
                 if fp_minus_one_RHS:
                     func += ")"
-                return func
+                return lHS, func
 
             id_statement1  = f"{sl2Ceps:s}(Lsldot1?LUsldot[i1sldot], Lsldot2?LUsldot[i2sldot])"
-            id_statement1 += except_dotted_eps(per, minus_one_RHS)
-            id_statement2 = f"{sl2Ceps:s}(Lsldot2?LUsldot[i2sldot], Lsldot1?LUsldot[i1sldot])"
-            id_statement2 += except_dotted_eps(per, not minus_one_RHS)
+            lHS1, id_statement_tmp1 = except_dotted_eps(per, minus_one_RHS)
+            lHS1 = id_statement1 + lHS1
+            id_statement1 += id_statement_tmp1
 
+            id_statement2 = f"{sl2Ceps:s}(Lsldot2?LUsldot[i2sldot], Lsldot1?LUsldot[i1sldot])"
+            lHS2, id_statement_tmp2 = except_dotted_eps(per, not minus_one_RHS)
+            lHS2 = id_statement2 + lHS2
+            id_statement2 += id_statement_tmp2
+
+            id_statements.append(f"if( match( {lHS1:s} ) ) $found = 1;\n")
             id_statements.append(f"id once ifmatch -> 1 {id_statement1:s};\n")
+            id_statements.append(f"if( match( {lHS2:s} ) ) $found = 1;\n")
             id_statements.append(f"id once ifmatch -> 1 {id_statement2:s};\n")
             id_statements.append("\n")
 
@@ -271,14 +280,16 @@ def form_antisymDerivative(n_der: int):
 
             def except_unddotted_eps(fp_per, fp_minus_one_RHS):
                 # Derivatives
-                func = " * "
+                lHS = " * "
+                func = ""
                 for i in fp_per:
                     if i in (1, 2):
-                        func += f"{cov:s}(Lsl{i:d}?LUsl[i{i:d}sl], Usldot{i:d}?Usldot, "
+                        lHS += f"{cov:s}(Lsl{i:d}?LUsl[i{i:d}sl], Usldot{i:d}?Usldot, "
                     else:
-                        func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
-                func += f"{higgs}?!" + "{" + f"{cov:s}" + "}(?a)"
-                func += der * ")"
+                        lHS += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
+                lHS += f"{higgs}?!" + "{" + f"{cov:s}" + "}(?a)"
+                lHS += der * ")"
+                func += lHS
                 func += " = "
                 if fp_minus_one_RHS:
                     func += "(-1)*("
@@ -292,14 +303,21 @@ def form_antisymDerivative(n_der: int):
                 func += f"i_ * FR(Usldot1, Usldot2, {''.join(red_der)}{higgs}(?a){len(red_per) * ')'})"
                 if fp_minus_one_RHS:
                     func += ")"
-                return func
+                return lHS, func
 
             id_statement1 = f"{sl2Ceps:s}(Usl1?ULsl[i1sl], Usl2?ULsl[i2sl])"
-            id_statement1 += except_unddotted_eps(per, minus_one_RHS)
-            id_statement2 = f"{sl2Ceps:s}(Usl2?ULsl[i2sl], Usl1?ULsl[i1sl])"
-            id_statement2 += except_unddotted_eps(per, not minus_one_RHS)
+            lHS1, id_statement_tmp1 = except_unddotted_eps(per, minus_one_RHS)
+            lHS1 = id_statement1 + lHS1
+            id_statement1 += id_statement_tmp1
 
+            id_statement2 = f"{sl2Ceps:s}(Usl2?ULsl[i2sl], Usl1?ULsl[i1sl])"
+            lHS2, id_statement_tmp2 = except_unddotted_eps(per, not minus_one_RHS)
+            lHS2 = id_statement2 + lHS2
+            id_statement2 += id_statement_tmp2
+
+            id_statements.append(f"if( match( {lHS1:s} ) ) $found = 1;\n")
             id_statements.append(f"id once ifmatch -> 1 {id_statement1:s};\n")
+            id_statements.append(f"if( match( {lHS2:s} ) ) $found = 1;\n")
             id_statements.append(f"id once ifmatch -> 1 {id_statement2:s};\n")
             id_statements.append("\n")
 
@@ -315,7 +333,7 @@ def form_antisymDerivative(n_der: int):
     form += f"id FR(Usldot1?ULsldot[i1], Usldot2?ULsldot[i2], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
     form += f"id FR(Usldot2?ULsldot[i2], Usldot1?ULsldot[i1], ?a) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
 
-    form += "goto 2;\n"
+    form += "if($found == 1) goto 2;\n"
     # form += "label 2;\n"
 
     return form

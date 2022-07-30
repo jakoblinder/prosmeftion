@@ -83,6 +83,7 @@ def replace_eoms(single_terms):
                 summand.form_higgsEOM(TERM_PATH)
                 summand.form_fieldstrengthtensor(TERM_PATH)
                 summand.form_fermionEOM(TERM_PATH)
+                summand.form_fieldstrengthtensorEOM(TERM_PATH)
 
                 # Write SL2C and set FORM-file:
                 form_SL2C = declaration_SL2C_sets(summand.possible_indices)
@@ -101,15 +102,17 @@ def replace_eoms(single_terms):
                 form += ".sort\n"
                 form += "\n"
 
+                # EOM identifications:
                 form += "#call antisymDerivative\n"
                 form += "#call spinorEOMidentification\n"
                 form += "#call fieldstrengthtensorEOMidentification\n"
                 form += "label 2;\n"
+                # EOM substitutions:
                 form += "#call higgsEOM\n"
                 form += "label 3;\n"
                 form += "#call fieldstrengthtensor\n"
                 form += "#call fermionEOM\n"
-                # Here more EOM substitutions
+                form += "#call fieldstrengthtensorEOM\n"
 
                 form += "label 4;\n"
 

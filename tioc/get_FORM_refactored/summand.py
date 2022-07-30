@@ -492,9 +492,7 @@ class Summand(Summand_Model):
         -------
 
         """
-        sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
         su2eps = op_config["tensors"]["[su2eps]"]["mathematica"]["su2eps"]
-        su3eps = op_config["tensors"]["[su3eps]"]["mathematica"]["su3eps"]
         # Higgs field
         higgs = op_config["bosonfields"]["H"]["mathematica"]["H"]  # 'H'
         higgs_dagger = op_config["bosonfields"]["H"]["mathematica"]["conj[H]"]  # 'H'
@@ -509,9 +507,6 @@ class Summand(Summand_Model):
         u_dagger = op_config["fermionfields"]["[u_C]"]["mathematica"]["conj[uC]"]
         e = op_config["fermionfields"]["[e_C]"]["mathematica"]["eC"]
         e_dagger = op_config["fermionfields"]["[e_C]"]["mathematica"]["conj[eC]"]
-        # Coefficients
-        Mu = op_config["coefficients"]["Mu"]["mathematica"]["Mu"]
-        lambdah= op_config["coefficients"]["lambdah"]["mathematica"]["lambdah"]
         # Yukawa matrices
         yu = op_config["tensors"]["yu"]["mathematica"]["yu"]
         yu_dagger = op_config["tensors"]["yu"]["mathematica"]["conj[yu]"]
@@ -531,16 +526,13 @@ class Summand(Summand_Model):
             gen_index_sldot = self.possible_indices.generate_index("Lsldot")
             gauge1 = next(gen_index_gauge)
             gauge2 = next(gen_index_gauge)
-            gauge3 = next(gen_index_gauge)
             colf1 = next(gen_index_colf)
             colf2 = next(gen_index_colf)
             colf3 = next(gen_index_colf)
             flav1 = next(gen_index_flav)
             flav2 = next(gen_index_flav)
             lsl1, usl1 = next(gen_index_sl)
-            lsl2, usl2 = next(gen_index_sl)
             lsldot1, usldot1 = next(gen_index_sldot)
-            lsldot2, usldot2 = next(gen_index_sldot)
             #  EOM of Q
             id_statement1 = f"EOM({q},{usldot1}?Usldot,{gauge1}?gauge,{colf1}?colf,{flav1}?flav) ="
             id_statement1 += f" + i_ * {yu}({flav1},{flav2}) * {higgs_dagger}({gauge1}) * {u_dagger}({usldot1},{colf1},{flav2})"
@@ -596,6 +588,130 @@ class Summand(Summand_Model):
             id_statement2 = f"EOM({e},{usldot1}?Usldot,{flav1}?flav) ="
             id_statement2 += f" + i_ * {ye}({flav2},{flav1}) * {su2eps}({gauge1},{gauge2}) * {l_dagger}({usldot1},{gauge2},{flav2}) * {higgs}({gauge1})"
             id_statements.append(f"id once ifmatch -> 4 {id_statement2:s};\n")
+
+            for id in id_statements:
+                form += f"{id:s}"
+
+            return form
+
+        create_form()
+
+    def form_fieldstrengthtensorEOM(self, form_path: Path):
+        """
+        Replace EOM(BL, Lsl1, Usldot1), EOM(WL, Lsl1, Usldot1, gauge1, gauge2)
+        and
+        EOM(BR, Lsl1, Usldot1), EOM(WR, Lsl1, Usldot1, gauge1, gauge2)
+        by the SM equation of motion.
+        Parameters
+        -------
+        form_path
+            Path where the form file is stored
+        Returns
+        -------
+
+        """
+        cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
+        su2eps = op_config["tensors"]["[su2eps]"]["mathematica"]["su2eps"]
+        su3eps = op_config["tensors"]["[su3eps]"]["mathematica"]["su3eps"]
+        # Higgs field
+        higgs = op_config["bosonfields"]["H"]["mathematica"]["H"]  # 'H'
+        higgs_dagger = op_config["bosonfields"]["H"]["mathematica"]["conj[H]"]  # 'H'
+        # Fermions
+        l = op_config["fermionfields"]["L"]["mathematica"]["L"]               # L
+        l_dagger = op_config["fermionfields"]["L"]["mathematica"]["conj[L]"]  # [L+]
+        q = op_config["fermionfields"]["Q"]["mathematica"]["Q"]
+        q_dagger = op_config["fermionfields"]["Q"]["mathematica"]["conj[Q]"]
+        d = op_config["fermionfields"]["[d_C]"]["mathematica"]["dC"]               # [d_C]
+        d_dagger = op_config["fermionfields"]["[d_C]"]["mathematica"]["conj[dC]"]  # [d_C+]
+        u = op_config["fermionfields"]["[u_C]"]["mathematica"]["uC"]
+        u_dagger = op_config["fermionfields"]["[u_C]"]["mathematica"]["conj[uC]"]
+        e = op_config["fermionfields"]["[e_C]"]["mathematica"]["eC"]
+        e_dagger = op_config["fermionfields"]["[e_C]"]["mathematica"]["conj[eC]"]
+        # field strength tensors
+        bl = op_config["bosonfields"]["BL"]["mathematica"]["BL"]
+        br = op_config["bosonfields"]["BL"]["mathematica"]["conj[BL]"]
+        wl = op_config["bosonfields"]["WL"]["mathematica"]["WL"]
+        wr = op_config["bosonfields"]["WL"]["mathematica"]["conj[WL]"]
+        # Coefficients
+        g1 = op_config["coefficients"]["g1"]["mathematica"]["g1"]
+        g2 = op_config["coefficients"]["g2"]["mathematica"]["g2"]
+
+        @create_procedure(form_path, "fieldstrengthtensorEOM")
+        def create_form():
+            form = ""
+            id_statements = []
+            gen_index_gauge = self.possible_indices.generate_index("gauge")  # get a new, i.e. unused SU2 index with 'next(gen_index_gauge)'
+            gen_index_colf = self.possible_indices.generate_index("colf")
+            gen_index_flav = self.possible_indices.generate_index("flav")
+            gen_index_sl = self.possible_indices.generate_index("Lsl")  # next(gen_index_sl) will generate new Lsl and new Usl index
+            gen_index_sldot = self.possible_indices.generate_index("Lsldot")
+            gauge1 = next(gen_index_gauge)
+            gauge2 = next(gen_index_gauge)
+            gauge3 = next(gen_index_gauge)
+            gauge4 = next(gen_index_gauge)
+            colf1 = next(gen_index_colf)
+            colf2 = next(gen_index_colf)
+            colf3 = next(gen_index_colf)
+            flav1 = next(gen_index_flav)
+            lsl1, usl1 = next(gen_index_sl)
+            lsldot1, usldot1 = next(gen_index_sldot)
+            #  EOM of the left-handed field strength tensor of U(1), BL
+            id_statement1 = f"EOM({bl},{lsl1}?Lsl,{usldot1}?Usldot) ="
+            rHS1 = f" {g1}*("
+
+            rHS1 += f" + (i_/2) * {su2eps}({gauge1},{gauge2}) * ( {cov}({lsl1},{usldot1},{higgs}({gauge1})) * {higgs_dagger}({gauge2})"
+            rHS1 += f" - {higgs}({gauge1}) * {cov}({lsl1},{usldot1},{higgs_dagger}({gauge2})) )"
+
+            rHS1 += f" - (1/6) * {su3eps}({colf1},{colf2},{colf3}) * {su2eps}({gauge1},{gauge2}) * {q}({lsl1},{gauge1},{colf1},{flav1}) * {q_dagger}({usldot1},{gauge2},{colf2},{colf3},{flav1})"
+
+            rHS1 += f" + (2/3) * {su3eps}({colf1},{colf2},{colf3}) * {u}({lsl1},{colf2},{colf3},{flav1}) * {u_dagger}({usldot1},{colf1},{flav1})"
+
+            rHS1 += f" - (1/3) * {su3eps}({colf1},{colf2},{colf3}) * {d}({lsl1},{colf2},{colf3},{flav1}) * {d_dagger}({usldot1},{colf1},{flav1})"
+
+            rHS1 += f" + {su2eps}({gauge1},{gauge2}) * {l}({lsl1},{gauge1},{flav1}) * {l_dagger}({usldot1},{gauge2},{flav1})"
+
+            rHS1 += f" + 2 * {e}({lsl1},{flav1}) * {e_dagger}({usldot1},{flav1})"
+
+            rHS1 += ")"
+
+            id_statement1 += rHS1
+            id_statements.append(f"id once ifmatch -> 4 {id_statement1:s};\n")
+
+            #  EOM of the right-handed field strength tensor of U(1), BR
+            id_statement2 = f"EOM({br},{lsl1}?Lsl,{usldot1}?Usldot) ="
+
+            id_statement2 += rHS1
+            id_statements.append(f"id once ifmatch -> 4 {id_statement2:s};\n")
+
+
+            #  EOM of the left-handed field strength tensor of SU(2), WL
+            # Note: The SU2-indices are explicitly symmetrized.
+            id_statement3 = f"EOM({wl},{lsl1}?Lsl,{usldot1}?Usldot,{gauge1}?gauge,{gauge2}?gauge) ="
+            rHS2 = f" - ({g2}/2) * {su2eps}({gauge1},{gauge3}) * {su2eps}({gauge2},{gauge4}) * ("
+
+            def gauge_indices(gaugek, gaugel):
+                """For the symmetrization of the SU2-indices."""
+                output = f" + i_ * ( {cov}({lsl1},{usldot1},{higgs}({gaugel})) * {higgs_dagger}({gaugek})"
+                output += f" - {higgs}({gaugel}) * {cov}({lsl1},{usldot1},{higgs_dagger}({gaugek})) )"
+                output += f" - (1/3) * {su3eps}({colf1},{colf2},{colf3}) * {q}({lsl1},{gaugel},{colf1},{flav1}) * {q_dagger}({usldot1},{gaugek},{colf2},{colf3},{flav1})"
+                output += f" + {l}({lsl1},{gaugel},{flav1}) * {l_dagger}({usldot1},{gaugek},{flav1})"
+
+                return output
+
+            # 'Normal' order of SU2 indices:
+            rHS2 += gauge_indices(gauge3, gauge4)
+            # SU2 indices swapped:
+            rHS2 += gauge_indices(gauge4, gauge3)
+
+            rHS2 += ")"
+
+            id_statement3 += rHS2
+            id_statements.append(f"id once ifmatch -> 4 {id_statement3:s};\n")
+
+            #  EOM of the right-handed field strength tensor of SU(2), WR
+            id_statement4 = f"EOM({wr},{lsl1}?Lsl,{usldot1}?Usldot,{gauge1}?gauge,{gauge2}?gauge) ="
+            id_statement4 += rHS2
+            id_statements.append(f"id once ifmatch -> 4 {id_statement4:s};\n")
 
             for id in id_statements:
                 form += f"{id:s}"

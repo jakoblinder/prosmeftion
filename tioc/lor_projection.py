@@ -155,3 +155,4 @@ def replace_eoms(single_terms):
     single_terms = get_type(term_list)
 
     return single_terms
+

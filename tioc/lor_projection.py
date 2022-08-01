@@ -28,7 +28,6 @@ def replace_eoms(single_terms):
     """
     Replace equation of motions first by a placeholder and then for the dimension 6 operators by the equation of motion
     of the SM-Lagrangian.
-    TODO: Implement EOM of the SM-Lagrangian.
     Parameters
     ----------
     single_terms
@@ -156,3 +155,22 @@ def replace_eoms(single_terms):
 
     return single_terms
 
+
+def ibp_and_schouten_ids(single_terms):
+    """
+    Apply the integration by parts and Schouten identities to the lorentz structure.
+    Parameters
+    ----------
+    single_terms
+
+    Returns
+    -------
+
+    """
+    # term_list = []  # flat list of Summands, which is later sorted by their types
+    for type in single_terms.values():
+        for term_mass_dim in type.values():
+            for summand in term_mass_dim:
+                pass
+
+    return single_terms

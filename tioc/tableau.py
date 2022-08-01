@@ -1,6 +1,7 @@
 import sys
 from collections.abc import MutableSequence
 from typing import Dict, List, Tuple
+from .sun_projection import get_basis
 from autoeft.combinat import Tableau
 from autoeft.invariants import OpClass, LorentzTableau
 
@@ -197,6 +198,8 @@ class Lorentz_Tableau(LorentzTableau):
     The position of the index on the field is not relevant,
     since all building blocks are assumed to be totally symmetric
     in their SL(2,C) indices.
+    Note l_tabs are the undotted epsilon tensors which are contracted with the left-handed fields, whereas
+         r_tabs denote the dotted epsilon tensors, contracted with right-handed fields.
     """
 
     tableau: Tuple[Tuple[int, ...], ...]
@@ -214,10 +217,40 @@ class Lorentz_Tableau(LorentzTableau):
     def __str__(self):
         return super().__str__()
 
+    @property
+    def lr_tableaux(self) -> Tuple[Tableau, Tableau, int]:
+        """Return the left- and the (conjugated) right-handed tableaux as well as the overall sign."""
 
-# Examples:
-c = [[1,2], [3,4]]
-op_cls = # TODO
-lt = Lorentz_Tableau(c, op_class=op_cls)
+        l_tab, r_tab, sign = LorentzTableau.lr_tableaux.fget(self)
 
-print("TEST")
+        return Young_Tableau(l_tab), Young_Tableau(r_tab), sign
+
+
+def test(basis, max_dim):
+    # Examples:
+    c = [[1,2], [3,4]]
+    # Properties of the operator
+    mass_dim = 6
+    field_content = {"H":2, "H+":2}
+    derivatives = 2
+    # get all the invariants associated with the operator
+    op_class, op_subclass, op_type, operator = basis[mass_dim].get_operator(field_content, derivatives)
+
+    lt = Lorentz_Tableau(c, op_class)
+    print(f"{lt:nice}")
+
+    l_tab, r_tab, sign = lt.lr_tableaux
+    print(f"LH:\n{l_tab:nice}")
+    print(f"RH:\n{r_tab:nice}")
+    print(f"sign: {sign:d}")
+    lorentzt, sign2 = Lorentz_Tableau.from_lr_tableaux(l_tab, r_tab, op_class)
+    print(f"Lorentz tableau:\n{lorentzt:nice}")
+    print(f"sign: {sign2:d}")
+
+    # FIXME: Remove FrozenInstanceError:
+    #  University/Physik/9Physik/ws21/Masterthesis/autoeft/projection/tioc/tableau.py", line 208, in __init__
+    #     self.tableau = Young_List(tableau)
+    #   File "<string>", line 4, in __setattr__
+    # dataclasses.FrozenInstanceError: cannot assign to field 'tableau'
+
+    print("TEST")

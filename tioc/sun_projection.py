@@ -18,12 +18,10 @@ from tioc.get_FORM_refactored.summand import Summand
 from tioc.get_FORM_refactored.term import Term, TermType
 
 from autoeft.invariants import SUNTableau, field_projection_operator, symmetrize_tensors
-from autoeft.io import load_basis
 from autoeft.model import SUNGroup
 from autoeft.sun_projection import tensor_projection
 from . import AUTOEFT_PATH, FORM_PATH, FORM_GENERAL_PATH, model, get_antisymEps, op_config, bosons, fermions, tensors, \
-    run_form
-
+    run_form, get_basis
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
@@ -426,19 +424,6 @@ def basis_tensors(op_type, field_content, tensors, group):
         tensor_basis.append(sym_basis_tensor)
     return MonBasisTensors(monomial_basis), SymBasisTensors(tensor_basis)
 
-def get_basis(max_dim: int):
-    """Load basis."""
-    basis = {}  # dictionary with basis for each mass dimension from 4 to 6.
-    for dim in range(4, max_dim + 1):
-        # load_basis also returns some counters and the Hilbert series, which we don't need here...
-        try:
-            basis[dim], _, _ = load_basis(AUTOEFT_PATH / Path(f"eft/{model.name}/"), dim)
-        except FileNotFoundError:
-            logger.error(f"No model with the name {model.name} can be found in {AUTOEFT_PATH / Path('eft/')}.")
-            sys.exit("STOP")
-
-    return basis
-
 def get_basis_tensors(basis, field_content, derivatives, mass_dim):
     sun_projection_tensors = {}
     # get all the invariants associated with the operator
@@ -457,10 +442,9 @@ def get_basis_tensors(basis, field_content, derivatives, mass_dim):
             sun_projection_tensors[sun_group.name] = False
     return sun_projection_tensors
 
-def sun_projection(single_terms, max_dim: int):
-    basis = get_basis(max_dim)
+def sun_projection(single_terms, basis, max_dim: int):
     logger.info(f"Project all terms for a specific type onto the {'-, '.join(list(model.sun_groups.keys()))}-group "
-                f"basis when their exist already one for the specific type.")
+                f"basis when the term of specific type is part of the basis.")
     for type in single_terms.values():
         for term_mass_dim in type.values():
             field_content = term_mass_dim.field_content
@@ -469,6 +453,13 @@ def sun_projection(single_terms, max_dim: int):
             try:
                 # get the SUN basis Tensors from autoeft for the projection
                 term_mass_dim.sun_projection_tensors = get_basis_tensors(basis, field_content, derivatives, mass_dim)
+                if not any(term_mass_dim.sun_projection_tensors.values()):
+                    # This case occurs, when the term is part of the basis and thus no KeyError exception is thrown, but still doesn't has a projection.
+                    # The only reason this could be is that the term doesn't contain any of the indices of all sun-groups, i.e. is a singlet of all of them.
+                    assert not term_mass_dim.indices["gauge"]
+                    assert not term_mass_dim.indices["colf"]
+                    term_mass_dim.sun_projection_tensors = False
+                    continue
                 # There exists a term in the basis which matches the type and the projection can be done:
                 # sun_tensors = list of all sun tensors contained in all terms of the same type.
                 for sun_group, tensors in term_mass_dim.sun_projection_tensors.items():
@@ -498,7 +489,8 @@ def sun_projection(single_terms, max_dim: int):
                     term_mass_dim.sun_projection_matrix[sun_group] = projection_matrix
                     logger.debug(f"Projection matrix of {sun_group}-group for field content {term_mass_dim.field_content}:\n{projection_matrix}.")
             except KeyError:
-                # Term contains still redundancies and therefore their exist no basis tensor.
+                # Term isn't part of the basis and thus either still contains redundancies or is (FIXME) part of the h.c. part, which isn't given at the moment.
+                # In both cases their exist no basis tensor.
                 term_mass_dim.sun_projection_tensors = False
     return single_terms
 
@@ -566,8 +558,6 @@ def replace_sun_tensors_by_projected_ones(single_terms):
                 sum_indices = ref_tensor_indices + [index for short_list in eq_tensor_indices for index in short_list]
                 n_ref = [len(indices) for indices in ref_tensor_indices]
                 n = [len(indices) for indices in eq_tensor_indices]
-                # FIXME: The number of yukawa matrices and thus the number of dummy indices, i.e. new flavour indices
-                #  could potentially be different, after EOM. application.
                 n_yukawa_matrices_ref = len(terms_specific[0].tensors["yukawa"])
                 n_yukawa_matrices = []
                 for i in range(1, len(terms_specific[1:]) + 1):
@@ -575,7 +565,7 @@ def replace_sun_tensors_by_projected_ones(single_terms):
 
                 check_flavor_indices = [abs(n_indices - n_ref_indices) == abs(n_yuk_matr - n_yukawa_matrices_ref) for n_indices, n_ref_indices, n_yuk_matr in zip(n, n_ref, n_yukawa_matrices)]
 
-                assert all(check_flavor_indices)
+                assert all(check_flavor_indices)  # Note: all([]) is True
                 if sun_proj_tensors:
                     exprs = []
                     for term in terms_specific:

@@ -8,8 +8,6 @@ from typing import List, Dict
 
 from yaml import safe_load
 
-from autoeft.model import Model
-
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
@@ -17,7 +15,11 @@ PROJECTION_PATH = Path(__file__).parent.parent
 
 # Include the autoeft package in system path for easier import
 AUTOEFT_PATH = PROJECTION_PATH.parent
-sys.path.append(AUTOEFT_PATH/ "autoeft")
+# sys.path.append(AUTOEFT_PATH/ "autoeft")
+sys.path.append(str(AUTOEFT_PATH))
+
+from autoeft.model import Model
+from autoeft.io import load_basis
 
 CONFIG_PATH = PROJECTION_PATH / "config"
 CONFIG_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
@@ -256,6 +258,19 @@ for name, field in model.fields.items():
     field.form_name = proj_name
     fields_sorted[proj_name] = field
 del transl_autoeft_projection
+
+def get_basis(max_dim: int):
+    """Load basis from autoeft."""
+    basis = {}  # dictionary with basis for each mass dimension from 4 to 6.
+    for dim in range(4, max_dim + 1):
+        # load_basis also returns some counters and the Hilbert series, which we don't need here...
+        try:
+            basis[dim], _, _ = load_basis(AUTOEFT_PATH / Path(f"eft/{model.name}/"), dim)
+        except FileNotFoundError:
+            logger.error(f"No model with the name {model.name} can be found in {AUTOEFT_PATH / Path('eft/')}.")
+            sys.exit("STOP")
+
+    return basis
 
 def get_SUN_name(N):
     """Get Name of SU2_W out of model file."""

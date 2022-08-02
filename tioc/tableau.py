@@ -448,7 +448,6 @@ def test(basis, max_dim):
     field_content = {"H":2, "H+":2}
     derivatives = 4
 
-
     def get_op_class(field_content: Dict[str,int], derivatives: int, mass_dim: int):
         """
         Returns the operator class object OpClass for given:
@@ -495,6 +494,7 @@ def test(basis, max_dim):
     print(f"LH:\n{l_tab:nice}")
     print(f"RH:\n{r_tab:nice}")
     print(f"sign: {sign:d}")
+
     # Change one column of the "right-handed tableau", i.e. the tableau for the dotted epsilon tensor.
     yt_r = Young_Tableau([[3], [1]])
     r_tab[:,1] = yt_r
@@ -506,4 +506,4 @@ def test(basis, max_dim):
     print(f"Lorentz tableau:\n{lorentz:nice}")
     print(f"sign: {sign2:d}")
 
-    print("TEST") lesbarkeit
+    print("TEST")

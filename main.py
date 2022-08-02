@@ -117,7 +117,7 @@ def main(max_dim = 6):
     single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
     # TODO: Apply the integration by parts and Schouten identities to the lorentz structure.
-    test(basis, max_dim)
+    # test()
     single_terms = ibp_and_schouten_ids(single_terms)
 
     # SUN_Projection of terms without doubles:

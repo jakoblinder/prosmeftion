@@ -15,6 +15,7 @@ from tioc.get_FORM_refactored.indices import Indices_Operator
 from tioc.get_FORM_refactored.index import Index
 from tioc.get_FORM_refactored.read_write import get_terms
 from tioc.sun_projection import get_type
+from tioc.tableau import get_op_class, Young_Tableau
 
 from autoeft.io import load_basis
 from autoeft.sun_projection import tensor_projection
@@ -171,6 +172,15 @@ def ibp_and_schouten_ids(single_terms):
     for type in single_terms.values():
         for term_mass_dim in type.values():
             for summand in term_mass_dim:
-                pass
+                op_class = get_op_class(summand.fieldcounter_stripped, summand.nD, summand.d)
+                for field in summand.fields:
+                    for sl_index in field.indices["sl"]:
+                        sl_index.lor_projection = f"{field.field_pos}"
+                    for sldot_index in field.indices["sldot"]:
+                        sldot_index.lor_projection = f"{field.field_pos}"
+                # TODO: Infer from field and derivative structure the l_tab and r_tab for all summands.
+                # TODO: Vice versa: Infer from the l_tab and r_tab the derivative structure for a given field structure.
+                l_tab = Young_Tableau([[3], [1]])
+                r_tab = Young_Tableau([[3], [1]])
 
     return single_terms

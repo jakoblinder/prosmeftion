@@ -40,21 +40,49 @@ class Young_List(MutableSequence):
 
     @list.setter
     def list(self, value: List[List]):
-        try:
-            self.diagram = [len(row) for row in value]
-        except TypeError:
+        wrong_type = False
+        if not (isinstance(value,list) or isinstance(value,tuple)):
+            wrong_type = True
+        if not all([(isinstance(row,list) or isinstance(row,tuple)) for row in value]):
+            wrong_type = True
+        if wrong_type:
             print("The input list has to be of typ List[List].")
             sys.exit("STOP")
-        if not sorted(self.diagram)[::-1] == self.diagram:
-            print("The number of columns has to not to be increase when going from the top row to the bottom row.")
-            sys.exit("STOP")
+
         self._list = [list(row) for row in value]
+        # check that the tableau is a Young tableau:
+        self.assert_yt()
 
     @property
-    def nrows(self):
-        """Number of rows."""
-        return len(self.list)
+    def diagram(self):
+        """Shape of the tableau."""
+        return [len(row) for row in self.list]
 
+    def nrows(self, col: int=0):
+        """
+        Number of rows in general or number of row in the i-th colum.
+        Note: The number of rows in general is equal to the number of rows in the first column
+        """
+        if col == 0:
+            return len(self.list)
+        else:
+            n = 0
+            for ncols in self.diagram:
+                if ncols >= col + 1:
+                    n += 1
+            return n
+    def assert_yt(self):
+        """
+        Assert that the tableau saved in list is a Young tableau, i.e. the number of columns is not increasing
+        when going from the top row to the bottom row.
+        Returns
+        -------
+
+        """
+        if not sorted(self.diagram)[::-1] == self.diagram:
+            print("The number of columns, i.e. boxes in one row does not need to be increased when going from the top to the bottom row in order to be a Young tableau.")
+            sys.exit("STOP")
+        return True
     def __getitem__(self, ii):
         max_dim = 2
         if isinstance(ii, int):
@@ -98,7 +126,44 @@ class Young_List(MutableSequence):
             return type(self)(new_list)
 
     def __delitem__(self, ii):
-        del self.list[ii]
+        max_dim = 2
+        if isinstance(ii, int):
+            return self.list[ii]
+        elif isinstance(ii, slice):
+            return type(self)(self.list[ii])
+        elif isinstance(ii, tuple) and all([isinstance(i, int) for i in ii]):
+            assert len(ii) == max_dim, "To many keys given."
+            return self.list[ii[0]][ii[1]]
+        elif isinstance(ii, tuple):
+            # If any of the keys is an integer, rewrite them as a slice returning exactly the one item the number would have returned.
+            ii = list(ii)
+            for j in range(max_dim):
+                if isinstance(ii[j], int):
+                    ii[j] = slice(ii[j], ii[j] + 1, 1)
+                elif isinstance(ii[j], slice):
+                    if ii[j].start == None:
+                        ii[j] = slice(0, ii[j].stop, ii[j].step)
+                    if ii[j].step == None:
+                        ii[j] = slice(ii[j].start, ii[j].stop, 1)
+                    if j == 0 and ii[0].stop == None:
+                        ii[0] = slice(ii[0].start, len(self.list), ii[0].step)
+                    # ii[1].stop is possibly different for each list
+            ii = tuple(ii)
+            # row:
+            for i in range(ii[0].start, ii[0].stop, ii[0].step):
+                start = ii[1].start
+                if ii[1].stop == None:
+                    stop = len(self.list[i])
+                else:
+                    stop = ii[1].stop
+                step = ii[1].step
+
+                del self.list[i][start:stop:step]
+
+            # Delete possibly empty lists, i.e. rows.
+            for i, row in enumerate(self.list):
+                if not row:
+                    del self.list[i]
 
     def __setitem__(self, ii, value):
         if isinstance(ii, int):
@@ -139,7 +204,7 @@ class Young_List(MutableSequence):
             new_list = []
             # row:
             for i_val, i_old in enumerate(range(ii[0].start, ii[0].stop, ii[0].step)):
-                if i_val >= value.nrows:
+                if i_val >= value.nrows():
                     break
                 start = ii[1].start
                 if ii[1].stop == None:
@@ -154,8 +219,61 @@ class Young_List(MutableSequence):
         return len(self.list)
 
     def insert(self, ii, value) -> None:
-        self.list.insert(ii, value)
+        # Since effectively a row is inserted, the 'value' has to be a row.
+        assert len(value.diagram) == 1
+        self.list.insert(ii, value[0])
+        # check that the tableau is still a Young tableau:
+        self.assert_yt()
+    def insert_row(self, ii, value) -> None:
+        """Insert a row."""
+        self.insert(ii, value)
 
+    def append_row(self, value) -> None:
+        """Append a row."""
+        self.list.insert_row(len(self.list), value)
+
+    def insert_col(self, ii, value) -> None:
+        """Insert a column."""
+        # Can only insert one column in one step:
+        assert isinstance(ii, int), "Can only insert one column in one step."
+        # If the index is smaller than 0 it will be inserted before the first column of the old diagram
+        if ii < 0:
+            before_diagram = True
+        else:
+            before_diagram = False
+        # If the index is larger than the diagram has columns, the new column will be inserted after the old diagram:
+        if ii >= max(self.diagram):
+            after_diagram = True
+        else:
+            after_diagram = False
+
+        # Ensure the correct shape -> self.diagram = [1,1,1,...]
+        assert value.nrows() == sum(value.diagram)
+        # Ensure that also after inserting the column, the YT has the correct shape:
+        nrows_inserted = value.nrows()
+        if before_diagram:
+            assert nrows_inserted >= self.nrows(0), "The number of boxes in the column which is inserted before the other columns has to be larger (or equal) then the number of boxes in the old first column."
+            insert_at = 0
+        elif after_diagram:
+            assert nrows_inserted <= self.nrows(self.diagram[0] - 1), "The number of boxes in the column which is inserted after the other columns has to be smaller (or equal) then the number of boxes in the old last column."
+            insert_at = self.diagram[0]
+        else:
+            assert nrows_inserted >= self.nrows(ii + 1), "The number of boxes in the column which is inserted has to be larger (or equal) then the number of boxes in the following column."
+            assert nrows_inserted <= self.nrows(ii - 1), "The number of boxes in the column which is inserted has to be smaller (or equal) then the number of boxes in the preceding column."
+            insert_at = ii
+
+        # Insert one empty column at the correct place.
+        for i, row in enumerate(self.list):
+            if i >= nrows_inserted: break
+            row.insert(insert_at, None)
+
+        self[:nrows_inserted,insert_at] = value
+
+        # check that the tableau is still a Young tableau:
+        self.assert_yt()
+
+    def append_col(self, value) -> None:
+        self.insert_col(self.diagram[0], value)
 
 # Examples:
 # b = [[1,2,4,5],[3,5,4],[2,3],[3,4]]
@@ -166,6 +284,13 @@ class Young_List(MutableSequence):
 # t[3,:] = Young_List([[1,3]])
 # print(f"First column:\n{t:nice}")
 # print(f"{t[0,0]}")
+# Number of rows in each column
+# print(f"{t:nice}")
+# print(t.nrows)
+# print(t.n_rows(0))
+# print(t.n_rows(2))
+# print(t.n_rows(3))
+# print(t.n_rows(4))
 
 # Copy Tableau class to unfreeze it
 @dataclass(order=True, frozen=False)
@@ -248,8 +373,17 @@ class Young_Tableau(Tableau):
     def __len__(self):
         return len(self.tableau)
 
-    def insert(self, ii, value) -> None:
-        self.tableau.insert(ii, value.tableau)
+    def insert_row(self, ii, value) -> None:
+        self.tableau.insert_row(ii, value.tableau)
+
+    def append_row(self, value) -> None:
+        self.insert_row(len(self.tableau), value)
+
+    def insert_col(self, ii, value) -> None:
+        self.tableau.insert_col(ii, value.tableau)
+
+    def append_col(self, value) -> None:
+        self.insert_col(self.tableau.diagram[0], value)
 
 # Examples:
 # b = [[1,2,4,5],[3,1,4],[2,3],[3,4]]
@@ -428,8 +562,17 @@ class Lorentz_Tableau(LorentzTableau):
     def __len__(self):
         return len(self.tableau)
 
-    def insert(self, ii, value) -> None:
-        self.tableau.insert(ii, value.tableau)
+    def insert_row(self, ii, value) -> None:
+        self.tableau.insert_row(ii, value.tableau)
+
+    def append_row(self, value) -> None:
+        self.insert_row(len(self.tableau), value)
+
+    def insert_col(self, ii, value) -> None:
+        self.tableau.insert_col(ii, value.tableau)
+
+    def append_col(self, value) -> None:
+        self.insert_col(self.tableau.diagram[0], value)
 
     @property
     def lr_tableaux(self) -> Tuple[Tableau, Tableau, int]:
@@ -437,47 +580,47 @@ class Lorentz_Tableau(LorentzTableau):
 
         l_tab, r_tab, sign = LorentzTableau.lr_tableaux.fget(self)
 
-        return Young_Tableau(l_tab), Young_Tableau(r_tab), sign
+        return Young_Tableau(l_tab.tableau), Young_Tableau(r_tab.tableau), sign
+
+def get_op_class(field_content: Dict[str,int], derivatives: int, mass_dim: int):
+    """
+    Returns the operator class object OpClass for given:
+    ----------
+    field_content
+        e.g.: {"H":2, "H+":2}
+    derivatives
+        e.g.: 4
+    mass_dim
+        e.g.: 8
+
+    Returns
+    -------
+        operator class: OpClass(N, nl, nr)
+    """
+    N = sum(field_content.values())
+
+    nl = derivatives / 2
+    nr = derivatives / 2
+    for field, multiplicity in field_content.items():
+        helicity = model.fields[field].helicity
+        nl += multiplicity * (abs(helicity) - helicity) / 2
+        nr += multiplicity * (abs(helicity) + helicity) / 2
+
+    nl = int(nl)
+    nr = int(nr)
+
+    assert N + nl + nr == mass_dim
+
+    return OpClass(N, nl, nr)
 
 
 # Examples:
-def test(basis, max_dim):
+def test():
     tab = [[2,1,1,2], [4,3,3,4]]
     # Properties of the operator
     mass_dim = 8
     field_content = {"H":2, "H+":2}
     derivatives = 4
-
-    def get_op_class(field_content: Dict[str,int], derivatives: int, mass_dim: int):
-        """
-        Returns the operator class object OpClass for given:
-        ----------
-        field_content
-            e.g.: {"H":2, "H+":2}
-        derivatives
-            e.g.: 4
-        mass_dim
-            e.g.: 8
-
-        Returns
-        -------
-
-        """
-        N = sum(field_content.values())
-
-        nl = derivatives / 2
-        nr = derivatives / 2
-        for field, multiplicity in field_content.items():
-            helicity = model.fields[field].helicity
-            nl += multiplicity * (abs(helicity) - helicity) / 2
-            nr += multiplicity * (abs(helicity) + helicity) / 2
-
-        nl = int(nl)
-        nr = int(nr)
-
-        assert N + nl + nr == mass_dim
-
-        return OpClass(N, nl, nr)
 
     op_class = get_op_class(field_content, derivatives, mass_dim)
 
@@ -505,5 +648,22 @@ def test(basis, max_dim):
     lorentz, sign2 = Lorentz_Tableau.from_lr_tableaux(l_tab, r_tab, op_class)
     print(f"Lorentz tableau:\n{lorentz:nice}")
     print(f"sign: {sign2:d}")
+
+    # Can Young_tableau also handle strings?
+    yt = Young_Tableau([["a"], ["b"]])
+    print(f"\n{yt:nice}")
+    # Append a row
+    yt_arow = Young_Tableau([["c"]])
+    print(f"\n{yt_arow:nice}")
+    yt.append_row(yt_arow)
+    print(f"\n{yt:nice}")
+    # Append a column
+    yt_acol = Young_Tableau([["a"], ["b"]])
+    print(f"\n{yt_acol:nice}")
+    yt.append_col(yt_acol)
+    print(f"\n{yt:nice}")
+    del yt[:,0]
+    print(f"\n{yt:nice}")
+
 
     print("TEST")

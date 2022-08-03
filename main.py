@@ -9,7 +9,7 @@ from yaml import safe_load
 
 from tioc import CONFIG_PATH, FORM_GENERAL_PATH, n_der, get_basis
 from tioc.general import form_declarations
-from tioc.lor_projection import replace_eoms, ibp_and_schouten_ids
+from tioc.lor_projection import rearrange_derivatives, replace_eoms, ibp_and_schouten_ids
 from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, \
     tex_terms_sorted_sun_projection  # , main
 from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
@@ -88,7 +88,7 @@ def main(max_dim = 6):
     # if args.tex:
     #     tex_sorted_terms_wo_doubles(single_terms)
     #
-    # # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
     # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
     #
     # nterms_before = number_terms(single_terms)
@@ -101,6 +101,13 @@ def main(max_dim = 6):
     #
     # logger.info(f"#Terms with EOMs: {nterms_before:d} <-> #Terms with less EOMs: {nterms_after:d}")
     #
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
+    # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
+    #
+    # # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
+    # single_terms = rearrange_derivatives(single_terms)
+    #
+    # single_terms = replace_eoms(single_terms)
     #
     # # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
@@ -112,7 +119,7 @@ def main(max_dim = 6):
     # nterms_after = number_terms(single_terms)
     #
     # logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-    #
+
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 

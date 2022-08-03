@@ -12,6 +12,7 @@ from .index import Dummy_Index
 from .indices import Indices_Summand, Indices_Operator, Possible_Indices
 from .operator import Tensor, Field
 from .operators import Tensors, Fields
+from tioc.tableau import get_op_class
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
@@ -289,6 +290,11 @@ class Summand(Summand_Model):
                     if index.typ == indtype:
                         # index.projection = self.get_projectionIndex_from_Field(index.id)
                         index.projection = self.get_projectionIndex_from_Field(index)
+
+    @property
+    def op_class(self):
+        """Operator class of the operator."""
+        return get_op_class(self.fieldcounter_stripped, self.nD, self.d)
 
     #########################
     ### EOM Substitutions ###

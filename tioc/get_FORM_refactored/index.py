@@ -57,6 +57,8 @@ class Index_Model(ABC):
         return self.expr == other.expr
         # return self.indname == other.indname
 
+        # return self.expr == other.dual_index.expr
+
     @property
     def typ(self) -> str:
         """
@@ -234,3 +236,50 @@ class Dummy_Index(Index_Model):
     def description(self) -> str:
         """Some information about the index."""
         return "Dummy index of FORM."
+
+class LP_Index():
+    """
+    Index for lorentz projection. This index is the possibly ambiguous attribute lp of a 'normal' index and specifies
+    first of all the position of the field.
+    """
+    expr: int
+    typ: str  # gauge, colf, lorentz, etc.
+    indname: str  # Ensures clear contractions
+    id: int  # cryptic id, e.g1234A in combination with the type
+    # tex: str  # readable name which should be printed in LaTex for the index
+    description: str
+    # derIndex: bool or int  # False if it is not an index of a derivative. If True, number specifies the number of the derivative.
+
+    def __init__(self, expr: int):
+        self.expr = int(expr)
+
+    def __repr__(self):
+        return f"{self.expr:d}"
+
+    def __str__(self):
+        """Specify the format for printing with str() or print() statement function: Here the same as the string representation repr() itself."""
+        return self.__repr__()
+
+    def __format__(self, key):
+        """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
+        return self.__repr__()
+
+    @property
+    def typ(self) -> str:
+        return "lp"
+
+    @property
+    def id(self) -> str:
+        return self.expr
+
+    @property
+    def indname(self) -> str:
+        """
+        E.g.: lor1234, gauge345, Lsldot123, Usldot123 ... have indname: lor-1234, gauge-345, sldot-123, sldot-123 ...
+        """
+        return f"lp-{self.id:d}"
+
+    @property
+    def description(self) -> str:
+        """Some information about the index."""
+        return "Index for lorentz projection, specifying the position of the field."

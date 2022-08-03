@@ -7,6 +7,7 @@ from sage.combinat.permutation import Permutation
 from sage.combinat.skew_tableau import SkewTableau
 
 from tioc import n_der, op_config, model
+from tioc.get_FORM_refactored.index import Index
 
 # from autoeft.combinat import Tableau
 # from autoeft.invariants import LorentzTableau
@@ -356,7 +357,16 @@ class Young_Tableau(Tableau):
         return self.tableau.__repr__()
 
     def __format__(self, key):
-        return self.tableau.__format__(key)
+        if key == "lp":
+            if isinstance(self.tableau[0, 0], Index):
+                # create copy which contains lp entries instead of indices
+                tab = [[ele.lp for ele in row] for row in self.tableau.list]
+                tab = type(self)(tab)
+                return tab.tableau.__format__("nice")
+            else:
+                return self.tableau.__format__(key)
+        else:
+            return self.tableau.__format__(key)
 
     def __str__(self):
         return super().__str__()

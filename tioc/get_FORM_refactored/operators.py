@@ -78,7 +78,7 @@ class Operators_Model(MutableMapping):
         elif isinstance(key, str):
             op_SUN_typ = {get_SUN_name(group): index_name for group, index_name in zip([2,3], ["gauge", "colf"])} ##[indextyp for indextyp in index_config.keys()]
             op_SUN_typ_check = list(op_SUN_typ.keys())  # Fields which have SUN, i.e. SU2-, or SU3-indices
-            op_other_typ = ["sl2C", "yukawa"]  # Fields which have SL2C- or Yukawa-indices
+            op_other_typ = ["sl2C", "sl", "sldot", "yukawa"]  # Fields which have SL2C-, only undotted SL2C-, only dotted SL2C- or Yukawa-indices
             field_type = bosons_non_conj + fermions_non_conj  # Fields of specific kind, i.e. "H" would return ALL Higgs fields, also the conjugate (H+) ones.
             possible_op_typ = op_SUN_typ_check + op_other_typ + field_type
             if key not in possible_op_typ:
@@ -108,6 +108,32 @@ class Operators_Model(MutableMapping):
                             operator_of_typ.append(operator)
                     elif type(operator) == Field:
                         sl2C_indices = operator.indices["sl"] + operator.indices["sldot"]
+                        if [index for index in sl2C_indices if not index.derIndex]:
+                            # Sl2C Indices exist in the operator, which don't come from a derivative.
+                            operator_of_typ.append(operator)
+            elif key == "sl":
+                # Look for sl2C-tensors.
+                operator_of_typ = []
+                for operator in self.operators:
+                    if type(operator) == Tensor:
+                        if operator.indices["sl"]:
+                            # Sl2C Indices exist in the operator.
+                            operator_of_typ.append(operator)
+                    elif type(operator) == Field:
+                        sl2C_indices = operator.indices["sl"]
+                        if [index for index in sl2C_indices if not index.derIndex]:
+                            # Sl2C Indices exist in the operator, which don't come from a derivative.
+                            operator_of_typ.append(operator)
+            elif key == "sldot":
+                # Look for sl2C-tensors.
+                operator_of_typ = []
+                for operator in self.operators:
+                    if type(operator) == Tensor:
+                        if operator.indices["sldot"]:
+                            # Sl2C Indices exist in the operator.
+                            operator_of_typ.append(operator)
+                    elif type(operator) == Field:
+                        sl2C_indices = operator.indices["sldot"]
                         if [index for index in sl2C_indices if not index.derIndex]:
                             # Sl2C Indices exist in the operator, which don't come from a derivative.
                             operator_of_typ.append(operator)

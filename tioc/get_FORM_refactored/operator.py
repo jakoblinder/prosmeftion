@@ -177,7 +177,18 @@ class Operator_Model(Index):
             if self.nD > 0:
                 # Term contain derivatives
                 for i in range(1, self.nD + 1):
-                    expr += f"{cov}({','.join(map(str, [nonD_index for nonD_index in self.indices if nonD_index.derIndex == i]))},"
+                    lsl = [der_index for der_index in self.indices['Lsl'] if der_index.derIndex == i]
+                    assert len(lsl) == 1
+                    if not lsl:
+                        logger.error(f"There wasn't an index found for the Lsl index of the {i}-th derivative.")
+                        sys.exit("STOP")
+                    usldot = [der_index for der_index in self.indices['Usldot'] if der_index.derIndex == i]
+                    assert len(usldot) == 1
+                    if not usldot:
+                        logger.error(f"There wasn't an index found for the Usldot index of the {i}-th derivative.")
+                        sys.exit("STOP")
+                    der_Indices = lsl + usldot
+                    expr += f"{cov}({','.join(map(str, der_Indices))},"
             n_brackets = self.nD * ")"
             expr += self.name
             non_Derivative_indices = [nonD_index for nonD_index in self.indices if not nonD_index.derIndex]
@@ -199,7 +210,7 @@ class Operator_Model(Index):
         Returns
         -------
         """
-        names, op_indices, self.nD, der_indices = Operator_Model.read_in_operator(fp_expr)
+        names, op_indices, self._nD, der_indices = Operator_Model.read_in_operator(fp_expr)
         self.name, self.isconj, self.non_conj_name = names # names[0], names[1], names[2]
         # self.indices = Indices_Operator(der_indices + op_indices)
         # Indexstructure of the operator only without the derivative.
@@ -245,6 +256,23 @@ class Operator_Model(Index):
             self.indices = assertion(der_indices, op_indices, "field", self.non_conj_name)
 
         self._expr = fp_expr
+
+    @property
+    def nD(self):
+        if type(self) == Tensor:
+            return self._nD
+        elif type(self) == Field:
+            if self.indices['lor']:
+                # Assume that if a lorentz index is present also the derivatives are written in terms of lorentz indices
+                lor = [der_index for der_index in self.indices['lor'] if der_index.derIndex]
+                self._nD = len(lor)
+                return len(lor)
+            else:
+                lsl = [der_index for der_index in self.indices['Lsl'] if der_index.derIndex]
+                usldot = [der_index for der_index in self.indices['Usldot'] if der_index.derIndex]
+                assert len(lsl) == len(usldot), "The number of Lsl and Usldot indices ON DERIVATIVES should be equal."
+                self._nD = len(lsl)
+                return len(lsl)
 
     @property
     def tex_name(self):

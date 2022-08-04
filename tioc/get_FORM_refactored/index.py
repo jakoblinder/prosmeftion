@@ -131,7 +131,14 @@ class Index_Model(ABC):
             expr = f"Lsldot{self.id}"
         else:
             expr = self.expr
-        return type(self)(expr, derIndex=self.derIndex)
+        dual_ind = type(self)(expr, derIndex=self.derIndex)
+        # Here, other attributes could possibly be set equal to the attributes of the non-dual index.
+        try:
+            dual_ind.lp = self.lp
+        except AttributeError:
+            pass
+        return dual_ind
+
 
     def is_in(self,listofIndices):
         """

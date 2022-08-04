@@ -104,7 +104,7 @@ class Indices_Model(Index, MutableMapping):
             return type(self)(self.indices[key])
         elif isinstance(key, str):
             index_types = [indextyp for indextyp in index_config.keys()]
-            index_special_types = ["sl", "sldot", "dummy"]
+            index_special_types = ["sl", "sldot", "sl2C", "dummy"]
             # index_types = ['lor', 'Lsl', 'Usl', 'Lsldot', 'Usldot', 'spin', 'gauge', 'gaugeadj', 'colf', 'cola', 'flav']
             if key not in (index_types + index_special_types):
                 logger.error(f"Key {key:s} is not a possible index typ.")
@@ -118,6 +118,10 @@ class Indices_Model(Index, MutableMapping):
                 elif key == "sldot":
                     for index in self.indices:
                         if index.typ == "Lsldot" or index.typ == "Usldot":
+                            index_of_typ.append(index)
+                elif key == "sl2C":
+                    for index in self.indices:
+                        if index.typ in ("Lsl", "Usl", "Lsldot", "Usldot"):
                             index_of_typ.append(index)
                 elif key == "dummy":
                     for index in self.indices:

@@ -403,4 +403,29 @@ class Field(Operator_Model):
                     index.projection = f"{pre:s}{indtype:s}F{self.field_pos:d}I{counter[indtype]:d}"
                     counter[indtype] += 1
 
+    def reset_derIndex(self):
+        """
+        Recalculate the number of derivatives 'derIndex', which stand on every index.
+        This is important if hte number of derivatives on a field suddenly changes due to for example
+        integration by parts.
+        Returns
+        -------
+
+        """
+        nD = 1
+        old_max = max([index.derIndex for index in self.indices])  # old maximum number of derivatives
+        found = {i: 0 for i in range(1, old_max + 1)}
+        for i in range(1, old_max + 1):
+            for derIndexLsl in self.indices['Lsl']:
+                if derIndexLsl.derIndex == i:
+                    derIndexLsl.derIndex = nD
+                    found[i] += 1
+            for derIndexUsldot in self.indices['Usldot']:
+                if derIndexUsldot.derIndex == i:
+                    derIndexUsldot.derIndex = nD
+                    found[i] += 1
+            if found[i] == 2: nD += 1
+
+        assert all([i in (0, 2) for i in
+                    found.values()]), "Something went wrong in the replacement of derIndex of the derivative indices."
 

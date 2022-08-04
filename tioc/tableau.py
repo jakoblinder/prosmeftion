@@ -66,7 +66,7 @@ class Young_List(MutableSequence):
     def nrows(self, col: int=0):
         """
         Number of rows in general or number of row in the i-th colum.
-        Note: The number of rows in general is equal to the number of rows in the first column
+        Note: The number of rows in general is equal to the number of rows in the first column.
         """
         if col == 0:
             return len(self.list)
@@ -76,6 +76,17 @@ class Young_List(MutableSequence):
                 if ncols >= col + 1:
                     n += 1
             return n
+
+    def ncols(self, row: int=0):
+        """
+        Number of columns in general or number of columns in the i-th row.
+        Note: The number of columns, i.e. the maximum number of columns is equal to the number of columns in the first row.
+        """
+        if not self:
+            # empty tableau
+            return 0
+        else:
+            return self.diagram[row]
     def assert_yt(self):
         """
         Assert that the tableau saved in list is a Young tableau, i.e. the number of columns is not increasing
@@ -355,7 +366,10 @@ class Tableau:
 
 class Young_Tableau(Tableau):
     def __init__(self, tableau):
-        self.tableau = Young_List(tableau)
+        if isinstance(tableau, Young_List):
+            self.tableau = tableau
+        else:
+            self.tableau = Young_List(tableau)
 
     def __repr__(self):
         return self.tableau.__repr__()
@@ -378,7 +392,11 @@ class Young_Tableau(Tableau):
         return super().__str__()
 
     def __getitem__(self, ii):
-        self.tableau[ii]
+        tab = self.tableau[ii]
+        if isinstance(tab, Young_List) or isinstance(tab, list):
+            return type(self)(self.tableau[ii])
+        else:
+            return tab
 
     def __delitem__(self, ii):
         del self.tableau[ii]
@@ -388,6 +406,21 @@ class Young_Tableau(Tableau):
 
     def __len__(self):
         return len(self.tableau)
+
+
+    def nrows(self, col: int=0):
+        """
+        Number of rows in general or number of row in the i-th colum.
+        Note: The number of rows in general is equal to the number of rows in the first column.
+        """
+        return self.tableau.nrows(col)
+
+    def ncols(self, row: int=0):
+        """
+        Number of columns in general or number of columns in the i-th row.
+        Note: The number of columns, i.e. the maximum number of columns is equal to the number of columns in the first row.
+        """
+        return self.tableau.ncols(row)
 
     def insert_row(self, ii, value) -> None:
         self.tableau.insert_row(ii, value.tableau)
@@ -553,7 +586,11 @@ class Lorentz_Tableau(LorentzTableau):
     op_class: OpClass
     def __init__(self, tableau: Tuple[Tuple[int, ...], ...], op_class: OpClass):
         # self.lt = LorentzTableau(Young_List(tableau), op_class)
-        self.tableau = Young_List(tableau)
+        if isinstance(tableau, Young_List):
+            self.tableau = tableau
+        else:
+            self.tableau = Young_List(tableau)
+
         self.op_class = op_class
         assert len(self) == 2  # each epsilon tensor only has 2 indices
 
@@ -567,7 +604,11 @@ class Lorentz_Tableau(LorentzTableau):
         return super().__str__()
 
     def __getitem__(self, ii):
-        self.tableau[ii]
+        tab = self.tableau[ii]
+        if isinstance(tab, Young_List) or isinstance(tab, list):
+            return type(self)(self.tableau[ii], self.op_class)
+        else:
+            return tab
 
     def __delitem__(self, ii):
         del self.tableau[ii]

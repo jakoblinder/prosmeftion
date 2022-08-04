@@ -25,12 +25,16 @@ class Young_List(MutableSequence):
     def __format__(self, key):
         if key == "nice":
             rows = []
-            for row in self.list:
-                rows.append(f"|{'|'.join([f'{repr(entry):>2s}' for entry in row])}|")
-            output = "-"*len(rows[0]) + "\n"
-            for row in rows:
-                output += row + "\n"
-                output += "-"*len(row) + "\n"
+            if not self:
+                # empty tableau
+                output = "---\n| |\n---"
+            else:
+                for row in self.list:
+                    rows.append(f"|{'|'.join([f'{repr(entry):>2s}' for entry in row])}|")
+                output = "-"*len(rows[0]) + "\n"
+                for row in rows:
+                    output += row + "\n"
+                    output += "-"*len(row) + "\n"
             return output
         else:
             return repr(self)
@@ -358,13 +362,15 @@ class Young_Tableau(Tableau):
 
     def __format__(self, key):
         if key == "lp":
-            if isinstance(self.tableau[0, 0], Index):
+            if not self:
+                # empty tableau
+                return self.tableau.__format__("nice")
+            elif isinstance(self.tableau[0, 0], Index):
                 # create copy which contains lp entries instead of indices
-                tab = [[ele.lp for ele in row] for row in self.tableau.list]
-                tab = type(self)(tab)
+                tab = type(self)([[ele.lp for ele in row] for row in self.tableau.list])
                 return tab.tableau.__format__("nice")
             else:
-                return self.tableau.__format__(key)
+                return self.tableau.__format__("nice")
         else:
             return self.tableau.__format__(key)
 

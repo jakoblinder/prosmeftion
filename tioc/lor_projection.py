@@ -192,6 +192,8 @@ def rearrange_derivatives(single_terms):
     nD4_h2h_dagger2 = single_terms[(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0)][4]
     for term in nD4_h2h_dagger2.terms:
         term = balance_derivatives(term)
+        term.name = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])
+
     return single_terms
 
 def replace_eoms(single_terms):
@@ -213,6 +215,7 @@ def replace_eoms(single_terms):
                 term_list.append([Term(term_mass_dim.terms, name=term_mass_dim.name)])
                 continue
             for summand in term_mass_dim:
+                summand.name = "".join([f"{name}{nD}" for name, nD in summand.fieldstructure])
                 check_derivatives_higgs = [field.nD for field in summand.fields["H"]]
 
                 q = summand.fields[f"{op_config['fermionfields']['Q']['mathematica']['Q']}"]
@@ -231,7 +234,7 @@ def replace_eoms(single_terms):
                     term_list.append([Term([summand], name=summand.name)])
                     continue
 
-                # FIXME: For the moment, don't consider fermins and field strength tensors with more than 1 derivatives.
+                # FIXME: For the moment, don't consider fermions and field strength tensors with more than 1 derivatives.
                 if any([nD > 1 for nD in check_derivatives_max_1_derivative]):
                     term_list.append([Term([summand], name=summand.name)])
                     continue
@@ -242,7 +245,6 @@ def replace_eoms(single_terms):
                     term_list.append([Term([summand], name=summand.name)])
                     continue
 
-                a, b = bosons_non_conj, fermions_non_conj
                 name_form = summand.name  # "".join([f"{name}{nD}" for name, nD in name_of_term])
                 TERM_PATH = FORM_PATH / name_form
                 TERM_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.

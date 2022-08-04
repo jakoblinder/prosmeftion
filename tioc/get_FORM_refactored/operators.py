@@ -196,21 +196,23 @@ class Operators_Model(MutableMapping):
                 return i
 
     def insert(self, ii, value):
-        type_check = [isinstance(value, Tensor), isinstance(value, Field)]
+        type_check = [isinstance(value, Tensor), isinstance(value, Field), isinstance(value, type(self))]
         if not any(type_check):
             logger.error("The value which will be inserted has to be of type Tensor or Field.")
             sys.exit("STOP")
-        logger.debug(f"The operator {value:s} will be inserted at the position {ii:d}.")
+        if ii == len(self.operators):
+            logger.debug(f"The operator(s) {value:s} will be appended.")
+        else:
+            logger.debug(f"The operator {value:s} will be inserted at the position {ii:d}.")
         operators = list(self.operators)
         operators.insert(ii, value)
         self.operators = tuple(operators)
 
     def append(self, value):
-        type_check = [isinstance(value, Tensor), isinstance(value, Field), isinstance(value, self)]
+        type_check = [isinstance(value, Tensor), isinstance(value, Field), isinstance(value, type(self))]
         if not any(type_check):
             logger.error("The value which will be appended has to be of type Index.")
             sys.exit("STOP")
-        logger.debug(f"The operator(s) {self.operators[key]:s} will be appended.")
         self.insert(len(self.operators), value)
 
     def clear(self):

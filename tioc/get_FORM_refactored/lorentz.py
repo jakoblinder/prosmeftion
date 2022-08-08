@@ -100,6 +100,71 @@ class LR_Tableaux():
             factor = 1 / other
             return (self * factor)
 
+    def copy(self):
+        l_tab = self.l_tab.copy()
+        r_tab = self.r_tab.copy()
+        return LR_Tableaux(l_tab, r_tab, self.factor)
+
+    def ibp(self, derivative: LP_Index, N: int):
+        """
+
+        Parameters
+        ----------
+        lr = LR_tableaux(l_tab, r_tab, factor)
+        derivative: LP_Index
+            This index specifies the derivative, which should be integrated by parts:
+        N
+            Number of fields in the operator.
+
+        Returns
+        -------
+
+        """
+        lr = self.copy()  # lr has to be deeply copied in order to not change the given lr.
+        assert lr.l_tab.ncols() == 1
+        assert lr.r_tab.ncols() == 1
+
+        found = 0
+
+        l_tab_index = lr.l_tab.index_lp(derivative)
+        if l_tab_index:
+            l_row_index_der, colum = l_tab_index
+            assert colum == 0
+            del l_tab_index
+            found += 1
+
+        r_tab_index = lr.r_tab.index_lp(derivative)
+        if r_tab_index:
+            r_row_index_der, colum = r_tab_index
+            assert colum == 0
+            del r_tab_index
+            found += 1
+        # Note: l_row_index_der and r_row_index_der denote the row in LH and RH-tableau where the derivative Index sits.
+
+        if found != 2:
+            logger.warning("No index was found for the given LP_Index. Therefore, no ibp was made.")
+            return lr
+        else:
+            # Indices of the derivative Indices where found and the integration by parts can be done.
+            tabs = []
+            spec_derivative = object()  # specify uniquely the derivative
+            for i in range(1, N + 1):  # iterate over all possible field positions
+                if i == derivative.fp:  # except the one which should be integrated
+                    continue
+                else:
+                    # Change the field position and specify the derivative 'position' uniquely
+                    lr.l_tab[l_row_index_der, 0].lp = LP_Index(field_pos=i, derIndex=spec_derivative)
+                    lr.l_tab[l_row_index_der, 0].derIndex = spec_derivative
+
+                    lr.r_tab[r_row_index_der, 0].lp = LP_Index(field_pos=i, derIndex=spec_derivative)
+                    lr.r_tab[r_row_index_der, 0].derIndex = spec_derivative
+                    # Sign changes due to ibp
+                    lr *= (-1)
+
+                    tabs.append(lr)
+            return tabs
+
+
 
 
 

@@ -94,6 +94,9 @@ class Coefficient_Model(ABC):
 
         return Coefficient(f"{self.expr}+{other.expr}", new_name)
 
+    def copy(self):
+        return type(self)(self.expr)
+
     @property
     def tex(self):
         """
@@ -210,6 +213,9 @@ class Coefficient(Coefficient_Model):
     def __add__(self, other):
         return super().__add__(other)
 
+    def copy(self):
+        return Coefficient(self.expr, self.name)
+
     @property
     def mdim(self):
         """
@@ -284,3 +290,6 @@ class Factor(Coefficient_Model):
         return Factor(f"{self.expr}*{other.expr}")
     def __add__(self, other):
         return Factor(f"{self.expr}+{other.expr}")
+
+    def copy(self):
+        return Factor(self.expr)

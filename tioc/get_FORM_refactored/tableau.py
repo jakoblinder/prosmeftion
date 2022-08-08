@@ -253,6 +253,9 @@ class Young_List(MutableSequence):
     def __len__(self):
         return len(self.list)
 
+    def __iter__(self):
+        return iter(self.list)
+
     def insert(self, ii, value) -> None:
         # Since effectively a row is inserted, the 'value' has to be a row.
         assert len(value.diagram) == 1
@@ -429,6 +432,9 @@ class Young_Tableau(Tableau):
     def __len__(self):
         return len(self.tableau)
 
+    def __iter__(self):
+        return iter(self.tableau)
+
     def nrows(self, col: int=0):
         """
         Number of rows in general or number of row in the i-th colum.
@@ -442,6 +448,22 @@ class Young_Tableau(Tableau):
         Note: The number of columns, i.e. the maximum number of columns is equal to the number of columns in the first row.
         """
         return self.tableau.ncols(row)
+
+    def copy(self):
+        if not self:
+            # empty tableau
+            return Young_Tableau([])
+        elif isinstance(self.tableau[0, 0], Index):
+            new_tab = []
+            for row in self:
+                new_tab.append([index.copy() for index in row])
+
+            return Young_Tableau(new_tab)
+
+
+
+        else:
+            return self.tableau.copy()
 
     def insert_row(self, ii, value) -> None:
         self.tableau.insert_row(ii, value.tableau)
@@ -494,7 +516,6 @@ class Young_Tableau(Tableau):
 @dataclass(order=True, frozen=False)
 class OpClass:
     """Represent an operator by the total number of fields N, the number of SU(2) left indices 2nl, and the number of SU(2) right indices 2nr."""
-
     N: int
     nl: int
     nr: int

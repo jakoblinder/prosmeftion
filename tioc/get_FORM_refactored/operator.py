@@ -8,7 +8,7 @@ from collections.abc import MutableMapping
 from copy import copy
 
 from tioc import CONFIG_PATH, op_config, escape_regex, model, index_config, op_pattern, index_pattern, dummy_index_pattern, op_name_pattern
-from .index import Index, Dummy_Index
+from .index import Index, Dummy_Index, LP_Index
 from .indices import Indices_Operator
 from tioc import index_number_pattern as inp
 
@@ -288,7 +288,6 @@ class Operator_Model(Index):
 
         return tex_expr
 
-
     @property
     def description(self):
         """Gives description to the operator."""
@@ -306,6 +305,10 @@ class Operator_Model(Index):
             form_field = list(all_ops[self.non_conj_name]["mathematica"].values())[0]
         autoeft_expr = all_ops[self.non_conj_name]["autoeft"][form_field]
         return autoeft_expr
+
+    @abstractmethod
+    def copy(self):
+        return Operator_Model(self.expr)
 
 
 class Tensor(Operator_Model):
@@ -327,6 +330,16 @@ class Tensor(Operator_Model):
         """Create tex expression of operator without derivatives."""
         return super().texed_op_wo_der(subscript_indices=("lor", "Lsldot", "Lsl", "gauge", "colf"),
                                     superscript_indices=("sbasis", "Usldot", "Usl", "gaugeadj", "cola", "flav"))
+
+    def copy(self):
+        tensor = Tensor(self.expr)
+
+        assert self.name == tensor.name
+        for i, index in enumerate(self.indices):
+            tensor.indices[i] = index.copy()
+
+        return tensor
+
 
 class Field(Operator_Model):
     expr: str
@@ -383,6 +396,15 @@ class Field(Operator_Model):
 
             return tex_derivatives + op_texed
 
+    def copy(self):
+        field = Field(self.expr, self.field_pos)
+
+        assert self.name == field.name
+        for i, index in enumerate(self.indices):
+            field.indices[i] = index.copy()
+
+        return field
+
     def gaugeIndicesforProjection(self):
         """
         The gauge indices of a field should be denoted by the pattern idxF2I1, where '2' denotes the second field
@@ -421,10 +443,12 @@ class Field(Operator_Model):
             for derIndexLsl in self.indices['Lsl']:
                 if derIndexLsl.derIndex == i:
                     derIndexLsl.derIndex = nD
+                    derIndexLsl.lp = LP_Index(self.field_pos, nD)
                     found[i] += 1
             for derIndexUsldot in self.indices['Usldot']:
                 if derIndexUsldot.derIndex == i:
                     derIndexUsldot.derIndex = nD
+                    derIndexUsldot.lp = LP_Index(self.field_pos, nD)
                     found[i] += 1
             if found[i] == 2: nD += 1
 

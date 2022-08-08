@@ -139,6 +139,18 @@ class Index_Model(ABC):
             pass
         return dual_ind
 
+    def copy(self):
+        new_ind = type(self)(self.expr, derIndex=self.derIndex)
+        # Here, other attributes could possibly be set equal to the attributes of the non-dual index.
+        try:
+            new_ind.projection = self.projection
+        except AttributeError:
+            pass
+        try:
+            new_ind.lp = self.lp.copy()
+        except AttributeError:
+            pass
+        return new_ind
 
     def is_in(self,listofIndices):
         """
@@ -278,6 +290,9 @@ class LP_Index():
             return True
         else:
             return False
+
+    def copy(self):
+        return LP_Index(self.fp, self.derIndex)
 
     @property
     def typ(self) -> str:

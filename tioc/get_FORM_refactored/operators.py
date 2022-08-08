@@ -219,7 +219,10 @@ class Operators_Model(MutableMapping):
         return self.operators.clear()
 
     def copy(self):
-        return type(self)(list(self.operators).copy())
+        new_ops = []
+        for ops in self:
+            new_ops.append(ops.copy())
+        return type(self)(tuple(new_ops))
 
 class Tensors(Operators_Model):
     def __init__(self, operators: List[Tensor]):

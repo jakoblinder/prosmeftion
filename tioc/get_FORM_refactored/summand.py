@@ -12,7 +12,7 @@ from .index import Dummy_Index
 from .indices import Indices_Summand, Indices_Operator, Possible_Indices
 from .operator import Tensor, Field
 from .operators import Tensors, Fields
-from tioc.tableau import get_op_class
+from .tableau import get_op_class
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)

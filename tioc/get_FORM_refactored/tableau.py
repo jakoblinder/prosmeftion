@@ -7,7 +7,7 @@ from sage.combinat.permutation import Permutation
 from sage.combinat.skew_tableau import SkewTableau
 
 from tioc import n_der, op_config, model
-from tioc.get_FORM_refactored.index import Index
+from tioc.get_FORM_refactored.index import Index, LP_Index
 
 # from autoeft.combinat import Tableau
 # from autoeft.invariants import LorentzTableau
@@ -99,6 +99,25 @@ class Young_List(MutableSequence):
             print("The number of columns, i.e. boxes in one row does not need to be increased when going from the top to the bottom row in order to be a Young tableau.")
             sys.exit("STOP")
         return True
+
+    def __eq__(self, other):
+        assert type(self) is type(other)
+        if self.diagram != other.diagram:
+            return False
+        else:
+            check = []
+            for i, self_row in enumerate(self):
+                for j, self_ele in enumerate(self_row):
+                    if self_ele == other[i,j]:
+                        check.append(True)
+                    else:
+                        check.append(False)
+
+            if all(check):
+                return True
+            else:
+                return False
+
     def __getitem__(self, ii):
         max_dim = 2
         if isinstance(ii, int):
@@ -375,13 +394,16 @@ class Young_Tableau(Tableau):
         return self.tableau.__repr__()
 
     def __format__(self, key):
-        if key == "lp":
+        if key == "lp" or key == "fp":
             if not self:
                 # empty tableau
                 return self.tableau.__format__("nice")
             elif isinstance(self.tableau[0, 0], Index):
                 # create copy which contains lp entries instead of indices
-                tab = type(self)([[ele.lp for ele in row] for row in self.tableau.list])
+                if key == "lp":
+                    tab = type(self)([[ele.lp for ele in row] for row in self.tableau.list])
+                else:
+                    tab = type(self)([[ele.lp.fp for ele in row] for row in self.tableau.list])
                 return tab.tableau.__format__("nice")
             else:
                 return self.tableau.__format__("nice")
@@ -406,7 +428,6 @@ class Young_Tableau(Tableau):
 
     def __len__(self):
         return len(self.tableau)
-
 
     def nrows(self, col: int=0):
         """
@@ -433,6 +454,23 @@ class Young_Tableau(Tableau):
 
     def append_col(self, value) -> None:
         self.insert_col(self.tableau.diagram[0], value)
+
+    def index_lp(self, lp: LP_Index):
+        """
+
+        Parameters
+        ----------
+        lp
+            Lorentz projection index, specifying the field the derivative is acting on and the number of the derivative.
+        Returns
+        -------
+            Return indices (i,j) of entry with lorentz projection index lp.
+            If nothing is found None is returned.
+        """
+        for i, row in enumerate(self.tableau):
+            for j, ele in enumerate(row):
+                if ele.lp == lp:
+                    return i,j
 
 # Examples:
 # b = [[1,2,4,5],[3,1,4],[2,3],[3,4]]

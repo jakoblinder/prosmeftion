@@ -361,7 +361,7 @@ def get_eps_from_tab(tab: Young_Tableau):
 
     return Tensors(epss), Indices_Operator(dual_indices)
 
-def get_term_from_lr_tabs(summand: Summand, l_tab: Young_Tableau, r_tab: Young_Tableau):
+def get_term_from_lr_tabs(summand: Summand, l_tab: Young_Tableau, r_tab: Young_Tableau, ignore_op_class: bool=False):
     """
     Infer from the l_tab and r_tab the derivative structure for a given field structure.
     For this purpose, the field content and the other indices are necessary, which is why the term with a predominantly
@@ -375,13 +375,16 @@ def get_term_from_lr_tabs(summand: Summand, l_tab: Young_Tableau, r_tab: Young_T
     term
     l_tab
     r_tab
+    ignore_op_class
+        If True, the operator class of the Summand will not be checked, i.e. it is possible to have more than derivatives then allowed by the operator class.
 
     Returns
     -------
 
     """
-    assert l_tab.ncols() == summand.op_class.nl, "The number of columns in l_tab doesn't match the the one necessary for the operator class."
-    assert r_tab.ncols() == summand.op_class.nr, "The number of columns in r_tab doesn't match the the one necessary for the operator class."
+    if not ignore_op_class:
+        assert l_tab.ncols() == summand.op_class.nl, "The number of columns in l_tab doesn't match the the one necessary for the operator class."
+        assert r_tab.ncols() == summand.op_class.nr, "The number of columns in r_tab doesn't match the the one necessary for the operator class."
 
     eps_undotted, lsl_indices = get_eps_from_tab(l_tab)
     eps_dotted, usldot_indices = get_eps_from_tab(r_tab)
@@ -507,13 +510,24 @@ def ibp_and_schouten_ids(single_terms):
 
                 print(summand)
                 # Change the derivative structure by only changing the tableau indices:
+                spec_derivative = object()
                 l_tab[0,0].lp = LP_Index(1)
-                l_tab[0, 0].derIndex = 1
+                l_tab[0, 0].derIndex = spec_derivative  # 1
                 r_tab[0, 0].lp = LP_Index(1)
-                r_tab[0, 0].derIndex = 1
+                r_tab[0, 0].derIndex = spec_derivative  # 1
+                gen_index_sl2C = summand.possible_indices.generate_index("sl2C", "new")
+                lsl1, lsldot1, usl1, usldot1 = next(gen_index_sl2C)
+                lsl2, lsldot2, usl2, usldot2 = next(gen_index_sl2C)
+                usl1.lp = LP_Index(1)
+                usl2.lp = LP_Index(1)
+                lsldot1.lp = LP_Index(1)
+                lsldot2.lp = LP_Index(1)
+
+                l_tab.append_col(Young_Tableau([[usl1],[usl2]]))
+                r_tab.append_col(Young_Tableau([[lsldot1], [lsldot2]]))
                 # l_tab = Young_Tableau([[l_tab[0,0]]])
                 # Infer from the l_tab and r_tab the derivative structure for a given field structure:
-                term = get_term_from_lr_tabs(summand, l_tab, r_tab)
+                term = get_term_from_lr_tabs(summand, l_tab, r_tab, ignore_op_class=True)
                 print(term)
                 print("TEST")
 

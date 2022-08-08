@@ -413,9 +413,11 @@ class Field(Operator_Model):
 
         """
         nD = 1
-        old_max = max([index.derIndex for index in self.indices])  # old maximum number of derivatives
-        found = {i: 0 for i in range(1, old_max + 1)}
-        for i in range(1, old_max + 1):
+        # old_max = max([index.derIndex for index in self.indices])  # old maximum number of derivatives
+        der_indices = list(set([index.derIndex for index in self.indices if index.derIndex]))
+        # found = {i: 0 for i in range(1, old_max + 1)}
+        found = {i: 0 for i in der_indices}
+        for i in found.keys():
             for derIndexLsl in self.indices['Lsl']:
                 if derIndexLsl.derIndex == i:
                     derIndexLsl.derIndex = nD

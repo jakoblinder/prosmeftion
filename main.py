@@ -89,7 +89,7 @@ def main(max_dim = 6):
     #     tex_sorted_terms_wo_doubles(single_terms)
     #
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
+    # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
     #
     # nterms_before = number_terms(single_terms)
     #
@@ -102,7 +102,7 @@ def main(max_dim = 6):
     # logger.info(f"#Terms with EOMs: {nterms_before:d} <-> #Terms with less EOMs: {nterms_after:d}")
     #
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
+    # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
     #
     # # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
     # single_terms = rearrange_derivatives(single_terms)

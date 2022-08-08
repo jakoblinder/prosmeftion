@@ -449,7 +449,7 @@ class Possible_Indices(Indices_Model):
 
         return lsl, usl, lsldot, usldot
 
-    def generate_index(self, typ: str, derIndex=False, fp_min: int=1, fp_max: int=None, exclude_indices: List[Index] = []):
+    def generate_index(self, typ: str, derIndex: Union[bool, int, str]=False, fp_min: int=1, fp_max: int=None, exclude_indices: List[Index] = []):
         """
         Call with
             gen_index = summand.possible_indices.generate_index("flav")
@@ -465,7 +465,8 @@ class Possible_Indices(Indices_Model):
         typ
             typ of index
         derIndex
-            Is this an index of a derivative or not and if yes on which derivative.
+            Is this an index of a derivative or not and if yes on which derivative (int).
+            Write "new" to assign unique "object()" to SL2C-indices.
         fp_min: int
             Minimum number on an index.
         fp_max: int
@@ -479,9 +480,12 @@ class Possible_Indices(Indices_Model):
         Returns a generator object, which generates unused indices of the specified typ.
         """
         index_types = [indextyp for indextyp in index_config.keys()]
+        index_types += ["sl2C"]  # generate all 4 types of SL2C-indices at ones -> necessary for derivative index generation in ibp relations.
         if typ not in index_types:
             logger.error(f"The type {typ} is not one of the possible types {', '.join(index_types)}")
             sys.exit("STOP")
+
+        if derIndex is "new": assert typ is "sl2C", "For generation of new indices it is necessary to generate all 4 indices at ones with the 'type' sl2C."
 
         sentinel = object()
         def count(min, max=None):
@@ -497,14 +501,16 @@ class Possible_Indices(Indices_Model):
                 yield n
                 n += 1
 
-        for i in count(fp_min, fp_max):
+        continue_object = object()
+        def gen_new_index(typ: str, i: int, derIndex: Union[bool, int, object]):
             index = Index(f"{typ}{i}", derIndex)
             if exclude_indices:
                 index_list = self[typ] + exclude_indices[typ]
             else:
                 index_list = self[typ]
             if index.is_in(index_list.indices):
-                continue
+                return continue_object
+                # continue
             elif i is sentinel:
                 logger.error("Not possible to generate a new index, since generator is out of range.")
                 sys.exit("STOP")
@@ -512,9 +518,33 @@ class Possible_Indices(Indices_Model):
                 self.append(index)
                 if index.dual_index != index:
                     self.append(index.dual_index)
-                    yield index, index.dual_index
+                    # yield index, index.dual_index
+                    return index, index.dual_index
                 else:
-                    yield index
+                    # yield index
+                    return index
+
+        for i in count(fp_min, fp_max):
+            spec_derivative = object()  # specify derivative uniquely
+            # Use in the following the 'is' (identity) operator instead of '==' (equality operator), since the  euqality operator can be and is overriden by user-defined objects.
+            if derIndex is "new" or type(derIndex) is object: derIndex = spec_derivative
+            if typ == "sl2C":
+                new_index_sl = gen_new_index("Lsl", i, derIndex)
+                new_index_sldot = gen_new_index("Lsldot", i, derIndex)
+                if new_index_sl is continue_object or new_index_sldot is continue_object:
+                    continue
+                else:
+                    lsl, usl = new_index_sl
+                    lsldot, usldot = new_index_sldot
+                    yield lsl, lsldot, usl, usldot
+            else:
+                new_index = gen_new_index(typ, i, derIndex)
+                if new_index is continue_object:
+                    continue
+                else:
+                    yield new_index
+
+
 
 
 class Indices_Summand(Indices_Model):

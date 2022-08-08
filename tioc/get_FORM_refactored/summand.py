@@ -1,18 +1,20 @@
 import logging.config
 import sys
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 from pathlib import Path
+from copy import copy
 
 from tioc import model, op_config, index_config, get_SUN_name
 from tioc.general import create_procedure
 
-from .coefficient import Coefficient
-from .index import Dummy_Index
+from .coefficient import Coefficient, Factor
+from .index import Index, Dummy_Index, LP_Index
 from .indices import Indices_Summand, Indices_Operator, Possible_Indices
 from .operator import Tensor, Field
 from .operators import Tensors, Fields
-from .tableau import get_op_class
+from .tableau import get_op_class, Young_Tableau
+from .lorentz import LR_Tableaux
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
@@ -123,8 +125,11 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         return self._tensors
 
     @tensors.setter
-    def tensors(self, value: List):
-        self._tensors = Tensors(tuple(map(Tensor, value)))
+    def tensors(self, fp_tensors: List):
+        if isinstance(fp_tensors, Tensors):
+            self._tensors = fp_tensors
+        else:
+            self._tensors = Tensors(tuple(map(Tensor, fp_tensors)))
 
     @property
     def fields(self):
@@ -132,7 +137,10 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
 
     @fields.setter
     def fields(self, fp_fields):
-        self._fields = Fields(tuple(map(Field, fp_fields, range(1, len(fp_fields)+1))))
+        if isinstance(fp_fields, Fields):
+            self._fields = fp_fields
+        else:
+            self._fields = Fields(tuple(map(Field, fp_fields, range(1, len(fp_fields)+1))))
 
     @property
     def coeff(self):
@@ -230,6 +238,13 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         else:
             return Indices_Summand(indices_expr.indices)
 
+    def copy(self):
+        """
+        Returns a copy of the object.
+        -------
+
+        """
+        return type(self)(self.tensors.copy(), self.fields.copy(), self.coeff.copy(), self.name)
 
     def replace_SUN_indices_by_projection_indices(self):
         """
@@ -295,6 +310,14 @@ class Summand(Summand_Model):
     def op_class(self):
         """Operator class of the operator."""
         return get_op_class(self.fieldcounter_stripped, self.nD, self.d)
+
+    def copy(self):
+        summand = super().copy()
+        su2 = get_SUN_name(2)
+        su3 = get_SUN_name(3)
+        summand.gaugeTensorsSUN = {su2: summand.tensors[su2], su3: summand.tensors[su3]}
+
+        return summand
 
     #########################
     ### EOM Substitutions ###
@@ -725,5 +748,191 @@ class Summand(Summand_Model):
             return form
 
         create_form()
+
+    ############################
+    ### SL2C epsilon tensors ###
+    ############################
+    @property
+    def lr(self):
+        def set_lp_in_tensors(tensors: Tensors, ref_index: Index, lp: LP_Index, derIndex: Union[bool, int]):
+            """
+            Set in the index in tensors which is conjugated with the index 'ref_index', the 'lp' attribute to lp
+            and the derIndex attribute to 'derIndex'.
+            Parameters
+            ----------
+            tensors
+            ref_index
+            lp
+            derIndex
+
+            Returns
+            -------
+                True if index successfully replace - otherwise False.
+            """
+            found = False
+            for tensor in tensors:
+                for sl_index in tensor.indices["sl"]:
+                    if sl_index == ref_index.dual_index:
+                        found = True
+                        sl_index.lp = lp
+                        # derivative index has to be set in order to be able to infer later on the derivative structure
+                        # only from the tensors.
+                        sl_index.derIndex = derIndex
+                        break
+                for sldot_index in tensor.indices["sldot"]:
+                    if sldot_index == ref_index.dual_index:
+                        found = True
+                        sldot_index.lp = lp
+                        sldot_index.derIndex = derIndex
+                        break
+                if found: break
+
+            if found:
+                return True
+            else:
+                return False
+
+        for field in self.fields:
+            fp = field.field_pos
+            for sl_index in field.indices["sl"]:
+                lp = LP_Index(fp, sl_index.derIndex)
+                sl_index.lp = lp
+                # equalize all properties in the tensor indices
+                assert set_lp_in_tensors(self.tensors, sl_index, lp, sl_index.derIndex)
+            for sldot_index in field.indices["sldot"]:
+                lp = LP_Index(fp, sldot_index.derIndex)
+                sldot_index.lp = lp
+                assert set_lp_in_tensors(self.tensors, sldot_index, lp, sldot_index.derIndex)
+
+        # Infer from field and derivative structure the l_tab and r_tab, specifying the epsilon tensors:
+        # First, get SL2C-eps tensors for undotted and dotted indices:
+        eps_lh = self.tensors["sl"]
+        eps_rh = self.tensors["sldot"]
+        if eps_lh:
+            eps0 = eps_lh[0]  # first epsilon tensor
+            l_tab = Young_Tableau([[eps0.indices[0].copy()], [eps0.indices[1].copy()]])
+            # Note: The copy is necessary in order get new indices, which are not linked to the old Summand indices and can thus be changed safely.
+            for eps in eps_lh[1:]:
+                # Append a column for the next epsilon tensor
+                l_tab.append_col(Young_Tableau([[eps.indices[0].copy()], [eps.indices[1].copy()]]))
+
+        else:
+            l_tab = Young_Tableau([])
+        if eps_rh:
+            eps0 = eps_rh[0]  # first epsilon tensor
+            r_tab = Young_Tableau([[eps0.indices[0].copy()], [eps0.indices[1].copy()]])
+            for eps in eps_rh[1:]:
+                # Append a column for the next epsilon tensor
+                r_tab.append_col(Young_Tableau([[eps.indices[0].copy()], [eps.indices[1].copy()]]))
+        else:
+            r_tab = Young_Tableau([])
+
+        # print(f"{eps_lh}\n->\n{l_tab:nice}\n{l_tab:lp}")
+        # print(f"{eps_rh}\n->\n{r_tab:nice}\n{r_tab:lp}")
+        # print("=========================================================================")
+        return LR_Tableaux(l_tab, r_tab, 1)
+
+    def get_term_from_lr_tabs(self, lr: LR_Tableaux, ignore_op_class: bool = False):
+        """
+        Infer from the l_tab and r_tab the derivative structure for a given field structure.
+        For this purpose, the field content and the other indices are necessary, which is why the term with a predominantly
+        incorrect derivative structure must also be specified.
+        -> In a first step, all SL2C-indices and thus also all derivatives of the fields are removed and also the
+           SL2C-epsilon tensors are removed.
+        -> Since each row in the l_tab and r_tab specifies uniquely an epsilon tensor and those specify uniquely the indices
+           of themselves and also those of the field.
+        Parameters
+        ----------
+        term
+        lr = LR_tableaux(l_tab, r_tab, factor)
+            The lr tableaux have to be given explicitely, because a new term with the SAME fields whould be constructed
+            for the GIVEN tableaux.
+        ignore_op_class
+            If True, the operator class of the Summand will not be checked, i.e. it is possible to have more derivatives then allowed by the operator class.
+
+        Returns
+        -------
+
+        """
+        if not ignore_op_class:
+            assert lr.l_tab.ncols() == self.op_class.nl, "The number of columns in l_tab doesn't match the the one necessary for the operator class."
+            assert lr.r_tab.ncols() == self.op_class.nr, "The number of columns in r_tab doesn't match the the one necessary for the operator class."
+
+        def get_eps_from_tab(tab: Young_Tableau):
+            sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
+            epss = []
+            for i in range(tab.ncols()):
+                col = tab[:, i]
+                tensor = Tensor(f"{sl2Ceps}({col[0, 0]},{col[1, 0]})")
+                for j, index in enumerate(tensor.indices):
+                    index.lp = col[j, 0].lp
+                    index.derIndex = col[j, 0].derIndex
+
+                epss.append(tensor)
+
+            dual_indices = []
+            for eps in epss:
+                for index in eps.indices:
+                    dual_indices.append(index.dual_index)
+
+            return Tensors(epss), Indices_Operator(dual_indices)
+
+        eps_undotted, lsl_indices = get_eps_from_tab(lr.l_tab)
+        eps_dotted, usldot_indices = get_eps_from_tab(lr.r_tab)
+        # sort indices by fields:
+        field_indices = {i: [] for i in range(1, self.op_class.N + 1)}
+
+        for index in lsl_indices:
+            field_indices[index.lp.fp].append(index)
+        for index in usldot_indices:
+            field_indices[index.lp.fp].append(index)
+
+        #New (identical) Summand object:
+        summand = self.copy()
+
+        # Delete old SL2C-tensors
+        del summand.tensors["sl2C"]
+        # Append new SL2C-tensors
+        for eps in eps_undotted:
+            summand.tensors.append(eps)
+        for eps in eps_dotted:
+            summand.tensors.append(eps)
+
+        def delete_sl2c_index(indices: Indices_Operator):
+            """
+            Recursively delete all SL2C-indices in 'indices'.
+            Parameters
+            ----------
+            indices
+
+            Returns
+            -------
+
+            """
+            sl2c = [index.typ in ("Lsl", "Usl", "Lsldot", "Usldot") for index in indices]
+            if any(sl2c):
+                for i, index in enumerate(indices):
+                    if index.typ in ("Lsl", "Usl", "Lsldot", "Usldot"):
+                        del field.indices[i]
+                        break
+                return delete_sl2c_index(indices)
+            else:
+                return indices
+
+        # Delete old SL2C-indices
+        for field in summand.fields:
+            delete_sl2c_index(field.indices)
+        # Append new SL2C-indices
+        for field in summand.fields:
+            for new_index in field_indices[field.field_pos]:
+                field.indices.append(new_index)
+            # Recalculate the number of derivatives 'derIndex', which stand on every index.
+            field.reset_derIndex()
+
+        # Adjust the coefficient
+        summand.coeff *= Factor(lr.factor)
+
+        return summand
+
 
 

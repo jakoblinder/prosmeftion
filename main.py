@@ -7,13 +7,10 @@ from pathlib import Path
 
 from yaml import safe_load
 
-from tioc import CONFIG_PATH, FORM_GENERAL_PATH, n_der, get_basis
-from tioc.general import form_declarations
-from tioc.lor_projection import rearrange_derivatives, replace_eoms, ibp_and_schouten_ids
-from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, \
-    tex_terms_sorted_sun_projection  # , main
-from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
-from tioc.tableau import test
+from tioc import CONFIG_PATH, get_basis
+from tioc.lor_projection import ibp_and_schouten_ids
+from tioc.projection import tex_terms_sorted_sun_projection  # , main
+from tioc.sun_projection import sun_projection, replace_sun_tensors_by_projected_ones
 
 # configure logger
 timestamp = datetime.now()

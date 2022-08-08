@@ -17,7 +17,8 @@ from tioc.get_FORM_refactored.indices import Indices_Operator
 from tioc.get_FORM_refactored.index import Index, LP_Index
 from tioc.get_FORM_refactored.read_write import get_terms
 from tioc.sun_projection import get_type
-from tioc.tableau import get_op_class, Young_Tableau
+from tioc.get_FORM_refactored.tableau import get_op_class, Young_Tableau
+from tioc.get_FORM_refactored.lorentz import LR_Tableaux
 
 from autoeft.io import load_basis
 from autoeft.sun_projection import tensor_projection
@@ -340,28 +341,9 @@ def get_lr_tabs(tensors: Tensors):
     print(f"{eps_lh}\n->\n{l_tab:nice}\n{l_tab:lp}")
     print(f"{eps_rh}\n->\n{r_tab:nice}\n{r_tab:lp}")
     print("=========================================================================")
-    return l_tab, r_tab
+    return LR_Tableaux(l_tab, r_tab, 1)
 
-def get_eps_from_tab(tab: Young_Tableau):
-    sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
-    epss = []
-    for i in range(tab.ncols()):
-        col = tab[:,i]
-        tensor = Tensor(f"{sl2Ceps}({col[0,0]},{col[1,0]})")
-        for j, index in enumerate(tensor.indices):
-            index.lp = col[j,0].lp
-            index.derIndex = col[j, 0].derIndex
-
-        epss.append(tensor)
-
-    dual_indices = []
-    for eps in epss:
-        for index in eps.indices:
-            dual_indices.append(index.dual_index)
-
-    return Tensors(epss), Indices_Operator(dual_indices)
-
-def get_term_from_lr_tabs(summand: Summand, l_tab: Young_Tableau, r_tab: Young_Tableau, ignore_op_class: bool=False):
+def get_term_from_lr_tabs(summand: Summand, lr: LR_Tableaux, ignore_op_class: bool=False):
     """
     Infer from the l_tab and r_tab the derivative structure for a given field structure.
     For this purpose, the field content and the other indices are necessary, which is why the term with a predominantly
@@ -373,8 +355,7 @@ def get_term_from_lr_tabs(summand: Summand, l_tab: Young_Tableau, r_tab: Young_T
     Parameters
     ----------
     term
-    l_tab
-    r_tab
+    lr = LR_tableaux(l_tab, r_tab, factor)
     ignore_op_class
         If True, the operator class of the Summand will not be checked, i.e. it is possible to have more than derivatives then allowed by the operator class.
 
@@ -383,18 +364,37 @@ def get_term_from_lr_tabs(summand: Summand, l_tab: Young_Tableau, r_tab: Young_T
 
     """
     if not ignore_op_class:
-        assert l_tab.ncols() == summand.op_class.nl, "The number of columns in l_tab doesn't match the the one necessary for the operator class."
-        assert r_tab.ncols() == summand.op_class.nr, "The number of columns in r_tab doesn't match the the one necessary for the operator class."
+        assert lr.l_tab.ncols() == summand.op_class.nl, "The number of columns in l_tab doesn't match the the one necessary for the operator class."
+        assert lr.r_tab.ncols() == summand.op_class.nr, "The number of columns in r_tab doesn't match the the one necessary for the operator class."
 
-    eps_undotted, lsl_indices = get_eps_from_tab(l_tab)
-    eps_dotted, usldot_indices = get_eps_from_tab(r_tab)
+    def get_eps_from_tab(tab: Young_Tableau):
+        sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
+        epss = []
+        for i in range(tab.ncols()):
+            col = tab[:, i]
+            tensor = Tensor(f"{sl2Ceps}({col[0, 0]},{col[1, 0]})")
+            for j, index in enumerate(tensor.indices):
+                index.lp = col[j, 0].lp
+                index.derIndex = col[j, 0].derIndex
+
+            epss.append(tensor)
+
+        dual_indices = []
+        for eps in epss:
+            for index in eps.indices:
+                dual_indices.append(index.dual_index)
+
+        return Tensors(epss), Indices_Operator(dual_indices)
+
+    eps_undotted, lsl_indices = get_eps_from_tab(lr.l_tab)
+    eps_dotted, usldot_indices = get_eps_from_tab(lr.r_tab)
     # sort indices by fields:
     field_indices = {i: [] for i in range(1, summand.op_class.N + 1)}
 
     for index in lsl_indices:
-        field_indices[index.lp.expr].append(index)
+        field_indices[index.lp.fp].append(index)
     for index in usldot_indices:
-        field_indices[index.lp.expr].append(index)
+        field_indices[index.lp.fp].append(index)
 
     # Delete old SL2C-tensors
     del summand.tensors["sl2C"]
@@ -435,7 +435,69 @@ def get_term_from_lr_tabs(summand: Summand, l_tab: Young_Tableau, r_tab: Young_T
         # Recalculate the number of derivatives 'derIndex', which stand on every index.
         field.reset_derIndex()
 
+    # Adjust the coefficient
+    summand.coeff *= Factor(lr.factor)
+
     return summand
+
+def ibp(lr: LR_Tableaux, derivative: LP_Index,  N: int):
+    """
+
+    Parameters
+    ----------
+    lr = LR_tableaux(l_tab, r_tab, factor)
+    derivative: LP_Index
+        This index specifies the derivative, which should be integrated by parts:
+    N
+        Number of fields in the operator.
+
+    Returns
+    -------
+
+    """
+    assert lr.l_tab.ncols() == 1
+    assert lr.r_tab.ncols() == 1
+
+    found = 0
+
+    l_tab_index = lr.l_tab.index_lp(derivative)
+    if l_tab_index:
+        l_row_index_der, colum = l_tab_index
+        assert colum == 0
+        del l_tab_index
+        found += 1
+
+    r_tab_index = lr.r_tab.index_lp(derivative)
+    if r_tab_index:
+        r_row_index_der, colum = r_tab_index
+        assert colum == 0
+        del r_tab_index
+        found += 1
+    # Note: l_row_index_der and r_row_index_der denote the row in LH and RH-tableau where the derivative Index sits.
+
+    if found != 2:
+        logger.warning("No index was found for the given LP_Index. Therefore, no ibp was made.")
+        return lr
+    else:
+        # Indices of the derivative Indices where found and the integration by parts can be done.
+        tabs = []
+        spec_derivative = object()  # specify uniquely the derivative
+        for i in range(1, N + 1):  # iterate over all possible field positions
+            if i == derivative.fp:  # except the one which should be integrated
+                continue
+            else:
+                # Change the field position and specify the derivative 'position' uniquely
+                lr.l_tab[l_row_index_der, 0].lp = LP_Index(field_pos=i, derIndex=spec_derivative)
+                lr.l_tab[l_row_index_der, 0].derIndex = spec_derivative
+
+                lr.r_tab[r_row_index_der, 0].lp = LP_Index(field_pos=i, derIndex=spec_derivative)
+                lr.r_tab[r_row_index_der, 0].derIndex = spec_derivative
+                #Sign changes due to ibp
+                lr *= (-1)
+
+                tabs.append(lr)
+        return tabs
+
 
 def ibp_and_schouten_ids(single_terms):
     """
@@ -494,41 +556,41 @@ def ibp_and_schouten_ids(single_terms):
                 skip_ibp_ids = False
                 if not summand.nD: skip_ibp_ids = True  # No ibp necessary if no derivative is there. -> Schouten id are still necessary!
                 for field in summand.fields:
-                    lp = LP_Index(field.field_pos)
+                    fp = field.field_pos
                     for sl_index in field.indices["sl"]:
+                        lp = LP_Index(fp, sl_index.derIndex)
                         sl_index.lp = lp
                         assert set_lp_in_tensors(summand.tensors, sl_index, lp, sl_index.derIndex)
                     for sldot_index in field.indices["sldot"]:
+                        lp = LP_Index(fp, sldot_index.derIndex)
                         sldot_index.lp = lp
                         assert set_lp_in_tensors(summand.tensors, sldot_index, lp, sldot_index.derIndex)
 
                 # Infer from field and derivative structure the l_tab and r_tab, specifying the epsilon tensors.
-                l_tab, r_tab = get_lr_tabs(summand.tensors)
+                lr = get_lr_tabs(summand.tensors)
 
-                if l_tab.ncols() < 2 and r_tab.ncols() < 2: skip_schouten_ids = True  # No Schouten ids can be applied when their are less then 2 epsilon tensors
+                if lr.l_tab.ncols() < 2 and lr.r_tab.ncols() < 2: skip_schouten_ids = True  # No Schouten ids can be applied when their are less then 2 epsilon tensors
                 if skip_schouten_ids and skip_ibp_ids: continue  # Neither the Schouten nor the ibp relations need to be applied.
 
-                print(summand)
+                print(f"{summand:c}")
                 # Change the derivative structure by only changing the tableau indices:
                 spec_derivative = object()
-                l_tab[0,0].lp = LP_Index(1)
-                l_tab[0, 0].derIndex = spec_derivative  # 1
-                r_tab[0, 0].lp = LP_Index(1)
-                r_tab[0, 0].derIndex = spec_derivative  # 1
-                gen_index_sl2C = summand.possible_indices.generate_index("sl2C", "new")
-                lsl1, lsldot1, usl1, usldot1 = next(gen_index_sl2C)
-                lsl2, lsldot2, usl2, usldot2 = next(gen_index_sl2C)
-                usl1.lp = LP_Index(1)
-                usl2.lp = LP_Index(1)
-                lsldot1.lp = LP_Index(1)
-                lsldot2.lp = LP_Index(1)
+                lr.l_tab[0,0].lp = LP_Index(1, spec_derivative)
+                lr.l_tab[0, 0].derIndex = spec_derivative  # 1
+                lr.r_tab[0, 0].lp = LP_Index(1, spec_derivative)
+                lr.r_tab[0, 0].derIndex = spec_derivative  # 1
 
-                l_tab.append_col(Young_Tableau([[usl1],[usl2]]))
-                r_tab.append_col(Young_Tableau([[lsldot1], [lsldot2]]))
-                # l_tab = Young_Tableau([[l_tab[0,0]]])
+                summand = get_term_from_lr_tabs(summand, lr)
                 # Infer from the l_tab and r_tab the derivative structure for a given field structure:
-                term = get_term_from_lr_tabs(summand, l_tab, r_tab, ignore_op_class=True)
-                print(term)
+                print("------------------------------------------")
+                print(f"{summand:c}")
+                print(f"{lr:fp}")
+                tabs1 = ibp(lr, LP_Index(1,1), summand.op_class.N)
+                tabs2 = ibp(lr, LP_Index(2,1), summand.op_class.N)
+                for lr in tabs:
+                    print(f"{lr:fp}")
+                    term = get_term_from_lr_tabs(summand, lr)
+                    print(f"{term:c}")
                 print("TEST")
 
 

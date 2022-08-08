@@ -249,7 +249,8 @@ class LP_Index():
     Index for lorentz projection. This index is the possibly ambiguous attribute lp of a 'normal' index and specifies
     first of all the position of the field.
     """
-    expr: int
+    fp: int  # field position
+    derIndex: int  # Number of the derivative. This can be for some time also an empty object().
     typ: str  # gauge, colf, lorentz, etc.
     indname: str  # Ensures clear contractions
     id: int  # cryptic id, e.g1234A in combination with the type
@@ -257,11 +258,12 @@ class LP_Index():
     description: str
     # derIndex: bool or int  # False if it is not an index of a derivative. If True, number specifies the number of the derivative.
 
-    def __init__(self, expr: int):
-        self.expr = int(expr)
+    def __init__(self, field_pos: int, derIndex: int):
+        self.fp = int(field_pos)
+        self.derIndex = derIndex
 
     def __repr__(self):
-        return f"{self.expr:d}"
+        return f"{self.fp:d}-{str(self.derIndex):s}"
 
     def __str__(self):
         """Specify the format for printing with str() or print() statement function: Here the same as the string representation repr() itself."""
@@ -271,20 +273,26 @@ class LP_Index():
         """Specify the format for "format" function in print statement: Here the same as the string representation repr() itself."""
         return self.__repr__()
 
+    def __eq__(self, other):
+        if self.fp is other.fp and self.derIndex is other.derIndex:
+            return True
+        else:
+            return False
+
     @property
     def typ(self) -> str:
         return "lp"
 
     @property
     def id(self) -> str:
-        return self.expr
+        return f"{self.fp:d}-{str(self.derIndex):s}"
 
     @property
     def indname(self) -> str:
         """
         E.g.: lor1234, gauge345, Lsldot123, Usldot123 ... have indname: lor-1234, gauge-345, sldot-123, sldot-123 ...
         """
-        return f"lp-{self.id:d}"
+        return f"lp-{self.id:s}"
 
     @property
     def description(self) -> str:

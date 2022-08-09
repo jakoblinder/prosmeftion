@@ -1,3 +1,4 @@
+import logging
 import sys
 from collections.abc import MutableSequence
 from dataclasses import dataclass
@@ -13,6 +14,9 @@ from tioc.get_FORM_refactored.index import Index, LP_Index
 # from autoeft.invariants import LorentzTableau
 from autoeft.combinat import Partition
 # from autoeft.invariants import OpClass
+
+logger_autoeft = logging.getLogger("autoeft.projection")
+logger = logger_autoeft.getChild(__name__)
 
 
 class Young_List(MutableSequence):
@@ -213,6 +217,8 @@ class Young_List(MutableSequence):
             assert value.diagram == self.diagram[ii], "Diagram should have the same shape afterwards."
             self.list[ii] = value
             type(self)(self.list)
+        elif isinstance(ii, tuple) and all([isinstance(i, int) for i in ii]) and isinstance(value, Index):
+            self.list[ii[0]][ii[1]] = value
         elif isinstance(ii, tuple):
             assert isinstance(value, type(self)), f"The inserted value should be of type {type(self)} and not {type(value)}."
             max_dim = 2
@@ -255,6 +261,16 @@ class Young_List(MutableSequence):
 
     def __iter__(self):
         return iter(self.list)
+
+    def iter_col(self):
+        """
+        Iterator for col -> for col in self: ...
+        Returns
+        -------
+
+        """
+        for col in range(self.ncols()):
+            yield self[:,col]
 
     def insert(self, ii, value) -> None:
         # Since effectively a row is inserted, the 'value' has to be a row.
@@ -427,13 +443,35 @@ class Young_Tableau(Tableau):
         del self.tableau[ii]
 
     def __setitem__(self, ii, value):
-        self.tableau[ii] = value.tableau
+        if isinstance(value, Young_Tableau):
+            self.tableau[ii] = value.tableau
+        elif isinstance(value, Index):
+            self.tableau[ii] = value
+        else:
+            logger.error(f"The variable which should be assign has to be of type Young_Tableau or Index and not of type {type(value)}.")
+            sys.exit("STOP")
 
     def __len__(self):
         return len(self.tableau)
 
     def __iter__(self):
+        """
+        Iterator for rows -> for row in self: ...
+        Returns
+        -------
+
+        """
         return iter(self.tableau)
+
+    def iter_col(self):
+        """
+        Iterator for col -> for col in self: ...
+        Returns
+        -------
+
+        """
+        for col in self.tableau.iter_col():
+            yield Young_Tableau(col)
 
     def nrows(self, col: int=0):
         """
@@ -493,6 +531,56 @@ class Young_Tableau(Tableau):
             for j, ele in enumerate(row):
                 if ele.lp == lp:
                     return i,j
+
+    def normal_order_tableau_row(self):
+        """
+        Change whole columns of tableau in such a way that the field positions of the indices are increasing among the
+        first entries of each column.
+        Returns
+        -------
+
+        """
+        if not self or self.ncols() == 1:
+            # empty tableau
+            return self
+
+        cols = []
+        for col in self.iter_col():
+            cols.append(col.copy())
+        cols_sorted = sorted(cols, key=lambda col: col[0,0].lp.fp)
+        tab = cols_sorted[0]
+        for col in cols_sorted[1:]:
+            tab.append_col(col)
+
+        logger.debug(f"Rows of tableau changed to:\n{tab:lp}.")
+
+        return tab
+
+    def normal_order_tableau_col(self):
+        """
+        Specific method for Young Tableau filled with 2 indices in one column:
+        Sort entries in columns by their field position.
+        Returns
+        -------
+            Sorted tableau and sign.
+        """
+        if not self:
+            # empty tableau
+            return self, 1
+        assert len(self) == 2, "Young Tableau has to have exact to indices per column."
+        tab, sign = self.copy(), 1
+        change = False
+        for i, col in enumerate(tab.iter_col()):
+            if col[0,0].lp.fp > col[1,0].lp.fp:
+                change = True
+                # Change positions of indices in one column such that field position is increasing when going from top to bottom.
+                sign *= -1
+                tab[0,i], tab[1,i] = col[1,0], col[0,0]# Young_Tableau([[col[1,0]], [col[0,0]]])
+        if change:
+            logger.debug(f"Indices of tableau changed in columns to:\n{tab:lp}\nwith sign: {sign}.")
+            return tab, sign
+        else:
+            return self, 1
 
 # Examples:
 # b = [[1,2,4,5],[3,1,4],[2,3],[3,4]]

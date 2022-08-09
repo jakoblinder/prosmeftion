@@ -12,13 +12,18 @@ logger = logger_autoeft.getChild(__name__)
 
 class LR_Tableaux():
 
-    l_tab: Young_Tableau
-    r_tab: Young_Tableau
+    l_tab: Young_Tableau  # l_tab and r_tab are normal order, i.e. the field position indices are
+    r_tab: Young_Tableau  # increasing in each column from top to bottom.
     factor: Fraction
     def __init__(self, l_tab: Young_Tableau, r_tab: Young_Tableau, factor: Fraction):
-        self.l_tab = l_tab
-        self.r_tab = r_tab
+        self.l_tab, l_sign = l_tab.normal_order_tableau_col()
+        self.r_tab, r_sign = r_tab.normal_order_tableau_col()
+        # order also the row in increasing order
+        self.l_tab = self.l_tab.normal_order_tableau_row()
+        self.r_tab = self.r_tab.normal_order_tableau_row()
+
         self.factor = factor if isinstance(factor, Fraction) else Fraction(factor).limit_denominator()
+        self.factor *= l_sign * r_sign
 
     def __repr__(self):
         return f"factor: {repr(self.factor)}; l_tab: {repr(self.l_tab)}; r_tab:\n{repr(self.r_tab)}"

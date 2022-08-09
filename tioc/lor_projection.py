@@ -335,46 +335,47 @@ def ibp_and_schouten_ids(single_terms):
                 skip_ibp_ids = False
                 if not summand.nD: skip_ibp_ids = True  # No ibp necessary if no derivative is there. -> Schouten id are still necessary!
 
+                print(f"{summand:c}")
+
                 lr = summand.lr
                 if lr.l_tab.ncols() < 2 and lr.r_tab.ncols() < 2: skip_schouten_ids = True  # No Schouten ids can be applied when their are less then 2 epsilon tensors
                 if skip_schouten_ids and skip_ibp_ids: continue  # Neither the Schouten nor the ibp relations need to be applied.
 
-                print(f"{summand:c}")
-                # Change the derivative structure by only changing the tableau indices (no sign change):
-                spec_derivative = object()
-                lr_copy = lr.copy()
-                del lr
-
-                lr_copy.l_tab[0,0].lp = LP_Index(1, spec_derivative)
-                lr_copy.l_tab[0, 0].derIndex = spec_derivative  # 1
-                lr_copy.r_tab[0, 0].lp = LP_Index(1, spec_derivative)
-                lr_copy.r_tab[0, 0].derIndex = spec_derivative  # 1
-
-                term = summand.get_term_from_lr_tabs(lr_copy)
-                # Infer from the l_tab and r_tab the derivative structure for a given field structure:
-                print("------------------------------------------")
-                print(f"{term:c}")
-                print(f"{term.lr:lp}")
-                # Integration by parts of derivative on first field
-                tabs1 = term.lr.ibp(LP_Index(1,1), summand.op_class.N)
-                # Integration by parts of derivative on second field
-                tabs2 = term.lr.ibp(LP_Index(2,1), summand.op_class.N)
-
-                #print both terms
-                print("Integration by parts of derivative on first field:")
-                for lr in tabs1:
-                    print(f"{lr:fp}")
-                    term1 = summand.get_term_from_lr_tabs(lr)
-                    print(f"{term1:c}")
-
-                print("Integration by parts of derivative on second field:")
-                for lr in tabs2:
-                    print(f"{lr:fp}")
-                    term1 = summand.get_term_from_lr_tabs(lr)
-                    print(f"{term1:c}")
-                print("Old term:")
-                print(f"{term:c}")
-                print("=> Old term stays the same!")
+                # # Change the derivative structure by only changing the tableau indices (no sign change):
+                # spec_derivative = object()
+                # lr_copy = lr.copy()
+                # del lr
+                #
+                # lr_copy.l_tab[0,0].lp = LP_Index(1, spec_derivative)
+                # lr_copy.l_tab[0, 0].derIndex = spec_derivative  # 1
+                # lr_copy.r_tab[0, 0].lp = LP_Index(1, spec_derivative)
+                # lr_copy.r_tab[0, 0].derIndex = spec_derivative  # 1
+                #
+                # term = summand.get_term_from_lr_tabs(lr_copy)
+                # # Infer from the l_tab and r_tab the derivative structure for a given field structure:
+                # print("------------------------------------------")
+                # print(f"{term:c}")
+                # print(f"{term.lr:lp}")
+                # # Integration by parts of derivative on first field
+                # tabs1 = term.lr.ibp(LP_Index(1,1), summand.op_class.N)
+                # # Integration by parts of derivative on second field
+                # tabs2 = term.lr.ibp(LP_Index(2,1), summand.op_class.N)
+                #
+                # #print both terms
+                # print("Integration by parts of derivative on first field:")
+                # for lr in tabs1:
+                #     print(f"{lr:fp}")
+                #     term1 = summand.get_term_from_lr_tabs(lr)
+                #     print(f"{term1:c}")
+                #
+                # print("Integration by parts of derivative on second field:")
+                # for lr in tabs2:
+                #     print(f"{lr:fp}")
+                #     term1 = summand.get_term_from_lr_tabs(lr)
+                #     print(f"{term1:c}")
+                # print("Old term:")
+                # print(f"{term:c}")
+                # print("=> Old term stays the same!")
 
 
     return single_terms

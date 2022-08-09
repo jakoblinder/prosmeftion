@@ -123,7 +123,7 @@ def main(max_dim = 6):
 
     # TODO: Apply the integration by parts and Schouten identities to the lorentz structure.
     # test()
-    single_terms = ibp_and_schouten_ids(single_terms)
+    single_terms = ibp_and_schouten_ids(single_terms, max_dim)
 
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, basis, max_dim)

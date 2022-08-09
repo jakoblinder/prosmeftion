@@ -65,7 +65,10 @@ class Young_List(MutableSequence):
     @property
     def diagram(self):
         """Shape of the tableau."""
-        return [len(row) for row in self.list]
+        if not self.list:
+            return [0]
+        else:
+            return [len(row) for row in self.list]
 
     def nrows(self, col: int=0):
         """
@@ -290,6 +293,11 @@ class Young_List(MutableSequence):
         """Insert a column."""
         # Can only insert one column in one step:
         assert isinstance(ii, int), "Can only insert one column in one step."
+        # Check for empty tableau:
+        if not self:
+            empty = True
+        else:
+            empty = False
         # If the index is smaller than 0 it will be inserted before the first column of the old diagram
         if ii < 0:
             before_diagram = True
@@ -305,7 +313,9 @@ class Young_List(MutableSequence):
         assert value.nrows() == sum(value.diagram)
         # Ensure that also after inserting the column, the YT has the correct shape:
         nrows_inserted = value.nrows()
-        if before_diagram:
+        if empty:
+            insert_at = 0
+        elif before_diagram:
             assert nrows_inserted >= self.nrows(0), "The number of boxes in the column which is inserted before the other columns has to be larger (or equal) then the number of boxes in the old first column."
             insert_at = 0
         elif after_diagram:
@@ -316,12 +326,15 @@ class Young_List(MutableSequence):
             assert nrows_inserted <= self.nrows(ii - 1), "The number of boxes in the column which is inserted has to be smaller (or equal) then the number of boxes in the preceding column."
             insert_at = ii
 
-        # Insert one empty column at the correct place.
-        for i, row in enumerate(self.list):
-            if i >= nrows_inserted: break
-            row.insert(insert_at, None)
+        if not empty:
+            # Insert one empty column at the correct place.
+            for i, row in enumerate(self.list):
+                if i >= nrows_inserted: break
+                row.insert(insert_at, None)
 
-        self[:nrows_inserted,insert_at] = value
+            self[:nrows_inserted,insert_at] = value
+        else:
+            self.list = value.list
 
         # check that the tableau is still a Young tableau:
         self.assert_yt()
@@ -463,6 +476,8 @@ class Young_Tableau(Tableau):
         """
         return iter(self.tableau)
 
+    def iter_row(self):
+        return self.__iter__()
     def iter_col(self):
         """
         Iterator for col -> for col in self: ...
@@ -663,7 +678,8 @@ class LorentzTableau:
     @property
     def is_ssyt(self) -> bool:
         """Return whether this tableau is semi-standard."""
-        return SkewTableau(self.tableau).is_semistandard()
+        st = SkewTableau(self.tableau)
+        return st.is_semistandard()
 
     @property
     def lr_tableaux(self) -> Tuple[Tableau, Tableau, int]:
@@ -739,7 +755,7 @@ class Lorentz_Tableau(LorentzTableau):
             self.tableau = Young_List(tableau)
 
         self.op_class = op_class
-        assert len(self) == 2  # each epsilon tensor only has 2 indices
+        assert len(self) in (0,2) # each epsilon tensor only has 2 indices
 
     def __repr__(self):
         return self.tableau.__repr__()

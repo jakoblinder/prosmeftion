@@ -3,8 +3,9 @@ import sys
 from fractions import Fraction
 from pathlib import Path
 from typing import List, Dict, Union
+from itertools import zip_longest
 
-from .tableau import Young_Tableau
+from .tableau import Young_Tableau, Lorentz_Tableau, OpClass
 from .index import Index, LP_Index
 
 logger_autoeft = logging.getLogger("autoeft.projection")
@@ -109,6 +110,59 @@ class LR_Tableaux():
         l_tab = self.l_tab.copy()
         r_tab = self.r_tab.copy()
         return LR_Tableaux(l_tab, r_tab, self.factor)
+
+    @classmethod
+    def permutation_sign(cls, l: list):
+        """
+        Determines the permutations of sign of the given list of digits:
+        For each entry, count how many smaller numbers are to the right of it. This indicates how many adjacent
+        transpositions are needed to put the permutation in order.
+        This is counted by 'cnt' and thus the permutation sign is given by (-1)**(cnt % 2)
+        Parameters
+        ----------
+        l
+
+        Returns
+        -------
+
+        """
+        if len(l) <= 1:
+            return 1
+        assert all([isinstance(i, int) for i in l]), f"Entries have to be integers not {type(l[0])}"
+        # check that all entries are different
+        n_entry= [l.count(i) for i in l]
+        if any([i > 1 for i in n_entry]):
+            logger.warning(f"Some numbers appear at least twice in {l}.")
+            return
+        n = len(l)
+        cnt = 0
+        for i in range(n):
+            for j in range(i + 1, n):
+                if (l[i] > l[j]):
+                    cnt += 1
+        return (-1) ** (cnt % 2)
+
+    def from_lr_tableaux(self, op_class: OpClass):
+        """Construct from left- and (conjugated) right-handed tableaux for given class and return the overall sign."""
+        N = op_class.N
+        lorentz_tab, sign = Lorentz_Tableau([], op_class), 1
+        # print(f"{self.r_tab:lp}")
+        # print(f"{self.l_tab:lp}")
+        for r_col in self.r_tab.iter_col():
+            r_col_fp = [ele[0].lp.fp for ele in r_col.iter_row()]
+            col = [j for j in range(1, N + 1) if j not in r_col_fp]
+            lt = Lorentz_Tableau([[i] for i in col], op_class)
+            lorentz_tab.append_col(lt)
+            sign *= LR_Tableaux.permutation_sign(col + r_col_fp) # Note: This is not the same as r_col_fp + col! (see dim 8 Paper p. 20)
+
+        for l_col in self.l_tab.iter_col():
+            l_col_fp = [ele[0].lp.fp for ele in l_col.iter_row()]
+            lt = Lorentz_Tableau([[i] for i in l_col_fp], op_class)
+            lorentz_tab.append_col(lt)
+
+        # print(f"{lorentz_tab:nice}")
+
+        return lorentz_tab, sign
 
     def ibp(self, derivative: LP_Index, N: int):
         """

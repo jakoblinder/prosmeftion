@@ -316,31 +316,44 @@ def replace_eoms(single_terms):
 
     return single_terms
 
-def ibp_and_schouten_ids(single_terms):
+def ibp_and_schouten_ids(single_terms, max_dim: int):
     """
     Apply the integration by parts and Schouten identities to the lorentz structure.
     Parameters
     ----------
     single_terms
+    max_dim
 
     Returns
     -------
 
     """
-    # term_list = []  # flat list of Summands, which is later sorted by their types
+    term_list = []  # flat list of Summands, which is later sorted by their types
     for type in single_terms.values():
         for term_mass_dim in type.values():
             for summand in term_mass_dim:
+                if summand.d < max_dim:  # FIXME: This is to easy! Also terms with less dimension need to be fixed. Nevertheless, the lorentz_tab cannot be determined for those, since eoms cannot be removed.
+                    term_list.append(summand)
+                    continue
                 skip_schouten_ids = False
                 skip_ibp_ids = False
                 if not summand.nD: skip_ibp_ids = True  # No ibp necessary if no derivative is there. -> Schouten id are still necessary!
 
-                print(f"{summand:c}")
-
                 lr = summand.lr
                 if lr.l_tab.ncols() < 2 and lr.r_tab.ncols() < 2: skip_schouten_ids = True  # No Schouten ids can be applied when their are less then 2 epsilon tensors
-                if skip_schouten_ids and skip_ibp_ids: continue  # Neither the Schouten nor the ibp relations need to be applied.
+                if skip_schouten_ids and skip_ibp_ids:
+                    # Neither the Schouten nor the ibp relations need to be applied.
+                    term_list.append(summand)
+                    continue
 
+                print(f"{summand:c}")
+
+                print(f"{lr.r_tab:fp}")
+                print(f"{lr.l_tab:fp}")
+                lorentz_tab, sign = lr.from_lr_tableaux(summand.op_class)
+                print(f"{lorentz_tab:nice}")
+                print(f"Is SSYT? -> {lorentz_tab.is_ssyt}")
+                print("-----------------------")
                 # # Change the derivative structure by only changing the tableau indices (no sign change):
                 # spec_derivative = object()
                 # lr_copy = lr.copy()

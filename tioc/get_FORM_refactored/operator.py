@@ -168,11 +168,49 @@ class Operator_Model(Index):
 
     @property
     def expr(self):
+        def op_indices_in_indstructure_order(ind_structures, op_indices):
+            """
+            Get an allowed list of indices for an operator or a tensor and return it order
+            as necessary by the demanded index structure.
+
+            Parameters
+            ----------
+            ind_structure
+                Possible index structures of the operator or tensor.
+            op_indices
+                Non-Derivative indices of the operator or tensor.
+            Returns
+            -------
+
+            """
+            op_indices = op_indices.copy()
+            n_indices = len(op_indices)
+            ind_structure_op = [index.typ for index in op_indices]
+            desired_ind_structure = []
+            for ind_structure in ind_structures:
+                if set(ind_structure_op) == set(ind_structure):
+                    desired_ind_structure = ind_structure
+            assert desired_ind_structure, f"It is not possible for the given indices {op_indices} to match any of the desired index structures {ind_structures}"
+            ordered_indices = []
+            for des_ind_typ in desired_ind_structure:
+                for i, index in enumerate(op_indices):
+                    if index.typ == des_ind_typ:
+                        ordered_indices.append(op_indices.pop(i))
+                        break
+
+            assert len(ordered_indices) == n_indices
+
+            return ordered_indices
+
         if type(self) == Tensor:
             expr = self.name
-            expr += f"({','.join(map(repr, self.indices))})"
+            ind_structure = op_config["tensors"][self.non_conj_name]["index_structure"]
+            ordered_indices = op_indices_in_indstructure_order(ind_structure, self.indices)
+            expr += f"({','.join(map(repr, ordered_indices))})"  # self.indices
         elif type(self) == Field:
             cov = op_config['fermionfields']['D']['mathematica']['cov']
+            bosonsANDfermions = {**op_config["bosonfields"], **op_config["fermionfields"]}
+            ind_structure = bosonsANDfermions[self.non_conj_name]["index_structure"]
             expr = ""
             if self.nD > 0:
                 # Term contain derivatives
@@ -192,7 +230,9 @@ class Operator_Model(Index):
             n_brackets = self.nD * ")"
             expr += self.name
             non_Derivative_indices = [nonD_index for nonD_index in self.indices if not nonD_index.derIndex]
-            expr += f"({','.join(map(str, non_Derivative_indices))})"
+            ordered_indices = op_indices_in_indstructure_order(ind_structure, non_Derivative_indices)
+            # FIXME: The indices has to be set in the correct order!
+            expr += f"({','.join(map(str, ordered_indices))})"  # non_Derivative_indices
 
             expr += n_brackets
 
@@ -226,7 +266,7 @@ class Operator_Model(Index):
 
             # Check that index structure matches:
             if ind_structure_op not in ind_structure:
-                structure_match = [[1 if ind_structure_op[i] == should_index else 0 for i, should_index in enumerate(ind_struc)] for ind_struc in ind_structure]
+                structure_match = [[1 if ind_structure_op[i] == should_index else 0 for i, should_index in enumerate(ind_struc)] if len(ind_struc) == len(ind_structure_op) else [0] for ind_struc in ind_structure]
                 dummy_in_indices = [True if index_typ == "dummy" else False for index_typ in ind_structure_op]
                 if all(dummy_in_indices):
                     # Since dummy indices should in general only occur in tensors and those are rewritten such that
@@ -435,6 +475,22 @@ class Field(Operator_Model):
 
         """
         nD = 1
+        # Note: Each derIndex consisting of only a digit should be rewritten in terms of an object() in order to avoid ambiguities.
+        for derIndexLsl in self.indices['Lsl']:
+            if derIndexLsl.derIndex and type(derIndexLsl.derIndex) is int:
+                lsl_nD = derIndexLsl.derIndex
+                new_nD = object()
+                derIndexLsl.derIndex = new_nD
+                derIndexLsl.lp = LP_Index(self.field_pos, new_nD)
+                found = 1
+                # Find dual index with the same derIndex.
+                for derIndexUsldot in self.indices['Usldot']:
+                    if derIndexUsldot.derIndex == lsl_nD:
+                        derIndexUsldot.derIndex = new_nD
+                        derIndexUsldot.lp = LP_Index(self.field_pos, new_nD)
+                        found += 1
+                assert found == 2
+
         # old_max = max([index.derIndex for index in self.indices])  # old maximum number of derivatives
         der_indices = list(set([index.derIndex for index in self.indices if index.derIndex]))
         # found = {i: 0 for i in range(1, old_max + 1)}
@@ -452,6 +508,5 @@ class Field(Operator_Model):
                     found[i] += 1
             if found[i] == 2: nD += 1
 
-        assert all([i in (0, 2) for i in
-                    found.values()]), "Something went wrong in the replacement of derIndex of the derivative indices."
+        assert all([i in (0, 2) for i in found.values()]), "Something went wrong in the replacement of derIndex of the derivative indices."
 

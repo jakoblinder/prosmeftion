@@ -473,31 +473,31 @@ class Summand(Summand_Model):
             # Note: The Hypercharges of H(gauge1) is (1/2) and that of [H+](gauge1) is (-1/2).
             # Note: Epsilon in W(gauge, gauge) H(gauge) are there, because two fundamental indices are contracted.
 
-            #  Left handed field strength tensor: FL(Lsl1, Lsl2, H(gauge1))
-            id_statement1 = f"FL({lsl1}, {lsl2}, {higgs}({gauge1}?gauge)) ="
+            #  Left-handed field strength tensor: FL(Lsl1, Lsl2, H(gauge1))
+            id_statement1 = f"FL({lsl1}?Lsl, {lsl2}?Lsl, {higgs}({gauge1}?gauge)) ="
             id_statement1 += f" + ({g1}/2) * {bl}({lsl1},{lsl2}) * {higgs}({gauge1})"
-            id_statement1 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wl}({lsl1},{lsl2},{gauge2},{gauge3}) * {su2eps}({gauge3},{gauge4}) * {higgs}({gauge4})"
+            id_statement1 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wl}({gauge2},{gauge3},{lsl1},{lsl2}) * {su2eps}({gauge3},{gauge4}) * {higgs}({gauge4})"
 
             id_statements.append(f"id once ifmatch -> 4 {id_statement1:s};\n")
 
-            #  Left handed field strength tensor: FL(Lsl1, Lsl2, [H+](gauge1))
-            id_statement2 = f"FL({lsl1}, {lsl2}, {higgs_dagger}({gauge1}?gauge)) ="
+            #  Left-handed field strength tensor: FL(Lsl1, Lsl2, [H+](gauge1))
+            id_statement2 = f"FL({lsl1}?Lsl, {lsl2}?Lsl, {higgs_dagger}({gauge1}?gauge)) ="
             id_statement2 += f" + (- {g1}/2) * {bl}({lsl1},{lsl2}) * {higgs_dagger}({gauge1})"
-            id_statement2 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wl}({lsl1},{lsl2},{gauge2},{gauge3}) * {su2eps}({gauge3},{gauge4}) * {higgs_dagger}({gauge4})"
+            id_statement2 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wl}({gauge2},{gauge3},{lsl1},{lsl2}) * {su2eps}({gauge3},{gauge4}) * {higgs_dagger}({gauge4})"
 
             id_statements.append(f"id once ifmatch -> 4 {id_statement2:s};\n")
 
-            #  Right handed field strength tensor: FR(Usldot1, Usldot2, H(gauge1))
-            id_statement1 = f"FR({usldot1}, {usldot2}, {higgs}({gauge1}?gauge)) ="
+            #  Right-handed field strength tensor: FR(Usldot1, Usldot2, H(gauge1))
+            id_statement1 = f"FR({usldot1}?Usldot, {usldot2}?Usldot, {higgs}({gauge1}?gauge)) ="
             id_statement1 += f" + ({g1}/2) * {br}({usldot1},{usldot2}) * {higgs}({gauge1})"
-            id_statement1 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wr}({usldot1},{usldot2},{gauge2},{gauge3}) * {su2eps}({gauge3},{gauge4}) * {higgs}({gauge4})"
+            id_statement1 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wr}({gauge2},{gauge3},{usldot1},{usldot2}) * {su2eps}({gauge3},{gauge4}) * {higgs}({gauge4})"
 
             id_statements.append(f"id once ifmatch -> 4 {id_statement1:s};\n")
 
-            #  Right handed field strength tensor: FR(Usldot1, Usldot2, [H +](gauge1))
-            id_statement2 = f"FR({usldot1}, {usldot2}, {higgs_dagger}({gauge1}?gauge)) ="
+            #  Right-handed field strength tensor: FR(Usldot1, Usldot2, [H +](gauge1))
+            id_statement2 = f"FR({usldot1}?Usldot, {usldot2}?Usldot, {higgs_dagger}({gauge1}?gauge)) ="
             id_statement2 += f" + (- {g1}/2) * {br}({usldot1},{usldot2}) * {higgs_dagger}({gauge1})"
-            id_statement2 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wr}({usldot1},{usldot2},{gauge2},{gauge3}) * {su2eps}({gauge3},{gauge4}) * {higgs_dagger}({gauge4})"
+            id_statement2 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wr}({gauge2},{gauge3},{usldot1},{usldot2}) * {su2eps}({gauge3},{gauge4}) * {higgs_dagger}({gauge4})"
 
             id_statements.append(f"id once ifmatch -> 4 {id_statement2:s};\n")
 

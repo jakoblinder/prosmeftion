@@ -7,10 +7,13 @@ from pathlib import Path
 
 from yaml import safe_load
 
-from tioc import CONFIG_PATH, get_basis
-from tioc.lor_projection import ibp_and_schouten_ids
-from tioc.projection import tex_terms_sorted_sun_projection  # , main
-from tioc.sun_projection import sun_projection, replace_sun_tensors_by_projected_ones
+from tioc import CONFIG_PATH, FORM_GENERAL_PATH, n_der, get_basis
+from tioc.general import form_declarations
+
+from tioc.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
+from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection  # , main
+from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
+from tioc.get_FORM_refactored.tableau import test
 
 # configure logger
 timestamp = datetime.now()
@@ -53,10 +56,10 @@ def number_terms(single_terms):
 def main(max_dim = 6):
     # get basis up to max_dim mass dimension
     basis = get_basis(max_dim)
-    # bs_file = args.matched.resolve()  # "exampleOutputBS.m"
-    #
-    # with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
-    #     file.write(form_declarations(n_der))
+    bs_file = args.matched.resolve()  # "exampleOutputBS.m"
+
+    with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
+        file.write(form_declarations(n_der))
     #
     # terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
     # del bs_file
@@ -123,7 +126,18 @@ def main(max_dim = 6):
 
     # TODO: Apply the integration by parts and Schouten identities to the lorentz structure.
     # test()
-    single_terms = ibp_and_schouten_ids(single_terms, max_dim)
+    # Apply ibp and schouten ids up to the point where all tableaus, are SSYT:
+    # Note due to the replacement of contracted derivative on the second and third field,
+    # this has to be done iteratively while removing always the EOMs before the next iteration
+    # while True:
+    single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim)
+    single_terms = replace_eoms(single_terms)
+    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_test.p", "wb"))
+    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_test.p", "rb"))
+    # Remove double terms:
+    single_terms = remove_doubles(single_terms)
+        # if ssyt:
+        #     break
 
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, basis, max_dim)

@@ -308,7 +308,7 @@ def replace_eoms(single_terms):
 
                 terms = get_terms(TERM_PATH / "term_with_less_eom.h", as_one=False)
                 term_list.append(terms)
-                op = op_config
+                # op = op_config
                 print("---------------")
 
     term_list = [term for short_list in term_list for term in short_list]
@@ -328,13 +328,11 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
     -------
 
     """
+    term_check = []  # This checks whether all terms are already Young tableaux or not.
     term_list = []  # flat list of Summands, which is later sorted by their types
     for type in single_terms.values():
         for term_mass_dim in type.values():
             for summand in term_mass_dim:
-                if summand.d < max_dim:  # FIXME: This is to easy! Also terms with less dimension need to be fixed. Nevertheless, the lorentz_tab cannot be determined for those, since eoms cannot be removed.
-                    term_list.append(summand)
-                    continue
                 skip_schouten_ids = False
                 skip_ibp_ids = False
                 if not summand.nD: skip_ibp_ids = True  # No ibp necessary if no derivative is there. -> Schouten id are still necessary!
@@ -346,14 +344,37 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
                     term_list.append(summand)
                     continue
 
+                # print(f"{lr.r_tab:fp}")
+                # print(f"{lr.l_tab:fp}")
+
                 print(f"{summand:c}")
 
-                print(f"{lr.r_tab:fp}")
-                print(f"{lr.l_tab:fp}")
-                lorentz_tab, sign = lr.from_lr_tableaux(summand.op_class)
-                print(f"{lorentz_tab:nice}")
-                print(f"Is SSYT? -> {lorentz_tab.is_ssyt}")
-                print("-----------------------")
+                tabs = summand.lr.remove_ibp(summand.op_class.N)
+
+                if not skip_schouten_ids:
+                    tabs_without_Schouten = []
+                    # TODO: Schouten ids for tabs!
+                    for lr_with_Schouten in tabs:
+                        tabs_without_Schouten += lr_with_Schouten[0].remove_schouten()
+
+                for new_lr in tabs:
+                    print(f"{new_lr[0]:lp}")
+                    term = summand.get_term_from_lr_tabs(new_lr[0])
+                    print(f"{term:c}")
+                    term_list.append(term)
+
+                for new_lr in tabs:
+                    if summand.d != 4 and summand.d == max_dim:  # FIXME: The part 'summand.d == max_dim' can be removed when EOMs are removed via fieldrefefinitions.
+                        if new_lr[1]:
+                            # EOMs might still occur
+                            term_check.append(False)
+                        elif lTs := new_lr[0].from_lr_tableaux(summand.op_class):
+                            lorentz_tab, sign = lTs[0], lTs[1]
+                            term_check.append(lorentz_tab.is_ssyt)
+                        else:
+                            term_check.append(False)
+                    # assert lorentz_tab.is_ssyt, f"At this point this should be a SSYT, but it is:\n{lorentz_tab:nice}"
+                print("=======================================")
                 # # Change the derivative structure by only changing the tableau indices (no sign change):
                 # spec_derivative = object()
                 # lr_copy = lr.copy()
@@ -390,5 +411,7 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
                 # print(f"{term:c}")
                 # print("=> Old term stays the same!")
 
+    term_list_Term = [Term([term], term.name) for term in term_list]
+    single_terms = get_type(term_list_Term)
 
-    return single_terms
+    return single_terms, all(term_check)

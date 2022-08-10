@@ -615,9 +615,9 @@ def form_fieldstrengthtensorEOMidentification(n_der: int):
                     else:
                         func += f"{cov:s}(Lsl{i:d}?Lsl, Usldot{i:d}?Usldot, "
                 if fst_permutation == 1:
-                    func += f"`field'(?a, Lsl{field_ind1:d}?LUsl[i{field_ind1:d}sl], Lsl{field_ind2:d}?, ?b)"
+                    func += f"`field'(?a, Lsl{field_ind1:d}?LUsl[i{field_ind1:d}sl], Lsl{field_ind2:d}?Lsl, ?b)"
                 elif fst_permutation == 2:
-                    func += f"`field'(?a, Lsl{field_ind2:d}?, Lsl{field_ind1:d}?LUsl[i{field_ind1:d}sl], ?b)"
+                    func += f"`field'(?a, Lsl{field_ind2:d}?Lsl, Lsl{field_ind1:d}?LUsl[i{field_ind1:d}sl], ?b)"
                 func += der * ")"
                 func += " = "
                 if fp_minus_one_RHS:

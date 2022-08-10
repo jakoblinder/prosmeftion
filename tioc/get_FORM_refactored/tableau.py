@@ -2,8 +2,8 @@ import logging
 import sys
 from collections.abc import MutableSequence
 from dataclasses import dataclass
-from itertools import zip_longest
-from typing import Iterator, List, Tuple, Dict
+from itertools import permutations, zip_longest
+from typing import Iterator, List, Tuple, Dict, Union
 from sage.combinat.permutation import Permutation
 from sage.combinat.skew_tableau import SkewTableau
 
@@ -423,7 +423,13 @@ class Young_Tableau(Tableau):
             self.tableau = Young_List(tableau)
 
     def __repr__(self):
-        return self.tableau.__repr__()
+        if isinstance(self.tableau[0, 0], Index):
+            if self.tableau[0, 0].lp:
+                # create List[List] which contains lp entries instead of indices
+                tab = [[f"{ele.lp}({ele})" for ele in row] for row in self.tableau.list]
+                return repr(tab)
+        else:
+            return self.tableau.__repr__()
 
     def __format__(self, key):
         if key == "lp" or key == "fp":
@@ -443,7 +449,7 @@ class Young_Tableau(Tableau):
             return self.tableau.__format__(key)
 
     def __str__(self):
-        return super().__str__()
+        return self.__repr__()
 
     def __getitem__(self, ii):
         tab = self.tableau[ii]
@@ -596,6 +602,57 @@ class Young_Tableau(Tableau):
             return tab, sign
         else:
             return self, 1
+
+    def contains(self, num: Union[int, Tuple]) -> bool:
+        """
+        Returns whether the tableau contains the given number.
+        """
+        if not self:
+            return False
+        elif isinstance(self[0,0], Index):
+            if isinstance(num, int):
+                fps = [[ele.lp.fp for ele in row] for row in self]
+                return any(num in row for row in fps)
+            elif isinstance(num, tuple) or isinstance(num, list) and isinstance(self[0,0], Index):
+                # consider all orderings of the tuple indices
+                perms = list(permutations(list(num)))
+                # iterate over all possible permutations
+                for p in perms:
+                    found = []
+                    # iterate over all columns -> this is most of the time just one column
+                    for col in self.iter_col():
+                        for j, row in enumerate(col):
+                            found.append(row[0].lp.fp == p[j])
+                    if all(found):
+                        return True
+                # If the algorithm comes up to this point, nothing was found
+                return False
+            else:
+                logger.error(f"The type {type(num)} is not support for an this operation.")
+                sys.exit("STOP")
+        else:
+            if isinstance(num, int):
+                return any(num in row for row in self)
+            else:
+                logger.error(f"The type {type(num)} is not support for an this operation.")
+                sys.exit("STOP")
+
+    def is_in(self, num: Union[int, Tuple]) -> Union[bool, int]:
+        """
+        Return whether the tableau contains the given number and if it contains the number, it returns the index of
+        the column (starting from 0).
+        """
+        found = False
+        for i, col in enumerate(self.iter_col()):
+            if col.contains(num):
+                found = True
+                position = i
+                break
+
+        if found:
+            return position
+        else:
+            return False
 
 # Examples:
 # b = [[1,2,4,5],[3,1,4],[2,3],[3,4]]
@@ -755,7 +812,6 @@ class Lorentz_Tableau(LorentzTableau):
             self.tableau = Young_List(tableau)
 
         self.op_class = op_class
-        assert len(self) in (0,2) # each epsilon tensor only has 2 indices
 
     def __repr__(self):
         return self.tableau.__repr__()

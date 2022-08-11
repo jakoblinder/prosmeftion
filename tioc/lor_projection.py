@@ -351,19 +351,26 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
 
                 tabs = summand.lr.remove_ibp(summand.op_class.N)
 
+                tabs_without_Schouten = []
                 if not skip_schouten_ids:
-                    tabs_without_Schouten = []
+                    # Schouten identities may occur
                     # TODO: Schouten ids for tabs!
                     for lr_with_Schouten in tabs:
-                        tabs_without_Schouten += lr_with_Schouten[0].remove_schouten()
+                        if lr_with_Schouten[1]:
+                            # EOMs might still occur
+                            tabs_without_Schouten.append(lr_with_Schouten)
+                        else:
+                            tabs_without_Schouten += [(lr_without_Schouten, False) for lr_without_Schouten in lr_with_Schouten[0].remove_schouten()]
+                else:
+                    tabs_without_Schouten = tabs
 
-                for new_lr in tabs:
+                for new_lr in tabs_without_Schouten:
                     print(f"{new_lr[0]:lp}")
                     term = summand.get_term_from_lr_tabs(new_lr[0])
                     print(f"{term:c}")
                     term_list.append(term)
 
-                for new_lr in tabs:
+                for new_lr in tabs_without_Schouten:
                     if summand.d != 4 and summand.d == max_dim:  # FIXME: The part 'summand.d == max_dim' can be removed when EOMs are removed via fieldrefefinitions.
                         if new_lr[1]:
                             # EOMs might still occur

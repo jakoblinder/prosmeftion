@@ -129,15 +129,15 @@ def main(max_dim = 6):
     # Apply ibp and schouten ids up to the point where all tableaus, are SSYT:
     # Note due to the replacement of contracted derivative on the second and third field,
     # this has to be done iteratively while removing always the EOMs before the next iteration
-    # while True:
-    single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim)
-    single_terms = replace_eoms(single_terms)
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_test.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_test.p", "rb"))
-    # Remove double terms:
-    single_terms = remove_doubles(single_terms)
-        # if ssyt:
-        #     break
+    while True:
+        single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim)
+        single_terms = replace_eoms(single_terms)
+        pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_test.p", "wb"))
+        # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_test.p", "rb"))
+        # Remove double terms:
+        single_terms = remove_doubles(single_terms)
+        if ssyt:
+            break
 
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, basis, max_dim)

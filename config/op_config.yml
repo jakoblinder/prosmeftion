@@ -114,6 +114,16 @@ tensors:
         -
           - Usldot
           - Lsldot
+    "[flavdK]":
+      description: "Kronecker-delta for flavor indices."
+      tex: \delta
+      mathematica:
+        flavdK: "[flavdK]"
+      autoeft:
+        "[flavdK]": "d_"
+      index_structure:
+        - flav
+        - flav
     T:
       description: "Generator of SU(2)-group."
       tex: \mathrm{T}

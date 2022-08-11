@@ -1,14 +1,14 @@
 *--#[ tensors :
-CFunction yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [su2dK], [su3dK], [sl2CdK], T, gamma, TSU2, TSU3;
+CFunction yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [su2dK], [su3dK], [sl2CdK], [flavdK], T, gamma, TSU2, TSU3;
 * Indices and functions for derivatives in SL2C notation.
 CFunction sigma, sigmabar;
 CFunction sigma2, sigmabar2;
-* Auxiliary antisymmtric epsilons, used in combination with replace_.
+* Auxiliary antisymmetric epsilons, used in combination with replace_.
 CFunction [su2epsA](antisymmetric), [su3epsA](antisymmetric), [sl2CepsA](antisymmetric);
 
 * Declare Kronecker Delta symbol for Sl2C Indices, because built in can not handle upper and lower (un-)dottet indices.
 * Since two indices are also symmetric when they are cyclic and vice versa and pattern matching is not allowed for symmetric function but for cyclic it is, [sl2CdK] is declared as cyclic.
-CFunction [su2dK](cyclic), [su3dK](cyclic), [sl2CdK](cyclic);
+CFunction [su2dK](cyclic), [su3dK](cyclic), [sl2CdK](cyclic), [flavdK](cyclic);
 
 *--#] tensors :
 
@@ -38,8 +38,10 @@ Set spinorsc: lc, ec, [e_Cc], uc, [u_Cc], bc, [d_Cc], qc;
 Set spinorsAdjc: lbarc, ebarc, [e_C+c], ubarc, [u_C+c], bbarc, [d_C+c], qbarc;
 Set spinorsAllc: lc, ec, [e_Cc], uc, [u_Cc], bc, [d_Cc], qc, lbarc, ebarc, [e_C+c], ubarc, [u_C+c], bbarc, [d_C+c], qbarc;
 
-* D2 = D_mu * D^mu ;
+* D2 = D_mu * D^mu:
 Function D2;
+* Intern abbreviation for equation of motion:
+Function EOM;
 * Total field strength tensor, necessary for EOM substitutions:
 Function FL, FR;
 

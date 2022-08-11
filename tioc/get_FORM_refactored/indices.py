@@ -156,7 +156,7 @@ class Indices_Model(Index, MutableMapping):
         if not isinstance(key, int) or (isinstance(key, int) and key < 0):
             logger.error("Key has to be of typ int and >= 0.")
             sys.exit("STOP")
-        logger.warning(f"The index {self.indices[key]:s} will be deleted.")
+        logger.debug(f"The index {self.indices[key]:s} will be deleted.")
         indices = list(self.indices)
         del indices[key]
         self.indices = tuple(indices)
@@ -172,9 +172,9 @@ class Indices_Model(Index, MutableMapping):
             logger.error("The key where the value is inserted has to be of type integer.")
             sys.exit("STOP")
         if key == len(self):
-            logger.warning(f"The index {val:s} will be appended.")
+            logger.debug(f"The index {val:s} will be appended.")
         else:
-            logger.warning(f"The index {val:s} will be inserted.")
+            logger.debug(f"The index {val:s} will be inserted.")
         indices = list(self.indices)
         indices.insert(key, val)
         self.indices = tuple(indices)

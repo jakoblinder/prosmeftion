@@ -423,7 +423,9 @@ class Young_Tableau(Tableau):
             self.tableau = Young_List(tableau)
 
     def __repr__(self):
-        if isinstance(self.tableau[0, 0], Index):
+        if not self:
+            return repr([])
+        elif isinstance(self.tableau[0, 0], Index):
             if self.tableau[0, 0].lp:
                 # create List[List] which contains lp entries instead of indices
                 tab = [[f"{ele.lp}({ele})" for ele in row] for row in self.tableau.list]

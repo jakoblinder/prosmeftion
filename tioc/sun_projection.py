@@ -367,6 +367,7 @@ def remove_doubles(single_terms):
                             contracted = {index.expr: 0 for index in dummy_indices}
                             dummy_to_new_index = {}
 
+                            # Note: In the following, only dummy indices in the tensors are substituted.
                             for tensor in summand.tensors:
                                 for i, index in enumerate(tensor.indices):
                                     if index.is_in(dummy_indices):

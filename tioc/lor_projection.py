@@ -276,8 +276,6 @@ def replace_eoms(single_terms):
 
                 form += "label 4;\n"
 
-
-
                 # Symplify expressions
                 form += "\n"
                 form += "* Symplify expression\n"
@@ -285,6 +283,10 @@ def replace_eoms(single_terms):
                 form += "#call simplifyEpsSU2\n"
                 form += "#call simplifyEpsSU3\n"
 
+                form += ".sort\n"
+                form += "#call simplifySymmetricFieldstrengthtensor\n"
+
+                form += ".sort\n"
                 form += "\n"
                 form += "* Write derivatives implicit with indices inside of fields.\n"
                 form += "#call derivativeasIndex\n"
@@ -329,7 +331,7 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
 
     """
     term_check = []  # This checks whether all terms are already Young tableaux or not.
-    term_list = []  # flat list of Summands, which is later sorted by their types
+    term_list  = []  # flat list of Summands, which is later sorted by their types
     for type in single_terms.values():
         for term_mass_dim in type.values():
             for summand in term_mass_dim:
@@ -375,10 +377,14 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
                         if new_lr[1]:
                             # EOMs might still occur
                             term_check.append(False)
+                            print("False: EOM")
                         elif lTs := new_lr[0].from_lr_tableaux(summand.op_class):
                             lorentz_tab, sign = lTs[0], lTs[1]
                             term_check.append(lorentz_tab.is_ssyt)
+                            if not lorentz_tab.is_ssyt:
+                                print("False: No SSYT")
                         else:
+                            print("False: else")
                             term_check.append(False)
                     # assert lorentz_tab.is_ssyt, f"At this point this should be a SSYT, but it is:\n{lorentz_tab:nice}"
                 print("=======================================")

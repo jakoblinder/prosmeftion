@@ -129,8 +129,10 @@ def main(max_dim = 6):
     # Apply ibp and schouten ids up to the point where all tableaus, are SSYT:
     # Note due to the replacement of contracted derivative on the second and third field,
     # this has to be done iteratively while removing always the EOMs before the next iteration
+    number_iterations = 0
     while True:
         single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim)
+        number_iterations += 1
         single_terms = replace_eoms(single_terms)
         pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_test.p", "wb"))
         # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_test.p", "rb"))
@@ -139,15 +141,14 @@ def main(max_dim = 6):
         if ssyt:
             break
 
+    loger.info(f"After {number_iterations:d} iterations of the ibp algorithm all ibp relations and Schouten identities are applied.")
+
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, basis, max_dim)
 
     single_terms = replace_sun_tensors_by_projected_ones(single_terms)
 
-    nterms_after_sun_projection = 0
-    for terms in single_terms.values():
-        for terms_n in terms.values():
-            nterms_after_sun_projection += len(terms_n)
+    nterms_after_sun_projection = number_terms(single_terms)
 
     logger.info(f"Terms after SUN projection: {nterms_after_sun_projection:d}")
 

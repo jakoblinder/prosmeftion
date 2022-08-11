@@ -577,7 +577,7 @@ def form_fieldstrengthtensorEOMidentification(n_der: int):
     wl = op_config["bosonfields"]["WL"]["mathematica"]["WL"]
     wr = op_config["bosonfields"]["WL"]["mathematica"]["conj[WL]"]
 
-    # Replace epsilon contracted with derivative and Q, L, d, u or e by EOM:
+    # Replace epsilon contracted with derivative and BL or WL by EOM:
     id_statements = []
     form += "* Replace epsilon contracted with derivative and BL or WL by EOM:\n"
     form += "#do field = {" + f"{bl}, {wl}" + "}\n"
@@ -726,6 +726,29 @@ def form_fieldstrengthtensorEOMidentification(n_der: int):
 
     # form += "label 2;\n"
     form += "\n"
+
+    return form
+
+@create_procedure(FORM_GENERAL_PATH)
+def form_simplifySymmetricFieldstrengthtensor():
+    """
+    Since the SL2C-indices of a field strength tensor are symmetric, a contraction with an epsilon tensor yields a zero.
+    Returns
+    -------
+
+    """
+    sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
+    bl = op_config["bosonfields"]["BL"]["mathematica"]["BL"]
+    br = op_config["bosonfields"]["BL"]["mathematica"]["conj[BL]"]
+    # wl = op_config["bosonfields"]["WL"]["mathematica"]["WL"]
+    # wr = op_config["bosonfields"]["WL"]["mathematica"]["conj[WL]"]
+
+    form = ""
+    form += "* Discard fieldstrengthtensor which are contracted with an SL2C epsilontensor, because the SL2C indices are symmetric:\n"
+    form += f"id {bl}?Field(?a, Lsl1?LUsl[i1], Lsl2?LUsl[i2], ?b) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"  # The set Field contains all Field strength tensors, LH and RH.
+    form += f"id {bl}?Field(?a, Lsl2?LUsl[i2], Lsl1?LUsl[i1], ?b) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
+    form += f"id {br}?Field(?a, Usldot1?ULsldot[i1], Usldot2?ULsldot[i2], ?b) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
+    form += f"id {br}?Field(?a, Usldot2?ULsldot[i2], Usldot1?ULsldot[i1], ?b) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;"
 
     return form
 
@@ -1149,7 +1172,7 @@ def form_declarations(n_der: int):
     form += "* Indices and functions for derivatives in SL2C notation.\n"
     form += "CFunction sigma, sigmabar;\n"
     form += "CFunction sigma2, sigmabar2;\n"
-    form += "* Auxiliary antisymmtric epsilons, used in combination with replace_.\n"
+    form += "* Auxiliary antisymmetric epsilons, used in combination with replace_.\n"
     eps = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if
            "eps" in tensor_name]
     form += f"CFunction {', '.join(map(lambda text: get_antisymEps(text) + '(antisymmetric)', eps))};\n"  # sl2CepsA(antisymmetric), su2epsA(antisymmetric), su3epsA(antisymmetric)
@@ -1265,6 +1288,7 @@ def form_declarations(n_der: int):
     form_antisymDerivative(n_der)
     form_spinorEOMidentification(n_der)
     form_fieldstrengthtensorEOMidentification(n_der)
+    form_simplifySymmetricFieldstrengthtensor()
     form_derivativeasIndex(n_der)
     form_indexasDerivative(n_der)
 

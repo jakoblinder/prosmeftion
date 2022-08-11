@@ -610,7 +610,7 @@ def replace_sun_tensors_by_projected_ones(single_terms):
                         sun_tensors = {}
                         for sun_group in [group for group in sun_proj_tensors.keys() if sun_proj_tensors[group]] :  # term_mass_dim.sun_projection_matrix.keys():
                             del term.tensors[sun_group]
-                            sun_tensors[sun_group] = [f"({str(proj_coeff)})*{sun_proj_tensors[sun_group][i]:abb}" for i, proj_coeff in enumerate(term.projected_tensors[sun_group]) if proj_coeff]
+                            sun_tensors[sun_group] = [f"({str(proj_coeff)})*{sun_proj_tensors[sun_group][i]:abb}" for i, proj_coeff in enumerate(term.projected_tensors[sun_group])]  # if proj_coeff
                         all_tensors = [f"({'+'.join(sui_tensors)})" for sui_tensors in sun_tensors.values()]
                         exprs.append(f"{'*'.join(all_tensors)}*{term:c}")
                     name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])

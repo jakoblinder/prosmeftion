@@ -144,7 +144,36 @@ class LR_Tableaux():
         return (-1) ** (cnt % 2)
 
     def from_lr_tableaux(self, op_class: OpClass):
-        """Construct from left- and (conjugated) right-handed tableaux for given class and return the overall sign."""
+        """
+        Construct lorentz tableau from left- and (conjugated) right-handed tableaux for given class.
+        Note: For undotted epsilon tensors the normal order, i.e. the order of the rows in the corresponding tableaux
+        is ascending w.r.t. to the first entry (and the field index in this entry) in each row. Further also from
+        top to bottom in each row the field indices are ascending.
+        The same is done for the dotted epsilon tensors and the corresponding right-handed tableau. If one construct
+        from such an ordered right-handed tableau like for example
+        -------
+        | 1| 2|
+        -------
+        | 3| 4|
+        -------
+        an Lorentz tableau, this would look like
+        -------
+        | 2| 1|
+        -------
+        | 4| 3|
+        -------.
+        I.e. the Lorentz tableau is not SSYT only due to the normal ordering. If one changes the to columns in the
+        Lorentz tableau it becomes a SSYT.
+        Therefore, in the following construction of a Lorentz tableau, the ordering of the columns in the right-handed
+        tableau is reversed!
+        Parameters
+        ----------
+        op_class
+
+        Returns
+        -------
+            Lorentz tableau and the overall sign.
+        """
         N = op_class.N
         lorentz_tab, sign = Lorentz_Tableau([], op_class), 1
         # print(f"{self.r_tab:lp}")
@@ -161,13 +190,12 @@ class LR_Tableaux():
                 # There appeared twice the same number and thus the tableau cannot be SSYT:
                 return False
 
+        lorentz_tab = lorentz_tab.reverse_cols()
+
         for l_col in self.l_tab.iter_col():
             l_col_fp = [ele[0].lp.fp for ele in l_col.iter_row()]
             lt = Lorentz_Tableau([[i] for i in l_col_fp], op_class)
-            try:
-                lorentz_tab.append_col(lt)
-            except AssertionError:
-                pass
+            lorentz_tab.append_col(lt)
 
         # print(f"{lorentz_tab:nice}")
 
@@ -920,6 +948,63 @@ class LR_Tableaux():
         return tabs
 
     def remove_schouten(self):
-        return []
+        """
+        Remove Schouten identities, i.e. Substitute in l_tab and r_tab 2 epsilon tensors with indices of the type:
+        ---------     ---------   ---------
+        |1  |2  |     |1  |3  |   |1  |2  |
+        --------- = - --------- + ---------
+        |4  |3  |     |2  |4  |   |3  |4  |
+        ---------     ---------   ---------
+
+
+        Returns
+        -------
+
+        """
+        def schouten(tab: Young_Tableau):
+            """Schouten identities for one epsilon tensor."""
+            if tab.ncols() < 2:
+                return [(tab.copy(), 1)]
+            else:
+                tabs = []
+                max_col = tab.ncols()  # number of columns
+                for m in range(max_col):
+                    for n in range(m + 1, max_col): # n > m
+                        i = tab[0, m]
+                        l = tab[1, m]
+                        j = tab[0, n]
+                        k = tab[1, n]
+                        if i.lp.fp < j.lp.fp and j.lp.fp < k.lp.fp and k.lp.fp < l.lp.fp:
+                            # i < j < k < l -> Schouten identity needs to be applied
+                            new_tab1 = tab.copy()
+                            new_tab1[0, m] = i
+                            new_tab1[1, m] = j
+                            new_tab1[0, n] = k
+                            new_tab1[1, n] = l
+                            tabs.append((new_tab1, -1))
+
+                            new_tab2 = tab.copy()
+                            new_tab2[0, m] = i
+                            new_tab2[1, m] = k
+                            new_tab2[0, n] = j
+                            new_tab2[1, n] = l
+                            tabs.append((new_tab2, +1))
+                if not tabs:
+                    # No Schouten id -> just return the original element
+                    return [(tab.copy(), 1)]
+                else:
+                    return tabs
+
+        new_l_tabs = schouten(self.l_tab)
+        new_r_tabs = schouten(self.r_tab)
+
+        lr_tableaux = []
+
+        for new_l_tab in new_l_tabs:
+            for new_r_tab in new_r_tabs:
+                coeff = self.factor * new_l_tab[1] * new_r_tab[1]
+                lr_tableaux.append(LR_Tableaux(new_l_tab[0],new_r_tab[0], coeff))
+
+        return lr_tableaux
 
 

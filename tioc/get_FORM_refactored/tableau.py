@@ -852,6 +852,23 @@ class Lorentz_Tableau(LorentzTableau):
     def append_col(self, value) -> None:
         self.insert_col(self.tableau.diagram[0], value)
 
+    def reverse_cols(self):
+        """
+        Reverses the order of the columns.
+        Returns
+        -------
+
+        """
+        if self.tableau.ncols() <= 1:
+            return self
+        else:
+            # more than one column
+            cols = list(reversed([self.tableau[:,i] for i in range(self.tableau.ncols())]))
+            reversed_cols = Young_List([])
+            for col in cols:
+                reversed_cols.append_col(col)
+            return Lorentz_Tableau(reversed_cols, self.op_class)
+
     @property
     def lr_tableaux(self) -> Tuple[Tableau, Tableau, int]:
         """Return the left- and the (conjugated) right-handed tableaux as well as the overall sign."""

@@ -356,7 +356,6 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
                 tabs_without_Schouten = []
                 if not skip_schouten_ids:
                     # Schouten identities may occur
-                    # TODO: Schouten ids for tabs!
                     for lr_with_Schouten in tabs:
                         if lr_with_Schouten[1]:
                             # EOMs might still occur

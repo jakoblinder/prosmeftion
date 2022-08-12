@@ -779,7 +779,7 @@ class LR_Tableaux():
                 l = lr[0]
                 r = lr[1]
                 der_LP = lr[2]
-                # Get the rows corresponding rows from lr_tab and do the ibp with them
+                # Get the corresponding rows from lr_tab and do the ibp with them
                 extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:,l], lr_tab.r_tab[:,r], lr_tab.factor)
                 # Integrate the selected rows by parts
                 tabs_tmp = extracted_lr_tab.ibp(der_LP, N)
@@ -810,7 +810,7 @@ class LR_Tableaux():
                 l = lr[0]
                 r = lr[1]
                 der_LP = lr[2]
-                # Get the rows corresponding rows from lr_tab and do the ibp with them
+                # Get the corresponding rows from lr_tab and do the ibp with them
                 extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
                 # Integrate the selected rows by parts
                 tabs_tmp = extracted_lr_tab.ibp(der_LP, N)
@@ -837,7 +837,7 @@ class LR_Tableaux():
                 l = lr[0]
                 r = lr[1]
                 der_LP = lr[2]
-                # Get the rows corresponding rows from lr_tab and do the ibp with them
+                # Get the corresponding rows from lr_tab and do the ibp with them
                 extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
                 # Integrate the selected rows by parts
                 tabs_tmp = extracted_lr_tab.ibp(der_LP, N)
@@ -864,7 +864,7 @@ class LR_Tableaux():
                 l = lr[0]
                 r = lr[1]
                 der_LP = lr[2]
-                # Get the rows corresponding rows from lr_tab and do the ibp with them
+                # Get the corresponding rows from lr_tab and do the ibp with them
                 extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
                 # Integrate the selected rows by parts
                 tabs_tmp = extracted_lr_tab.ibp(der_LP, N)
@@ -891,7 +891,7 @@ class LR_Tableaux():
                 l = lr[0]
                 r = lr[1]
                 der_LP = lr[2]
-                # Get the rows corresponding rows from lr_tab and do the ibp with them
+                # Get the corresponding rows from lr_tab and do the ibp with them
                 extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
                 # Integrate the selected rows by parts
                 tabs_tmp = extracted_lr_tab.ibp(der_LP, N)
@@ -919,7 +919,7 @@ class LR_Tableaux():
                 r = lr[1]
                 der_LP2 = lr[2]  # i
                 der_LP3 = lr[3]  # j
-                # Get the rows corresponding rows from lr_tab and do the ibp with them
+                # Get the corresponding rows from lr_tab and do the ibp with them
                 extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
                 # Integrate the selected rows by parts
                 tabs_tmp = extracted_lr_tab.der_23(der_LP2, der_LP3, N)

@@ -397,7 +397,7 @@ def remove_doubles(single_terms):
     return single_terms
 
 def sun_internal_projector(op_type, group):
-    """Construct a projector to impose the 'internal symmetries'."""
+    """Construct a projector to impose the 'internal symmetries'."""  # FIXME: What about external symmetries?
     field_id = 0 #!
     projection_operator = []
     for field, multiplicity in op_type.fields:

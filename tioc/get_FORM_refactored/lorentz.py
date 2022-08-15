@@ -977,17 +977,17 @@ class LR_Tableaux():
                         if i.lp.fp < j.lp.fp and j.lp.fp < k.lp.fp and k.lp.fp < l.lp.fp:
                             # i < j < k < l -> Schouten identity needs to be applied
                             new_tab1 = tab.copy()
-                            new_tab1[0, m] = i
-                            new_tab1[1, m] = j
-                            new_tab1[0, n] = k
-                            new_tab1[1, n] = l
+                            new_tab1[0, m] = i.copy()
+                            new_tab1[1, m] = j.copy()
+                            new_tab1[0, n] = k.copy()
+                            new_tab1[1, n] = l.copy()
                             tabs.append((new_tab1, -1))
 
                             new_tab2 = tab.copy()
-                            new_tab2[0, m] = i
-                            new_tab2[1, m] = k
-                            new_tab2[0, n] = j
-                            new_tab2[1, n] = l
+                            new_tab2[0, m] = i.copy()
+                            new_tab2[1, m] = k.copy()
+                            new_tab2[0, n] = j.copy()
+                            new_tab2[1, n] = l.copy()
                             tabs.append((new_tab2, +1))
                 if not tabs:
                     # No Schouten id -> just return the original element

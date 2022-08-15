@@ -178,7 +178,12 @@ def rearrange_derivatives(single_terms):
                     term = ibp_2_fields(term, before=2, afterwards=1, derIndices=derFields[2][0][der])
                 return balance_derivatives(term)
 
-    nD4_h2h_dagger2 = single_terms[(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0)][4]
+    try:
+        nD4_h2h_dagger2 = single_terms[(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0)][4]
+    except KeyError:
+        logger.info("There is no term with nD=2 and H:1, H+:1 and thus no derivatives need to be rearranged.")
+        return single_terms
+
     for term in nD4_h2h_dagger2.terms:
         term = balance_derivatives(term)
         term.name = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])

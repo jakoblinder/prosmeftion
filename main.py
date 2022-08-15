@@ -11,7 +11,7 @@ from tioc import CONFIG_PATH, FORM_GENERAL_PATH, n_der, get_basis
 from tioc.general import form_declarations
 
 from tioc.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
-from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection  # , main
+from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms  # , main
 from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
 from tioc.get_FORM_refactored.tableau import test
 
@@ -120,6 +120,9 @@ def main(max_dim = 6):
     nterms_after = number_terms(single_terms)
 
     logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+
+    if args.tex:
+        tex_sorted_terms_wo_eoms(single_terms)
 
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))

@@ -188,8 +188,6 @@ def rearrange_derivatives(single_terms):
         term = balance_derivatives(term)
         term.name = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])
 
-    return single_terms
-
 def replace_eoms(single_terms):
     """
     Replace equation of motions first by a placeholder and then for the dimension 6 operators by the equation of motion

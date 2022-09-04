@@ -531,8 +531,8 @@ class Term(Operator, Coefficient):
             # remove last comma
             form = form[:-1]
             form += "}\n"
-            form += "\tid once [HC+]?{[HC+], " + f"{spinorsSL2C_c['[L+]']}, {spinorsSL2C_c['[Q+]']}" + "}(?c, 'gaugeindex', ?d) = [su2eps]('gaugeindex', 'gaugeindex'a) * [HC+](?c, 'gaugeindex'a, ?d);\n"
-            form += "\tid once [HC+]?{[HC+], " + f"{spinorsSL2C_c['[L+]']}, {spinorsSL2C_c['[Q+]']}" + "}(?c, 'gaugeindex', ?d) = [su2eps]('gaugeindex', 'gaugeindex'b) * [HC+](?c, 'gaugeindex'b, ?d);\n"
+            form += "\tid once [HC+]?{[HC+], " + f"{spinorsSL2C_c['[L+]']}, {spinorsSL2C_c['[Q+]']}" + "}(?c, 'gaugeindex', ?d) = [su2eps]('gaugeindex'a, 'gaugeindex') * [HC+](?c, 'gaugeindex'a, ?d);\n"
+            form += "\tid once [HC+]?{[HC+], " + f"{spinorsSL2C_c['[L+]']}, {spinorsSL2C_c['[Q+]']}" + "}(?c, 'gaugeindex', ?d) = [su2eps]('gaugeindex'b, 'gaugeindex') * [HC+](?c, 'gaugeindex'b, ?d);\n"
             # form += "\tid HC('gaugeindex')*[HC+]('gaugeindex') = [su2eps]('gaugeindex'a, 'gaugeindex'b) * [HC+]('gaugeindex'b) * HC('gaugeindex'a);\n"
             form += "#enddo\n"
 
@@ -542,20 +542,50 @@ class Term(Operator, Coefficient):
     #
     def form_fieldstrengthtensorDerivativeHandling(self, nDer=4):  # fieldstrengthtensorDerivativetoCommutative
         """
-        TODO: Docu
-        Rewrite (if there exists a spin index in the term) spinor fields inside a derivative as:
-            D(lor1?, D(lor2?, [qbar]('spin', gauge1, colf2, flav3))) = D(lor1, D(lor2, [[qbar]('spin', gauge1, colf2, flav3)])) * [qCbar]('spin', gauge1, colf2, flav3),
-        where [[qbar]('spin', gauge1, colf2, flav3)] is some placeholder to remember the position of the spinor field and [qCbar]('spin', gauge1, colf2, flav3)
-        is a commuting field. This makes it easier to implement id-statement for contracted spinor fields.
-        Note: Also a "lonely" spinor field is replaced,
-            [qbar]('spin', gauge1, colf2, flav3) = [[qbar]('spin', gauge1, colf2, flav3)]*[qCbar]('spin', gauge1, colf2, flav3),
-        in order to ensure also the order of the "lonely" spinor fields.
+        Rewrite fieldstrengthtensors inside a derivative as:
+            D(lorA1?lor, B(lor1,lor2))
+            = D(lorA1, [B(op0,lor1,lor2)])*(-i_/4)*(
+              BCR(op0, Usldot1, Usldot2)*sigmabar2(lor1, lor2, Lsldot1, Lsldot2)
+              - BCL(op0, Lsl1, Lsl2)*sigma2(lor1, lor2, Usl1, Usl2)
+              ),
+        and
+            D(lorA1?lor, W(gaugeadj1,lor1,lor2))
+            = D(lorA1, [W(op3,gaugeadj1,lor1,lor2)])*T(gaugeadj1,gaugeA10,gaugeA11)*[su2eps](gaugeA11,gaugeA12)*(-i_/4)*(
+              WCR(op3, gaugeA10, gaugeA12, Usldot10, Usldot11)*sigmabar2(lor1, lor2, Lsldot10, Lsldot11)
+              - WCL(op3, gaugeA10, gaugeA12, Lsl10, Lsl11)*sigma2(lor1, lor2, Usl10, Usl11)
+              ).
+        Note 1: The [B(op0,lor1,lor2)] are some placeholder to remember the position of the fieldstrengthtensor and
+                the BCL, BCR, WCL, WCR, GCL and GCR are a commuting fields. This makes it easier to implement
+                id-statement for contracted fields.
+        Note 2: The additional index 'op0' specifies the position of the fields, which is important for the replacement
+                of commuting fields again with not commuting fields if for example two identical fields are involved.
+                TODO: This form of replacement should be done for all fields not only the fieldstrengthtensors.
+                TODO: The index should corresponce to the field position used also later. Thus, the first index should have the position index 'op1' and not 'op0'.
+        Note 3: Also a "lonely" fieldstrengthtensor is replaced, not only to ensure also the order of the "lonely"
+                fieldstrengthtensors, but for the SU(2) and SU(3) fieldstrengthtensors also to replace the adjoint
+                gauge group indices by fundamental ones:
+                W(gaugeadj1,lor1,lor2)
+                = [W(op3,gaugeadj1,lor1,lor2)]*T(gaugeadj1,gaugeA10,gaugeA11)*[su2eps](gaugeA11,gaugeA12)*(-i_/4)*(
+                  WCR(op3, gaugeA10, gaugeA12, Usldot10, Usldot11)*sigmabar2(lor1, lor2, Lsldot10, Lsldot11)
+                  - WCL(op3, gaugeA10, gaugeA12, Lsl10, Lsl11)*sigma2(lor1, lor2, Usl10, Usl11)
+                  ).
+        Note 4: The fundamental representation generator T(gaugeadj1,gauge2,gauge1) has one adjoint, one fundamental
+                and one anti-fundamental index. Since the BSUOLEA-output contains terms like
+                    [H+](gauge2)*T(gaugeadj1,gauge2,gauge1)*H(gauge1),
+                and an fundamental index always has to be contracted with an anti-fundamental one, it is clear that
+                the first index of T (here 'gauge2') is fundamental and second (here 'gauge1') is anti-fundamental.
+                -> \tensor{(T^{A})}{_{a}^{b}}, with 'a' fundamental and 'b' anti-fundamental.
+                The SU(2) and SU(3) fieldstrengthtensors are therefore replaced as follows:
+                W^{I} = \eps^{j k} \tensor{(T^{I})}{_{k} ^{i}} W_{(i j)},
+                <=> W(gaugeadj1,lor1,lor2) = [su2eps](gauge2,gauge3)*WT(gaugeadj1,gauge3,gauge1)*(gauge1,gauge2,lor1,lor2)
+                G^{A} = \frac{\tensor{(T^{A})}{_{d} ^{b}}}{2} \eps^{a c d} G_{a b c}.
+                <=> G(cola1,lor1,lor2) = (1/2)*T(cola1,colf4,colf2)*[su3eps](colf1,colf3,colf4)*G(colf1,colf2,colf3,lor1,lor2)
 
         Parameters
         ----------
         nDer : int
             Maximum number of derivatives.
-        Returns
+        Returns: 4 FORM strings
         -------
         initialize_DtC : str
             Contains essentially the declaration of the dummy function [q('spin', gauge1, colf2, flav3)] and [[qbar]('spin', gauge1, colf2, flav3)] with
@@ -563,6 +593,15 @@ class Term(Operator, Coefficient):
         form_DtC : str
             Formatted string of the FORM procedure file "spinorDerivativetoCommutative.prc" with the correct indices.
             in the do-loop index list.
+            -> Replacements of fieldstrengthtensor by commuting fieldstrengthtensor and dummy fieldstrengthtensor.
+        form_DtSL : str
+            Formatted string of the FORM procedure file "fieldstrengthtensorDerivativetoSL2C.prc" with the correct indices.
+            in the do-loop index list.
+            -> Replacements of derivative acting on a fieldstrengthtensor by SL2C derivative and sigma matrix.
+        form_CtD : str
+            Formatted string of the FORM procedure file "fieldstrengthtensorDerivativetoSL2C.prc" with the correct indices.
+            in the do-loop index list.
+            -> Replacements of commuting fieldstrengthtensor and dummy fieldstrengthtensor by fieldstrengthtensor.
 
         """
         initialize_DtC = ""
@@ -624,6 +663,9 @@ class Term(Operator, Coefficient):
                     else:
                         logger.error(f"Operator {operator.expression} couldn't be matched as an fieldstrengthtensor {fieldstrengthtensor}.")
                         sys.exit("STOP")
+                #
+                # Replacements of fieldstrengthtensor by commuting fieldstrengthtensor and dummy fieldstrengthtensor:
+                #
                 if fieldstrengthtensor:
                     initialize_DtC += f"{auxfield}, "
                     if fieldstrengthtensor == opname["F"]:
@@ -643,10 +685,13 @@ class Term(Operator, Coefficient):
                                              f"Usl{ind2_2:d}"]
                     elif fieldstrengthtensor == opname["V"]:
                         # TODO: Change index order, so that SL2C-indices are always the first.
+                        # FIXME: Check signs.
                         for j in range(0, nDer + 1):
+                            # Adjoint gauge index substitution is of the following form:
+                            # W(gaugeadj1,lor1,lor2) = T(gaugeadj1,gauge2,gauge1)*[su2eps](gauge2,gauge3)*W(gauge1,gauge3,lor1,lor2)
                             form_temp = "id once " + Term.derivativesLorentz(f"{fieldstrengthtensor:s}({','.join([gaugeadj] + lor):s})", n=j)
                             form_temp += " = " + Term.derivativesLorentz(auxfield, n=j, questionmark=False)
-                            form_temp += "*" + f"T({gaugeadj:s},gaugeA{ind3_1:d},gaugeA{ind3_2:d})*[su2eps](gaugeA{ind3_2:d},gaugeA{ind3_3:d})*(-i_/4)" \
+                            form_temp += "*" + f"[su2eps](gaugeA{ind3_3:d},gaugeA{ind3_2:d})*T({gaugeadj:s},gaugeA{ind3_2:d},gaugeA{ind3_1:d})*(-i_/4)" \
                                          f"*({opname['V']:s}CR({operator.id:s}, gaugeA{ind3_1:d}, gaugeA{ind3_3:d}, Usldot{ind3_1:d}, Usldot{ind3_2:d})*sigmabar2({lor[0]:s}, {lor[1]:s}, Lsldot{ind3_1:d}, Lsldot{ind3_2:d})" \
                                          f"- {opname['V']:s}CL({operator.id:s}, gaugeA{ind3_1:d}, gaugeA{ind3_3:d}, Lsl{ind3_1:d}, Lsl{ind3_2:d})*sigma2({lor[0]:s}, {lor[1]:s}, Usl{ind3_1:d}, Usl{ind3_2:d}));"
                             form_list_DtC.append(form_temp)
@@ -665,10 +710,13 @@ class Term(Operator, Coefficient):
                                              f"gaugeA{ind3_3:d}",
                                              f"gaugeA{ind3_3:d}"]
                     elif fieldstrengthtensor == opname["G"]:
+                        # FIXME: Check signs.
                         for j in range(0, nDer + 1):
+                            # Adjoint gauge index substitution is of the following form:
+                            # G(cola1,lor1,lor2) = (1/2)*T(cola1,colf4,colf2)*[su3eps](colf1,colf3,colf4)*G(colf1,colf2,colf3,lor1,lor2)
                             form_temp = "id once " + Term.derivativesLorentz(f"{fieldstrengthtensor:s}({','.join([cola] + lor):s})", n=j)
                             form_temp += " = " + Term.derivativesLorentz(auxfield, n=j, questionmark=False)
-                            form_temp += "*" + f"(1/2)*T({cola:s},colfA{ind4_2:d},colfA{ind4_4:d})*[su3eps](colfA{ind4_1:d},colfA{ind4_3:d},colfA{ind4_4:d})*(-i_/4)" \
+                            form_temp += "*" + f"(1/2)*T({cola:s},colfA{ind4_4:d},colfA{ind4_2:d})*[su3eps](colfA{ind4_1:d},colfA{ind4_3:d},colfA{ind4_4:d})*(-i_/4)" \
                                          f"*({opname['G']:s}CR({operator.id:s}, colfA{ind4_1:d}, colfA{ind4_2:d}, colfA{ind4_3:d}, Usldot{ind4_1:d}, Usldot{ind4_2:d})*sigmabar2({lor[0]:s}, {lor[1]:s}, Lsldot{ind4_1:d}, Lsldot{ind4_2:d})" \
                                          f"- {opname['G']:s}CL({operator.id:s}, colfA{ind4_1:d}, colfA{ind4_2:d}, colfA{ind4_3:d}, Lsl{ind4_1:d}, Lsl{ind4_2:d})*sigma2({lor[0]:s}, {lor[1]:s}, Usl{ind4_1:d}, Usl{ind4_2:d}));"
                             form_list_DtC.append(form_temp)
@@ -690,6 +738,7 @@ class Term(Operator, Coefficient):
                                              f"colfA{ind4_4:d}"]
 
                     #
+                    # Replacements of derivative acting on a fieldstrengthtensor by SL2C derivative and sigma matrix:
                     # form_fieldstrengthtensorDerivativetoSL2C -> DtSL
                     #
                     if fieldstrengthtensor == opname["F"]:
@@ -747,6 +796,7 @@ class Term(Operator, Coefficient):
                                                  f"Lsldot{operator.id}{j:d}",
                                                  f"Usldot{operator.id}{j:d}"]
                     #
+                    # Replacements of commuting fieldstrengthtensor and dummy fieldstrengthtensor by fieldstrengthtensor:
                     # form_fieldstrengthtensorCommutativetoDerivative -> CtD
                     #
                     form_temp_CtD = ""

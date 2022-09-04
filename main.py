@@ -11,7 +11,7 @@ from tioc import CONFIG_PATH, FORM_GENERAL_PATH, n_der, get_basis
 from tioc.general import form_declarations
 
 from tioc.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
-from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms  # , main
+from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms, tex_sorted_terms_before_sun  # , main
 from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
 from tioc.get_FORM_refactored.tableau import test
 
@@ -148,6 +148,8 @@ def main(max_dim = 6):
 
     logger.info(f"After {number_iterations:d} iterations of the ibp algorithm all ibp relations and Schouten identities are applied.")
 
+    if args.tex:
+        tex_sorted_terms_before_sun(single_terms)
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, basis, max_dim)
 

@@ -387,7 +387,7 @@ class Summand(Summand_Model):
             id_statement1 = f"D2({higgs}({gauge1}?gauge)) ="
             id_statement1 += f" + ({Mu}^2) * {higgs}({gauge1})"
 
-            id_statement1 += f" - {lambdah} * {su2eps}({gauge2},{gauge3})*{higgs_dagger}({gauge3}) * {higgs}({gauge2}) * {higgs}({gauge1})"
+            id_statement1 += f" - {lambdah} * {su2eps}({gauge3},{gauge2})*{higgs_dagger}({gauge3}) * {higgs}({gauge2}) * {higgs}({gauge1})"
 
             id_statement1 += f" + (1/2) * {yu}({flav1},{flav2}) * {su3eps}({colf1},{colf2},{colf3}) * {sl2Ceps}({lsldot1},{lsldot2})"
             id_statement1 += f" * {q_dagger}({usldot2},{gauge1},{colf2},{colf3},{flav1}) * {u_dagger}({usldot1},{colf1},{flav2})"
@@ -404,7 +404,7 @@ class Summand(Summand_Model):
             id_statement2 = f"D2({higgs_dagger}({gauge1}?gauge)) ="
             id_statement2 += f" + ({Mu}^2) * {higgs_dagger}({gauge1})"
 
-            id_statement2 += f" - {lambdah} * {su2eps}({gauge2},{gauge3})*{higgs_dagger}({gauge3}) * {higgs}({gauge2}) * {higgs_dagger}({gauge1})"
+            id_statement2 += f" - {lambdah} * {su2eps}({gauge3},{gauge2})*{higgs_dagger}({gauge3}) * {higgs}({gauge2}) * {higgs_dagger}({gauge1})"
 
             id_statement2 += f" + (1/2) * {yu_dagger}({flav2},{flav1}) * {su3eps}({colf1},{colf2},{colf3}) * {sl2Ceps}({usl1},{usl2})" # {sl2Ceps}({usl1},{usl2})
             id_statement2 += f" * {u}({lsl2},{colf2},{colf3},{flav2}) * {q}({lsl1},{gauge1},{colf1},{flav1})"
@@ -476,28 +476,28 @@ class Summand(Summand_Model):
             #  Left-handed field strength tensor: FL(Lsl1, Lsl2, H(gauge1))
             id_statement1 = f"FL({lsl1}?Lsl, {lsl2}?Lsl, {higgs}({gauge1}?gauge)) ="
             id_statement1 += f" + ({g1}/2) * {bl}({lsl1},{lsl2}) * {higgs}({gauge1})"
-            id_statement1 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wl}({gauge2},{gauge3},{lsl1},{lsl2}) * {su2eps}({gauge3},{gauge4}) * {higgs}({gauge4})"
+            id_statement1 += f" + ({g2}/2) * {wl}({gauge1},{gauge2},{lsl1},{lsl2}) * {su2eps}({gauge2},{gauge3}) * {higgs}({gauge3})"
 
             id_statements.append(f"id once ifmatch -> 4 {id_statement1:s};\n")
 
             #  Left-handed field strength tensor: FL(Lsl1, Lsl2, [H+](gauge1))
             id_statement2 = f"FL({lsl1}?Lsl, {lsl2}?Lsl, {higgs_dagger}({gauge1}?gauge)) ="
             id_statement2 += f" + (- {g1}/2) * {bl}({lsl1},{lsl2}) * {higgs_dagger}({gauge1})"
-            id_statement2 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wl}({gauge2},{gauge3},{lsl1},{lsl2}) * {su2eps}({gauge3},{gauge4}) * {higgs_dagger}({gauge4})"
+            id_statement2 += f" + ({g2}/2) * {wl}({gauge1},{gauge2},{lsl1},{lsl2}) * {su2eps}({gauge2},{gauge3}) * {higgs_dagger}({gauge3})"
 
             id_statements.append(f"id once ifmatch -> 4 {id_statement2:s};\n")
 
             #  Right-handed field strength tensor: FR(Usldot1, Usldot2, H(gauge1))
             id_statement1 = f"FR({usldot1}?Usldot, {usldot2}?Usldot, {higgs}({gauge1}?gauge)) ="
             id_statement1 += f" + ({g1}/2) * {br}({usldot1},{usldot2}) * {higgs}({gauge1})"
-            id_statement1 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wr}({gauge2},{gauge3},{usldot1},{usldot2}) * {su2eps}({gauge3},{gauge4}) * {higgs}({gauge4})"
+            id_statement1 += f" + ({g2}/2) * {wr}({gauge1},{gauge2},{usldot1},{usldot2}) * {su2eps}({gauge2},{gauge3}) * {higgs}({gauge3})"
 
             id_statements.append(f"id once ifmatch -> 4 {id_statement1:s};\n")
 
             #  Right-handed field strength tensor: FR(Usldot1, Usldot2, [H +](gauge1))
             id_statement2 = f"FR({usldot1}?Usldot, {usldot2}?Usldot, {higgs_dagger}({gauge1}?gauge)) ="
             id_statement2 += f" + (- {g1}/2) * {br}({usldot1},{usldot2}) * {higgs_dagger}({gauge1})"
-            id_statement2 += f" + ({g2}/2) * {su2eps}({gauge1},{gauge2}) * {wr}({gauge2},{gauge3},{usldot1},{usldot2}) * {su2eps}({gauge3},{gauge4}) * {higgs_dagger}({gauge4})"
+            id_statement2 += f" + ({g2}/2) * {wr}({gauge1},{gauge2},{usldot1},{usldot2}) * {su2eps}({gauge2},{gauge3}) * {higgs_dagger}({gauge3})"
 
             id_statements.append(f"id once ifmatch -> 4 {id_statement2:s};\n")
 
@@ -570,7 +570,7 @@ class Summand(Summand_Model):
 
             #  EOM of Q+
             id_statement2 = f"EOM({q_dagger},{lsl1}?Lsl,{gauge1}?gauge,{colf2}?colf,{colf3}?colf,{flav1}?flav) ="
-            id_statement2 += f" + i_ * {yu_dagger}({flav2},{flav1}) * {u}({lsl1},{colf2},{colf3},{flav2}) * {higgs}({gauge1})"
+            id_statement2 += f" - i_ * {yu_dagger}({flav2},{flav1}) * {u}({lsl1},{colf2},{colf3},{flav2}) * {higgs}({gauge1})"
             id_statement2 += f" + i_ * {yd_dagger}({flav2},{flav1}) * {d}({lsl1},{colf2},{colf3},{flav2}) * {higgs_dagger}({gauge1})"
             id_statements.append(f"id once ifmatch -> 4 {id_statement2:s};\n")
             id_statements.append("\n")
@@ -588,12 +588,12 @@ class Summand(Summand_Model):
 
             #  EOM of [d_C+]
             id_statement1 = f"EOM({d_dagger},{lsl1}?Lsl,{colf1}?colf,{flav1}?flav) ="
-            id_statement1 += f" + i_ * {yd_dagger}({flav1},{flav2}) * {su2eps}({gauge1},{gauge2}) * {higgs_dagger}({gauge2}) * {q}({lsl1},{gauge1},{colf1},{flav2})"
+            id_statement1 += f" + i_ * {yd_dagger}({flav1},{flav2}) * {su2eps}({gauge2},{gauge1}) * {higgs_dagger}({gauge2}) * {q}({lsl1},{gauge1},{colf1},{flav2})"
             id_statements.append(f"id once ifmatch -> 4 {id_statement1:s};\n")
 
             #  EOM of [d_C]
             id_statement2 = f"EOM({d},{usldot1}?Usldot,{colf2}?colf,{colf3}?colf,{flav1}?flav) ="
-            id_statement2 += f" + i_ * {yd}({flav2},{flav1}) * {su2eps}({gauge1},{gauge2}) * {q_dagger}({usldot1},{gauge2},{colf2},{colf3},{flav2}) * {higgs}({gauge1})"
+            id_statement2 += f" + i_ * {yd}({flav2},{flav1}) * {su2eps}({gauge2},{gauge1}) * {q_dagger}({usldot1},{gauge2},{colf2},{colf3},{flav2}) * {higgs}({gauge1})"
             id_statements.append(f"id once ifmatch -> 4 {id_statement2:s};\n")
             id_statements.append("\n")
 
@@ -604,18 +604,18 @@ class Summand(Summand_Model):
 
             #  EOM of [u_C]
             id_statement2 = f"EOM({u},{usldot1}?Usldot,{colf2}?colf,{colf3}?colf,{flav1}?flav) ="
-            id_statement2 += f" + i_ * {yu}({flav2},{flav1}) * {su2eps}({gauge1},{gauge2}) * {q_dagger}({usldot1},{gauge2},{colf2},{colf3},{flav2}) * {higgs_dagger}({gauge1})"
+            id_statement2 += f" + i_ * {yu}({flav2},{flav1}) * {su2eps}({gauge2},{gauge1}) * {q_dagger}({usldot1},{gauge2},{colf2},{colf3},{flav2}) * {higgs_dagger}({gauge1})"
             id_statements.append(f"id once ifmatch -> 4 {id_statement2:s};\n")
             id_statements.append("\n")
 
             #  EOM of [e_C+]
             id_statement1 = f"EOM({e_dagger},{lsl1}?Lsl,{flav1}?flav) ="
-            id_statement1 += f" + i_ * {ye_dagger}({flav1},{flav2}) * {su2eps}({gauge1},{gauge2}) * {higgs_dagger}({gauge2}) * {l}({lsl1},{gauge1},{flav2})"
+            id_statement1 += f" + i_ * {ye_dagger}({flav1},{flav2}) * {su2eps}({gauge2},{gauge1}) * {higgs_dagger}({gauge2}) * {l}({lsl1},{gauge1},{flav2})"
             id_statements.append(f"id once ifmatch -> 4 {id_statement1:s};\n")
 
             #  EOM of [e_C]
             id_statement2 = f"EOM({e},{usldot1}?Usldot,{flav1}?flav) ="
-            id_statement2 += f" + i_ * {ye}({flav2},{flav1}) * {su2eps}({gauge1},{gauge2}) * {l_dagger}({usldot1},{gauge2},{flav2}) * {higgs}({gauge1})"
+            id_statement2 += f" + i_ * {ye}({flav2},{flav1}) * {su2eps}({gauge2},{gauge1}) * {l_dagger}({usldot1},{gauge2},{flav2}) * {higgs}({gauge1})"
             id_statements.append(f"id once ifmatch -> 4 {id_statement2:s};\n")
 
             for id in id_statements:
@@ -690,28 +690,18 @@ class Summand(Summand_Model):
             id_statement1 = f"EOM({bl},{lsl1}?Lsl,{usldot1}?Usldot) ="
             rHS1 = f" {g1}*("
 
-            rHS1 += f" + (i_/2) * {su2eps}({gauge1},{gauge2}) * ( {cov}({lsl1},{usldot1},{higgs}({gauge1})) * {higgs_dagger}({gauge2})"
+            rHS1 += f" + (i_/2) * {su2eps}({gauge2},{gauge1}) * ( {cov}({lsl1},{usldot1},{higgs}({gauge1})) * {higgs_dagger}({gauge2})"
             rHS1 += f" - {higgs}({gauge1}) * {cov}({lsl1},{usldot1},{higgs_dagger}({gauge2})) )"
 
-            rHS1 += f" - (1/6) * {su3eps}({colf1},{colf2},{colf3}) * {su2eps}({gauge1},{gauge2}) * {flavdK}({flav1},{flav2}) * {q}({lsl1},{gauge1},{colf1},{flav1}) * {q_dagger}({usldot1},{gauge2},{colf2},{colf3},{flav2})"
+            rHS1 += f" - (1/6) * {su3eps}({colf1},{colf2},{colf3}) * {su2eps}({gauge2},{gauge1}) * {flavdK}({flav1},{flav2}) * {q}({lsl1},{gauge1},{colf1},{flav1}) * {q_dagger}({usldot1},{gauge2},{colf2},{colf3},{flav2})"
 
             rHS1 += f" + (2/3) * {su3eps}({colf1},{colf2},{colf3}) * {flavdK}({flav1},{flav2}) * {u}({lsl1},{colf2},{colf3},{flav1}) * {u_dagger}({usldot1},{colf1},{flav2})"
 
             rHS1 += f" - (1/3) * {su3eps}({colf1},{colf2},{colf3}) * {flavdK}({flav1},{flav2}) * {d}({lsl1},{colf2},{colf3},{flav1}) * {d_dagger}({usldot1},{colf1},{flav2})"
 
-            rHS1 += f" + {su2eps}({gauge1},{gauge2}) * {flavdK}({flav1},{flav2}) * {l}({lsl1},{gauge1},{flav1}) * {l_dagger}({usldot1},{gauge2},{flav2})"
+            rHS1 += f" + {su2eps}({gauge2},{gauge1}) * {flavdK}({flav1},{flav2}) * {l}({lsl1},{gauge1},{flav1}) * {l_dagger}({usldot1},{gauge2},{flav2})"
 
             rHS1 += f" + 2 * {flavdK}({flav1},{flav2}) * {e}({lsl1},{flav1}) * {e_dagger}({usldot1},{flav2})"
-
-            # rHS1 += f" - (1/6) * {su3eps}({colf1},{colf2},{colf3}) * {su2eps}({gauge1},{gauge2}) * {q}({lsl1},{gauge1},{colf1},{flav1}) * {q_dagger}({usldot1},{gauge2},{colf2},{colf3},{flav1})"
-            #
-            # rHS1 += f" + (2/3) * {su3eps}({colf1},{colf2},{colf3}) * {u}({lsl1},{colf2},{colf3},{flav1}) * {u_dagger}({usldot1},{colf1},{flav1})"
-            #
-            # rHS1 += f" - (1/3) * {su3eps}({colf1},{colf2},{colf3}) * {d}({lsl1},{colf2},{colf3},{flav1}) * {d_dagger}({usldot1},{colf1},{flav1})"
-            #
-            # rHS1 += f" + {su2eps}({gauge1},{gauge2}) * {l}({lsl1},{gauge1},{flav1}) * {l_dagger}({usldot1},{gauge2},{flav1})"
-            #
-            # rHS1 += f" + 2 * {e}({lsl1},{flav1}) * {e_dagger}({usldot1},{flav1})"
 
             rHS1 += ")"
 
@@ -728,24 +718,23 @@ class Summand(Summand_Model):
             #  EOM of the left-handed field strength tensor of SU(2), WL
             # Note: The SU2-indices are explicitly symmetrized.
             id_statement3 = f"EOM({wl},{lsl1}?Lsl,{usldot1}?Usldot,{gauge1}?gauge,{gauge2}?gauge) ="
-            rHS2 = f" - ({g2}/2) * {su2eps}({gauge1},{gauge3}) * {su2eps}({gauge2},{gauge4}) * ("
-
-            def gauge_indices(gaugek, gaugel):
+            rHS2 = f" - {g2} * ("
+            def gauge_indices(gaugei, gaugek):
                 """For the symmetrization of the SU2-indices."""
-                output = f" + i_ * ( {cov}({lsl1},{usldot1},{higgs}({gaugel})) * {higgs_dagger}({gaugek})"
-                output += f" - {higgs}({gaugel}) * {cov}({lsl1},{usldot1},{higgs_dagger}({gaugek})) )"
-                output += f" - (1/3) * {su3eps}({colf1},{colf2},{colf3}) * {flavdK}({flav1},{flav2}) * {q}({lsl1},{gaugel},{colf1},{flav1}) * {q_dagger}({usldot1},{gaugek},{colf2},{colf3},{flav2})"
-                output += f" + {flavdK}({flav1},{flav2}) * {l}({lsl1},{gaugel},{flav1}) * {l_dagger}({usldot1},{gaugek},{flav2})"
+                output = f" + i_ * ( {cov}({lsl1},{usldot1},{higgs}({gaugei})) * {higgs_dagger}({gaugek})"
+                output += f" - {higgs}({gaugei}) * {cov}({lsl1},{usldot1},{higgs_dagger}({gaugek})) )"
+                output += f" - (1/3) * {su3eps}({colf1},{colf2},{colf3}) * {flavdK}({flav1},{flav2}) * {q}({lsl1},{gaugei},{colf1},{flav1}) * {q_dagger}({usldot1},{gaugek},{colf2},{colf3},{flav2})"
+                output += f" + {flavdK}({flav1},{flav2}) * {l}({lsl1},{gaugei},{flav1}) * {l_dagger}({usldot1},{gaugek},{flav2})"
 
-                # output += f" - (1/3) * {su3eps}({colf1},{colf2},{colf3}) * {q}({lsl1},{gaugel},{colf1},{flav1}) * {q_dagger}({usldot1},{gaugek},{colf2},{colf3},{flav1})"
-                # output += f" + {l}({lsl1},{gaugel},{flav1}) * {l_dagger}({usldot1},{gaugek},{flav1})"
+                # output += f" - (1/3) * {su3eps}({colf1},{colf2},{colf3}) * {q}({lsl1},{gaugek},{colf1},{flav1}) * {q_dagger}({usldot1},{gaugei},{colf2},{colf3},{flav1})"
+                # output += f" + {l}({lsl1},{gaugek},{flav1}) * {l_dagger}({usldot1},{gaugei},{flav1})"
 
                 return output
 
             # 'Normal' order of SU2 indices:
-            rHS2 += gauge_indices(gauge3, gauge4)
+            rHS2 += gauge_indices(gauge1, gauge2)
             # SU2 indices swapped:
-            rHS2 += gauge_indices(gauge4, gauge3)
+            rHS2 += gauge_indices(gauge2, gauge1)
 
             rHS2 += ")"
 

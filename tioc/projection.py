@@ -889,6 +889,20 @@ def tex_sorted_terms_wo_doubles(single_terms):
 
     return latex
 
+@write_texfile_and_create_pdf("tex_sorted_terms_before_sun")
+def tex_sorted_terms_before_sun(single_terms):
+    latex = ""
+    for term_type in single_terms.values():
+        for term_type_nD in term_type.values():
+            latex += r"\section*{" + re.sub(r"'", "", term_type_nD.name) + "}\n"
+            for term in term_type_nD:
+                latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
+                latex += r"\begin{dmath}" + "\n"
+                latex += f"{term:tex}\n"
+                latex += r"\end{dmath}" + "\n"
+
+    return latex
+
 @write_texfile_and_create_pdf("terms_sorted_wo_eoms")
 def tex_sorted_terms_wo_eoms(single_terms):
     latex = ""

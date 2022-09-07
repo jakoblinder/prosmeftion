@@ -7,7 +7,7 @@ from pathlib import Path
 
 from yaml import safe_load
 
-from tioc import CONFIG_PATH, FORM_GENERAL_PATH, n_der, get_basis
+from tioc import CONFIG_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, n_der, get_basis
 from tioc.general import form_declarations
 
 from tioc.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
@@ -161,6 +161,14 @@ def main(max_dim = 6):
 
     if args.tex:
         tex_terms_sorted_sun_projection(single_terms)
+
+    # output = ""
+    # for term_type in single_terms.values():
+    #     for term_mass_dim in term_type.values():
+    #         for term in term_mass_dim:
+    #             output += f"+{term:c}\n"
+    # with open(PROJECTION_PATH / "all_terms.h", "w") as file:
+    #     file.write(output)
 
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))

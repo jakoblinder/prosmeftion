@@ -772,6 +772,7 @@ def form_replaceSigmabyEps():
 
     """
     sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]
+    sl2CdK = op_config["tensors"]["[sl2CdK]"]["mathematica"]["sl2CdK"]
     sigma = "sigma"
     sigmabar = "sigmabar"
     form = ""
@@ -788,20 +789,20 @@ def form_replaceSigmabyEps():
     form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2Ceps}(Lsl1, Lsl2) * {sl2Ceps}(Lsldot1, Lsldot2);\n"
     form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2Ceps}(Lsl1, Lsl2) * {sl2Ceps}(Usldot1, Usldot2);\n"
     form += "*\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2Ceps}(Usl1, Usl2) * {sl2Ceps}(Usldot1, Lsldot2);\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2Ceps}(Usl1, Usl2) * {sl2Ceps}(Lsldot1, Usldot2);\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2Ceps}(Lsl1, Lsl2) * {sl2Ceps}(Usldot1, Lsldot2);\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2Ceps}(Lsl1, Lsl2) * {sl2Ceps}(Lsldot1, Usldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2Ceps}(Usl1, Usl2) * {sl2CdK}(Usldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2Ceps}(Usl1, Usl2) * {sl2CdK}(Lsldot1, Usldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2Ceps}(Lsl1, Lsl2) * {sl2CdK}(Usldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2Ceps}(Lsl1, Lsl2) * {sl2CdK}(Lsldot1, Usldot2);\n"
     form += "*\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2Ceps}(Usl1, Lsl2) * {sl2Ceps}(Lsldot1, Lsldot2);\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2Ceps}(Usl1, Lsl2) * {sl2Ceps}(Usldot1, Usldot2);\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2Ceps}(Usl1, Lsl2) * {sl2Ceps}(Usldot1, Lsldot2);\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2Ceps}(Usl1, Lsl2) * {sl2Ceps}(Lsldot1, Usldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2CdK}(Usl1, Lsl2) * {sl2Ceps}(Lsldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2CdK}(Usl1, Lsl2) * {sl2Ceps}(Usldot1, Usldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Lsl2?Lsl, Lsldot2?Lsldot) = + 2 * {sl2CdK}(Usl1, Lsl2) * {sl2CdK}(Usldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Lsl2?Lsl, Usldot2?Usldot) = - 2 * {sl2CdK}(Usl1, Lsl2) * {sl2CdK}(Lsldot1, Usldot2);\n"
     form += "*\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2Ceps}(Lsl1, Usl2) * {sl2Ceps}(Lsldot1, Lsldot2);\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2Ceps}(Lsl1, Usl2) * {sl2Ceps}(Usldot1, Usldot2);\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2Ceps}(Lsl1, Usl2) * {sl2Ceps}(Usldot1, Lsldot2);\n"
-    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2Ceps}(Lsl1, Usl2) * {sl2Ceps}(Lsldot1, Usldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2CdK}(Lsl1, Usl2) * {sl2Ceps}(Lsldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2CdK}(Lsl1, Usl2) * {sl2Ceps}(Usldot1, Usldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2CdK}(Lsl1, Usl2) * {sl2CdK}(Usldot1, Lsldot2);\n"
+    form += "\t" + f"id {sigma}(lor1?lor, Lsl1?Lsl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2CdK}(Lsl1, Usl2) * {sl2CdK}(Lsldot1, Usldot2);\n"
     form += "endrepeat;\n"
 
     return form
@@ -844,11 +845,11 @@ def form_simplifySL2CEps():
     form += "\t" + f"id {sl2Ceps}(Lsldot1?Lsldot, Lsldot2?LUsldot[k]) * {sl2Ceps}(Usldot2?ULsldot[k], Usldot3?Usldot) = + {sl2CdK}(Usldot3,Lsldot1);\n"
     form += "\t" + f"id {sl2Ceps}(Lsldot1?Lsldot, Lsldot2?LUsldot[k]) * {sl2Ceps}(Usldot3?Usldot, Usldot2?ULsldot[k]) = - {sl2CdK}(Usldot3,Lsldot1);\n"
 
-    form += "* Replace epsilons with one upper and one lower index by Kronecker-deltas:\n"
-    form += "\t" + f"id {sl2Ceps}(Lsl1?Lsl,Usl2?Usl) = {sl2CdK}(Lsl1,Usl2);\n"
-    form += "\t" + f"id {sl2Ceps}(Usl1?Usl,Lsl2?Lsl) = {sl2CdK}(Lsl2,Usl1);\n"
-    form += "\t" + f"id {sl2Ceps}(Lsldot1?Lsldot,Usldot2?Usldot) = {sl2CdK}(Lsldot1,Usldot2);\n"
-    form += "\t" + f"id {sl2Ceps}(Usldot1?Usldot,Lsldot2?Lsldot) = {sl2CdK}(Lsldot2,Usldot1);\n"
+    # form += "* Replace epsilons with one upper and one lower index by Kronecker-deltas:\n"
+    # form += "\t" + f"id {sl2Ceps}(Lsl1?Lsl,Usl2?Usl) = {sl2CdK}(Lsl1,Usl2);\n"
+    # form += "\t" + f"id {sl2Ceps}(Usl1?Usl,Lsl2?Lsl) = {sl2CdK}(Lsl2,Usl1);\n"
+    # form += "\t" + f"id {sl2Ceps}(Lsldot1?Lsldot,Usldot2?Usldot) = {sl2CdK}(Lsldot1,Usldot2);\n"
+    # form += "\t" + f"id {sl2Ceps}(Usldot1?Usldot,Lsldot2?Lsldot) = {sl2CdK}(Lsldot2,Usldot1);\n"
     form += "* Replace only contracted Kronecker-deltas which are contracted with eps and Kronecker-deltas themself, because contractions inside one building block are not wanted:\n"  # Replace contracted Kronecker-deltas (works for every function, not just eps):\n
     form += "\t" + f"id {sl2Ceps}?" + "{" + f"{sl2Ceps},{sl2CdK},{sigma},{sigmabar}" + "}" + f"(?a,Lsl1?LUsl[k],?b)*{sl2CdK}(?c,Usl1?ULsl[k],?d) = {sl2Ceps}(?a,?c,?d,?b);\n"  # [sl2Ceps]?
     form += "\t" + f"id {sl2Ceps}?" + "{" + f"{sl2Ceps},{sl2CdK},{sigma},{sigmabar}" + "}" + f"(?a,Lsldot1?LUsldot[k],?b)*{sl2CdK}(?c,Usldot1?ULsldot[k],?d) = {sl2Ceps}(?a,?c,?d,?b);\n"  # [sl2Ceps]?

@@ -918,60 +918,64 @@ def tex_sorted_terms_wo_eoms(single_terms):
     return latex
 
 @write_texfile_and_create_pdf("terms_sorted_sun_projection")
-def tex_terms_sorted_sun_projection(single_terms):
+def tex_terms_sorted_sun_projection(single_terms, max_dim:int=6):
     latex = ""
-    for term_type in single_terms.values():
-        for term_mass_dim in term_type.values():
-            latex += r"\section*{" + re.sub(r"'", "", term_mass_dim.name) + "}\n"
-            # get terms with specific field structure
-            term_with_specific_field_structure = {}
-            for term in term_mass_dim:
-                try:
-                    term_with_specific_field_structure[term.fieldstructure].append(term)
-                except KeyError:
-                    term_with_specific_field_structure[term.fieldstructure] = [term]
+    for mass_dim in range(2, max_dim + 1):
+        latex += r"\section*{" + f"Mass dimension: {mass_dim:d}" + "}\n"
+        for term_type in single_terms.values():
+            for term_mass_dim in term_type.values():
+                if term_mass_dim.d is not mass_dim:
+                    continue
+                latex += r"\subsection*{" + re.sub(r"'", "", term_mass_dim.name) + "}\n"
+                # get terms with specific field structure
+                term_with_specific_field_structure = {}
+                for term in term_mass_dim:
+                    try:
+                        term_with_specific_field_structure[term.fieldstructure].append(term)
+                    except KeyError:
+                        term_with_specific_field_structure[term.fieldstructure] = [term]
 
-            latex_terms = ""
-            for name_of_term, terms_specific in term_with_specific_field_structure.items():
-                name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])
-                latex_terms += r"\paragraph{" + f"{name_form:s}" + "}\n"
-                for term in terms_specific:
-                    latex_terms += r"\begin{dmath}" + "\n"
-                    latex_terms += f"{term:tex}\n"
-                    latex_terms += r"\end{dmath}" + "\n"
+                latex_terms = ""
+                for name_of_term, terms_specific in term_with_specific_field_structure.items():
+                    name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])
+                    latex_terms += r"\paragraph{" + f"{name_form:s}" + "}\n"
+                    for term in terms_specific:
+                        latex_terms += r"\begin{dmath}" + "\n"
+                        latex_terms += f"{term:tex}\n"
+                        latex_terms += r"\end{dmath}" + "\n"
 
-            latex_sun_tensors = ""
-            if term_mass_dim.sun_projection_tensors:
-                for sun_group, sun_tensors in term_mass_dim.sun_projection_tensors.items():
-                    if not sun_tensors: continue
-                    # get tex indices for the tensor indices
-                    # Note 1: This has to be done after the generation of the tex expression of the term even if
-                    # the latter is texed after the SUN-Tensors, since in this generation the tex indices for each
-                    # operator are assigned.
-                    # Note 2: Since the indices on all fields are always named in ascending order, exactly as it is
-                    # the case for the SUN-Tensors. The SUN-Tensor indices should have all assigned the same LaTex
-                    # indices and can thus be written one time, for all terms.
-                    if "2" in sun_group:
-                        index_name = "gauge"
-                    elif "3" in sun_group:
-                        index_name = "colf"
-                    ref_indices = {index.expr: index.tex for index in term_mass_dim[0].indices[index_name]}
-                    for term in term_mass_dim[1:]:
-                        for index in term.indices[index_name]:
-                            assert ref_indices[index.expr] == index.tex, f"Tex indices for indices of type {index_name} are not the same in all terms."
+                latex_sun_tensors = ""
+                if term_mass_dim.sun_projection_tensors:
+                    for sun_group, sun_tensors in term_mass_dim.sun_projection_tensors.items():
+                        if not sun_tensors: continue
+                        # get tex indices for the tensor indices
+                        # Note 1: This has to be done after the generation of the tex expression of the term even if
+                        # the latter is texed after the SUN-Tensors, since in this generation the tex indices for each
+                        # operator are assigned.
+                        # Note 2: Since the indices on all fields are always named in ascending order, exactly as it is
+                        # the case for the SUN-Tensors. The SUN-Tensor indices should have all assigned the same LaTex
+                        # indices and can thus be written one time, for all terms.
+                        if "2" in sun_group:
+                            index_name = "gauge"
+                        elif "3" in sun_group:
+                            index_name = "colf"
+                        ref_indices = {index.expr: index.tex for index in term_mass_dim[0].indices[index_name]}
+                        for term in term_mass_dim[1:]:
+                            for index in term.indices[index_name]:
+                                assert ref_indices[index.expr] == index.tex, f"Tex indices for indices of type {index_name} are not the same in all terms."
 
-                    for basis_tensor in sun_tensors:
-                        for monom in basis_tensor.monoms:
-                            for tensor in monom.tensors:
-                                for index in tensor.indices:
-                                    index.tex = ref_indices[index.expr]
-                    latex_sun_tensors += r"\paragraph{" + f"{sun_group:s}-Basis Tensors" + "}\n"
-                    latex_sun_tensors += r"\begin{align}" + "\n"
-                    latex_sun_tensors += f"{sun_tensors:tex}"
-                    latex_sun_tensors += r"\end{align}" + "\n"
+                        for basis_tensor in sun_tensors:
+                            for monom in basis_tensor.monoms:
+                                for tensor in monom.tensors:
+                                    for index in tensor.indices:
+                                        index.tex = ref_indices[index.expr]
+                        latex_sun_tensors += r"\paragraph{" + f"{sun_group:s}-Basis Tensors" + "}\n"
+                        latex_sun_tensors += r"\begin{align}" + "\n"
+                        latex_sun_tensors += f"{sun_tensors:tex}"
+                        latex_sun_tensors += r"\end{align}" + "\n"
 
-            if latex_sun_tensors: latex += latex_sun_tensors
-            latex += latex_terms
+                if latex_sun_tensors: latex += latex_sun_tensors
+                latex += latex_terms
     return latex
 
 

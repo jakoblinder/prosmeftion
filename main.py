@@ -160,7 +160,7 @@ def main(max_dim = 6):
     logger.info(f"Terms after SUN projection: {nterms_after_sun_projection:d}")
 
     if args.tex:
-        tex_terms_sorted_sun_projection(single_terms)
+        tex_terms_sorted_sun_projection(single_terms,max_dim)
 
     # output = ""
     # for term_type in single_terms.values():

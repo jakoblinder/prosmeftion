@@ -147,9 +147,11 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         return self._coeff
 
     @coeff.setter
-    def coeff(self, value):
-        # TODO: Abstraction into operators
-        self._coeff = Coefficient(value, self.name)
+    def coeff(self, fp_coeff):
+        if isinstance(fp_coeff, Coefficient):
+            self._coeff = fp_coeff
+        else:
+            self._coeff = Coefficient(fp_coeff, self.name)
 
     @property
     def d(self):
@@ -267,7 +269,7 @@ class Summand(Summand_Model):
     """Single term consisting of an overall coefficient and a product of operators."""
     fieldcounter: Dict[str, int]
 
-    def __init__(self, tensors: List[str], fields: List[str], coeff: str, fp_name: str):
+    def __init__(self, tensors: List[Union[str,Tensor]], fields: List[Union[str,Field]], coeff: Union[str,Coefficient], fp_name: str):
         super().__init__(tensors, fields, coeff, fp_name)
 
         # Gauge fields contain special projection index of the form idxF2I1, which is transmitted to the contracted tensors:

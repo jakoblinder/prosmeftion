@@ -58,112 +58,112 @@ def get_type(terms):
 
 
 def equalize_indices(ref_term: Summand, eq_term: Summand) -> (List[Index], List[Index]):
-        """
-        Renames indices of the fields for a given Summand eq_term in the same way as in the reference Summand ref_term
-        and replaces them accordingly in the tensors of the eq_term.
-        Parameters
-        ----------
-        ref_term
-            Reference Summand.
-        eq_term
-            Summand for which the indices are equalized.
-        Returns
-        -------
-        """
-        # Note the order of indices on a field is very specific and specified in the op_config.yml file.
-        # Nevertheless, the order of derivative indices is not specific and also derivative indices might stand
-        # before or behind the field indices.
-        #
-        for ref_field, eq_field in zip(ref_term.fields, eq_term.fields):
-            assert ref_field.name == eq_field.name
-            skip_field_indices = []  # Those are the indices of the non derivative indices on a field which are already replaced -> Important if there are 2 identical non derivative indices in a field.
-            for i, ref_index in enumerate(ref_field.indices):
-                index_tensor_found = False
-                if der := ref_index.derIndex:
-                    for j, eq_index in enumerate(eq_field.indices):
-                        # Assure that the correct derivative index is changed, i.e. the index of the correct derivative of the correct type.
-                        if eq_index.derIndex == der and eq_index.typ == ref_index.typ:
-                            for tensor in eq_term.tensors:
-                                for k, tensor_index in enumerate(tensor.indices):
-                                    # find the tensor in the eq_term with which the field is contracted
-                                    if tensor_index.indname == eq_index.indname:
-                                        index_tensor_found = True
-                                        tensor.indices[k] = ref_index.dual_index
-                                        break
-                                if index_tensor_found: break
-                        # Replace Field index afterwards to ensure that contraction stay the same.
-                        if index_tensor_found:
-                            eq_field.indices[j] = ref_index
-                            break
-                else:
-                    for j, eq_index in enumerate(eq_field.indices):
-                        if j in skip_field_indices:
-                            # This index is already replaced.
-                            continue
-                        # Assure that it is not a derivative index
-                        if not eq_index.derIndex and eq_index.typ == ref_index.typ:
-                            for tensor in eq_term.tensors:
-                                for k, tensor_index in enumerate(tensor.indices):
-                                    # find the tensor in the eq_term with which the field is contracted
-                                    if tensor_index.indname == eq_index.indname:
-                                        index_tensor_found = True
-                                        tensor.indices[k] = ref_index.dual_index
-                                        break
-                                if index_tensor_found: break
-                        # Replace Field index afterwards to ensure that contraction stay the same.
-                        if index_tensor_found:
-                            eq_field.indices[j] = ref_index
-                            skip_field_indices.append(j)
-                            break
-                    # for tensor in eq_term.tensors:
-                    #     for j, tensor_index in enumerate(tensor.indices):
-                    #         # find the tensor in the eq_term with which the field is contracted
-                    #         if tensor_index.indname == eq_field.indices[i].indname:
-                    #             index_tensor_found = True
-                    #             # print(f"{index} -> {index.dual_index}")
-                    #             tensor.indices[j] = ref_index.dual_index
-                    #             break
-                    #     if index_tensor_found: break
-                    # # Replace Field index afterwards to ensure that contraction stay the same.
-                    # eq_field.indices[i] = ref_index
-        #  Contractions within tensors like for example between 2 Yukawa matrices are still allowed, but occur also
-        #  only between Yukawa matrices.
-        ref_tensor_indices = Indices_Operator([])  # All indices occuring in the tensors of ref_term
-        for ref_tensor in ref_term.tensors:
-            ref_tensor_indices += ref_tensor.indices
-        eq_tensor_indices = Indices_Operator([])  # All indices occuring in the tensors of eq_term
-        for eq_tensor in eq_term.tensors:
-            eq_tensor_indices += eq_tensor.indices
+    """
+    Renames indices of the fields for a given Summand eq_term in the same way as in the reference Summand ref_term
+    and replaces them accordingly in the tensors of the eq_term.
+    Parameters
+    ----------
+    ref_term
+        Reference Summand.
+    eq_term
+        Summand for which the indices are equalized.
+    Returns
+    -------
+    """
+    # Note the order of indices on a field is very specific and specified in the op_config.yml file.
+    # Nevertheless, the order of derivative indices is not specific and also derivative indices might stand
+    # before or behind the field indices.
+    #
+    for ref_field, eq_field in zip(ref_term.fields, eq_term.fields):
+        assert ref_field.name == eq_field.name
+        skip_field_indices = []  # Those are the indices of the non derivative indices on a field which are already replaced -> Important if there are 2 identical non derivative indices in a field.
+        for i, ref_index in enumerate(ref_field.indices):
+            index_tensor_found = False
+            if der := ref_index.derIndex:
+                for j, eq_index in enumerate(eq_field.indices):
+                    # Assure that the correct derivative index is changed, i.e. the index of the correct derivative of the correct type.
+                    if eq_index.derIndex == der and eq_index.typ == ref_index.typ:
+                        for tensor in eq_term.tensors:
+                            for k, tensor_index in enumerate(tensor.indices):
+                                # find the tensor in the eq_term with which the field is contracted
+                                if tensor_index.indname == eq_index.indname:
+                                    index_tensor_found = True
+                                    tensor.indices[k] = ref_index.dual_index
+                                    break
+                            if index_tensor_found: break
+                    # Replace Field index afterwards to ensure that contraction stay the same.
+                    if index_tensor_found:
+                        eq_field.indices[j] = ref_index
+                        break
+            else:
+                for j, eq_index in enumerate(eq_field.indices):
+                    if j in skip_field_indices:
+                        # This index is already replaced.
+                        continue
+                    # Assure that it is not a derivative index
+                    if not eq_index.derIndex and eq_index.typ == ref_index.typ:
+                        for tensor in eq_term.tensors:
+                            for k, tensor_index in enumerate(tensor.indices):
+                                # find the tensor in the eq_term with which the field is contracted
+                                if tensor_index.indname == eq_index.indname:
+                                    index_tensor_found = True
+                                    tensor.indices[k] = ref_index.dual_index
+                                    break
+                            if index_tensor_found: break
+                    # Replace Field index afterwards to ensure that contraction stay the same.
+                    if index_tensor_found:
+                        eq_field.indices[j] = ref_index
+                        skip_field_indices.append(j)
+                        break
+                # for tensor in eq_term.tensors:
+                #     for j, tensor_index in enumerate(tensor.indices):
+                #         # find the tensor in the eq_term with which the field is contracted
+                #         if tensor_index.indname == eq_field.indices[i].indname:
+                #             index_tensor_found = True
+                #             # print(f"{index} -> {index.dual_index}")
+                #             tensor.indices[j] = ref_index.dual_index
+                #             break
+                #     if index_tensor_found: break
+                # # Replace Field index afterwards to ensure that contraction stay the same.
+                # eq_field.indices[i] = ref_index
+    #  Contractions within tensors like for example between 2 Yukawa matrices are still allowed, but occur also
+    #  only between Yukawa matrices.
+    ref_tensor_indices = Indices_Operator([])  # All indices occuring in the tensors of ref_term
+    for ref_tensor in ref_term.tensors:
+        ref_tensor_indices += ref_tensor.indices
+    eq_tensor_indices = Indices_Operator([])  # All indices occuring in the tensors of eq_term
+    for eq_tensor in eq_term.tensors:
+        eq_tensor_indices += eq_tensor.indices
 
-        ref_tensor_indices = list(ref_tensor_indices.indices)
-        eq_tensor_indices = list(eq_tensor_indices.indices)
-        # Remove double indices in eq_tensor_indices and ref_tensor_indices
-        for index in ref_tensor_indices.copy():
-            while index.is_in(ref_tensor_indices) > 1:
-                ref_tensor_indices.remove(index)
-        for index in eq_tensor_indices.copy():
-            while index.is_in(eq_tensor_indices) > 1:
-                eq_tensor_indices.remove(index)
-        # Remove all indices from eq_tensor_indices which are already in ref_tensor_indices, so that only non renamed
-        # indices in eq_tensor_indices remain:
-        eq_tensor_indices_copy = eq_tensor_indices.copy()
-        for index in eq_tensor_indices_copy:
-            if index.is_in(ref_tensor_indices):
-                eq_tensor_indices.remove(index)
-        for index in ref_tensor_indices.copy():
-            if index.is_in(eq_tensor_indices_copy):
-                ref_tensor_indices.remove(index)
-        eq_tensor_indices = list(eq_tensor_indices)
-        ref_tensor_indices = list(ref_tensor_indices)
-        # Worst case:
-        # In  eq_term: [ye+](flav2765,flav3459)*ye(flav3459,flav2991)*[ye+](flav2991,flav3648)
-        # In ref_term: [ye+](flav2765,flav2917)*ye(flav2917,flav3140)*[ye+](flav3140,flav3648)
-        # -> Sum over contractions within tensors in FORM, so that FORM will generate dummy indices
-        # and the naming isn't important anymore.
-        # In this example: sum flav3459, flav2991, flav2917, flav3140;
-        # Read in output and replace dummy indices by newly generated flavor indices, which will be generated by
-        # a generator in python, respecting already set indices.
-        return ref_tensor_indices, eq_tensor_indices
+    ref_tensor_indices = list(ref_tensor_indices.indices)
+    eq_tensor_indices = list(eq_tensor_indices.indices)
+    # Remove double indices in eq_tensor_indices and ref_tensor_indices
+    for index in ref_tensor_indices.copy():
+        while index.is_in(ref_tensor_indices) > 1:
+            ref_tensor_indices.remove(index)
+    for index in eq_tensor_indices.copy():
+        while index.is_in(eq_tensor_indices) > 1:
+            eq_tensor_indices.remove(index)
+    # Remove all indices from eq_tensor_indices which are already in ref_tensor_indices, so that only non renamed
+    # indices in eq_tensor_indices remain:
+    eq_tensor_indices_copy = eq_tensor_indices.copy()
+    for index in eq_tensor_indices_copy:
+        if index.is_in(ref_tensor_indices):
+            eq_tensor_indices.remove(index)
+    for index in ref_tensor_indices.copy():
+        if index.is_in(eq_tensor_indices_copy):
+            ref_tensor_indices.remove(index)
+    eq_tensor_indices = list(eq_tensor_indices)
+    ref_tensor_indices = list(ref_tensor_indices)
+    # Worst case:
+    # In  eq_term: [ye+](flav2765,flav3459)*ye(flav3459,flav2991)*[ye+](flav2991,flav3648)
+    # In ref_term: [ye+](flav2765,flav2917)*ye(flav2917,flav3140)*[ye+](flav3140,flav3648)
+    # -> Sum over contractions within tensors in FORM, so that FORM will generate dummy indices
+    # and the naming isn't important anymore.
+    # In this example: sum flav3459, flav2991, flav2917, flav3140;
+    # Read in output and replace dummy indices by newly generated flavor indices, which will be generated by
+    # a generator in python, respecting already set indices.
+    return ref_tensor_indices, eq_tensor_indices
 
 def equalize_field_indices(single_terms):
     """

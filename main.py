@@ -14,6 +14,7 @@ from tioc.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_de
 from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms, tex_sorted_terms_before_sun  # , main
 from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
 from tioc.get_FORM_refactored.tableau import test
+from tioc.get_FORM_refactored.rfr import rfr
 
 # configure logger
 timestamp = datetime.now()
@@ -89,8 +90,7 @@ def main(max_dim = 6):
         tex_sorted_terms_wo_doubles(single_terms)
 
     pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
-
+    single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
     nterms_before = number_terms(single_terms)
 
     single_terms = replace_eoms(single_terms)
@@ -124,8 +124,16 @@ def main(max_dim = 6):
     if args.tex:
         tex_sorted_terms_wo_eoms(single_terms)
 
-    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
+    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
+
+    logger.info("Symmetries terms.")
+    single_terms = rfr(single_terms)
+
+    nterms_before = number_terms(single_terms)
+    single_terms = remove_doubles(single_terms)
+    nterms_after = number_terms(single_terms)
+    logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
 
     # TODO: Apply the integration by parts and Schouten identities to the lorentz structure.
     # test()
@@ -162,13 +170,13 @@ def main(max_dim = 6):
     if args.tex:
         tex_terms_sorted_sun_projection(single_terms,max_dim)
 
-    # output = ""
-    # for term_type in single_terms.values():
-    #     for term_mass_dim in term_type.values():
-    #         for term in term_mass_dim:
-    #             output += f"+{term:c}\n"
-    # with open(PROJECTION_PATH / "all_terms.h", "w") as file:
-    #     file.write(output)
+    output = ""
+    for term_type in single_terms.values():
+        for term_mass_dim in term_type.values():
+            for term in term_mass_dim:
+                output += f"+{term:c}\n"
+    with open(PROJECTION_PATH / "all_terms.h", "w") as file:
+        file.write(output)
 
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))

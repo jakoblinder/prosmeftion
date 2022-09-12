@@ -6,6 +6,13 @@ from copy import copy
 from fractions import Fraction
 from math import factorial
 from typing import Iterator, List, Tuple, Dict, Union
+from tioc import model
+from tioc.get_FORM_refactored.term import Term
+from tioc.get_FORM_refactored.summand import Summand
+from tioc.get_FORM_refactored.coefficient import Factor
+from tioc.get_FORM_refactored.operators import Fields
+from tioc.sun_projection import get_type
+
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
@@ -119,20 +126,82 @@ def symmetrize(input_list:List, sym_structures:List[Tuple[List]]) -> List[Tuple]
 
     return permuted_list[0]
 
-# a = symmetrize_list((2, [1,2,3,4,5]), [3,1,5], True)
-b = symmetrize([1,2,3,4,5,6,7,8], [([3,1,5], "S"), ([2,4], "A"), ([7,8], "S")])
+def shift_fields(term:Summand, field_indices:Tuple[List]):
+    """
+    A term with e.g. 5 field has field position indices [1,2,3,4,5]. The field_indices declare to which position each
+    field will be shifted. For example field_indices = ('-1/2', [2,1,3,4,5])
+    would change the position of the first two field and multiply the coefficient of the term by (-1/2). This would
+    correspond to the antisymmetrisation of two fermions.
 
-print(perms)
+    Parameters
+    ----------
+    term
+    field_indices
+
+    Returns
+    -------
+        Term with changed order of fields and adjusted coefficient.
+    """
+    n_fields = sum(term.fieldcounter_stripped.values())
+    ref_order = list(range(1, n_fields + 1))
+    new_order = field_indices[1]
+
+    new_fields = [None for i in range(n_fields)]
+    new_coeff = term.coeff.copy()
+    new_coeff *= Factor(field_indices[0])
+
+    for i, field in enumerate(term.fields):
+        field_cp = field.copy()
+        assert field_cp.field_pos == ref_order[i]
+        field_cp.field_pos = new_order[i]
+        field_cp.gaugeIndicesforProjection()
+        new_fields[new_order[i] - 1] = field_cp
+
+    return Summand(tensors=term.tensors.copy(), fields=Fields(new_fields), coeff=new_coeff, fp_name=term.name)
 
 
 def rfr(single_terms):
+    terms = []
     for term_type in single_terms.values():
         for term_mass_dim in term_type.values():
-            if not any([n_field > 1 for n_field in term_mass_dim.field_content.values()]):
-                # no field occurs at least twice
-                continue
-            else:
+            if any([n_field > 1 for n_field in term_mass_dim.field_content.values()]):
                 # At least one field occurs at least twice:
+                logger.info(f"Terms with field content {term_mass_dim.field_content} are (anti-)symmetrized.")
+                n_fields = sum(term_mass_dim.field_content.values())  # number of fields in the term
                 for term in term_mass_dim.terms:
+                    symmetrized_terms = []
+                    field_indices = list(range(1, n_fields + 1))
+                    symmetrizations = []
+                    n = 1
                     for field_name, n_field in term.fieldcounter_stripped.items():
-                        pass
+                        if n_field > 1:
+                            if model.fields[field_name].ac:
+                                sym_antisym = "A"
+                            else:
+                                sym_antisym = "S"
+                            symmetrizations.append((list(range(n, n + n_field)), sym_antisym))
+                        n += n_field
+                    sym_field_indices = symmetrize(field_indices, symmetrizations)
+                    for field_indices in sym_field_indices:
+                        symmetrized_terms.append(shift_fields(term, field_indices))
+
+
+                    for term_sym in symmetrized_terms:
+                        name_form = "".join([f"{name}{nD}" for name, nD in term_sym.fieldstructure])
+                        terms.append(Term([term_sym], name_form))
+
+            else:
+                # no field occurs at least twice
+                logger.info(f"For terms with field content {term_mass_dim.field_content} no field occurs at least twice.")
+                for term in term_mass_dim.terms:
+                    name_form = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])
+                    terms.append(Term([term], name_form))
+
+    single_terms = get_type(terms)
+
+    return single_terms
+
+if __name__ == "__main__":
+    # a = symmetrize_list((2, [1,2,3,4,5]), [3,1,5], True)
+    b = symmetrize([1, 2, 3, 4, 5, 6, 7, 8], [([3, 1, 5], "S"), ([2, 4], "A"), ([7, 8], "S")])
+    print(b)

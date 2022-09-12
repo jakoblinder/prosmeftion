@@ -185,86 +185,17 @@ def main(max_dim = 6, debug=None):
 
 start_time = timeit.default_timer()
 
-# terms = main(args.dimension)
-#
-# output = ""
-# for term_type in terms.values():
-#     for term_mass_dim in term_type.values():
-#         for term in term_mass_dim:
-#             output += f"+{term:c}\n"
-# n_terms = number_terms(terms)
-#
-# with open(PROJECTION_PATH / f"all_terms{n_terms}.h", "w") as file:
-#     file.write(output)
+terms = main(args.dimension)
 
+output = ""
+for term_type in terms.values():
+    for term_mass_dim in term_type.values():
+        for term in term_mass_dim:
+            output += f"+{term:c}\n"
+n_terms = number_terms(terms)
 
-fieldstructures = [(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 0, 1, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 1, 1, 0, 0, 0, 0), (0, 0, 0, 1, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 1, 0, 0, 1, 0, 0), (0, 0, 1, 0, 0, 1, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 1, 1, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0), (0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 1, 0, 0), (0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0), (0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0), (0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0), (0, 0, 0, 2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0), (0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0), (1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0), (0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1), (0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 0), (2, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1), (1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 2), (0, 2, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0), (0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0), (0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0), (0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0), (0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0)]
-# fieldstructures = [tuple(map(int,list("0100000110000000"))),]
-for fieldstructure in fieldstructures:
-    term_sets = []
-    for i in range(2):
-        terms = main(args.dimension, debug=fieldstructure)
-        term_sets.append(terms)
-
-    output_path = PROJECTION_PATH / Path(f"consistency_problems/{''.join(map(str,fieldstructure))}")
-    output_path.mkdir(parents=True, exist_ok=True)
-    n_term_collected = []
-    for i, terms in enumerate(term_sets):
-        output = ""
-        for term_type in terms.values():
-            for term_mass_dim in term_type.values():
-                for term in term_mass_dim:
-                    output += f"+{term:c}\n"
-        n_terms = number_terms(terms)
-        n_term_collected.append(n_terms)
-        with open(output_path / f"all_terms{n_terms}_{i}.h", "w") as file:
-            file.write(output)
-    form = f"""Off statistics;
-#include declarations_general.h # coefficient
-#include declarations_general.h # indices
-#include declarations_general.h # tensors
-#include declarations_general.h # operators
-
-Local expr0 =
-#include all_terms{n_term_collected[0]}_0.h
-;
-Local expr1 =
-#include all_terms{n_term_collected[1]}_1.h
-;
-
-Local expr = expr0 - expr1;
-.sort
-Drop expr0, expr1;
-
-* Bring indices of epsilons in order:
-Multiply replace_([su2eps],[su2epsA]);
-.sort
-Multiply replace_([su2epsA],[su2eps]);
-.sort
-Multiply replace_([su3eps],[su3epsA]);
-.sort
-Multiply replace_([su3epsA],[su3eps]);
-.sort
-Multiply replace_([sl2Ceps],[sl2CepsA]);
-.sort
-Multiply replace_([sl2CepsA],[sl2Ceps]);
-.sort
-
-Bracket yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [su2dK], [su3dK], [sl2CdK], [flavdK], T, gamma, TSU2, TSU3, H, [H+], G, W, B, GL, GR, WL, WR, BL, BR, D, l, lbar, L, [L+], e, ebar, [e_C], [e_C+], u, ubar, [u_C], [u_C+], b, bbar, [d_C], [d_C+], q, qbar, Q, [Q+];
-
-#write <{output_path}/diff{n_terms}.h> "%E", expr
-Print +ss;
-.end"""
-    with open(output_path / f"diff{n_terms}_0-{n_terms}_1.frm", "w") as file:
-        file.write(form)
-    run_form(fp_cwd=output_path, filename=output_path / f"diff{n_terms}_0-{n_terms}_1.frm", fp_p=PROJECTION_PATH/ "form_files/general")
-    with open(output_path / f"diff{n_terms}.h", "r") as file:
-        term = file.read()
-        try:
-            term = int(term)
-            print(term)
-        except ValueError:
-            print(f"Difference: {term}")
+with open(PROJECTION_PATH / f"all_terms{n_terms}.h", "w") as file:
+    file.write(output)
 
 stop_time = timeit.default_timer()
 logger.info(f"Done in {stop_time - start_time:.2f} sec.")

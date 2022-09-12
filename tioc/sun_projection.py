@@ -274,7 +274,7 @@ def remove_doubles(single_terms):
     -------
     """
     merged_terms = []
-    for type in single_terms.values():
+    for type_name, type in single_terms.items():
         for term_mass_dim in type.values():
             term_with_specific_field_structure = {}
             for term in term_mass_dim:

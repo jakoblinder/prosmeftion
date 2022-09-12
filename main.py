@@ -7,7 +7,7 @@ from pathlib import Path
 
 from yaml import safe_load
 
-from tioc import CONFIG_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, n_der, get_basis
+from tioc import CONFIG_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, n_der, get_basis, run_form
 from tioc.general import form_declarations
 
 from tioc.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
@@ -54,7 +54,7 @@ def number_terms(single_terms):
             nterms += len(terms_n)
     return nterms
 
-def main(max_dim = 6):
+def main(max_dim = 6, debug=None):
     # get basis up to max_dim mass dimension
     basis = get_basis(max_dim)
     bs_file = args.matched.resolve()  # "exampleOutputBS.m"
@@ -135,11 +135,17 @@ def main(max_dim = 6):
     nterms_after = number_terms(single_terms)
     logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
 
-    # TODO: Apply the integration by parts and Schouten identities to the lorentz structure.
+    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_without_rfr.p", "wb"))
+    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_without_rfr.p", "rb"))
+
+    # FIXME: From here on something happens which is not the same for every run and involves both field strength tensors.
     # test()
     # Apply ibp and schouten ids up to the point where all tableaus, are SSYT:
     # Note due to the replacement of contracted derivative on the second and third field,
     # this has to be done iteratively while removing always the EOMs before the next iteration
+    if debug:
+        single_terms = {debug: single_terms[debug]}
+
     number_iterations = 0
     while True:
         single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim)
@@ -170,14 +176,6 @@ def main(max_dim = 6):
     if args.tex:
         tex_terms_sorted_sun_projection(single_terms,max_dim)
 
-    output = ""
-    for term_type in single_terms.values():
-        for term_mass_dim in term_type.values():
-            for term in term_mass_dim:
-                output += f"+{term:c}\n"
-    with open(PROJECTION_PATH / "all_terms.h", "w") as file:
-        file.write(output)
-
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
@@ -187,7 +185,86 @@ def main(max_dim = 6):
 
 start_time = timeit.default_timer()
 
-stuff = main(args.dimension)
+# terms = main(args.dimension)
+#
+# output = ""
+# for term_type in terms.values():
+#     for term_mass_dim in term_type.values():
+#         for term in term_mass_dim:
+#             output += f"+{term:c}\n"
+# n_terms = number_terms(terms)
+#
+# with open(PROJECTION_PATH / f"all_terms{n_terms}.h", "w") as file:
+#     file.write(output)
+
+
+fieldstructures = [(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 0, 1, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 1, 1, 0, 0, 0, 0), (0, 0, 0, 1, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 1, 0, 0, 1, 0, 0), (0, 0, 1, 0, 0, 1, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 1, 1, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0), (0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 1, 0, 0), (0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0), (0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0), (0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0), (0, 0, 0, 2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0), (0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0), (1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0), (0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1), (0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 0), (2, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1), (1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 2), (0, 2, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0), (0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0), (0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0), (0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0), (0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0), (0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0)]
+# fieldstructures = [tuple(map(int,list("0100000110000000"))),]
+for fieldstructure in fieldstructures:
+    term_sets = []
+    for i in range(2):
+        terms = main(args.dimension, debug=fieldstructure)
+        term_sets.append(terms)
+
+    output_path = PROJECTION_PATH / Path(f"consistency_problems/{''.join(map(str,fieldstructure))}")
+    output_path.mkdir(parents=True, exist_ok=True)
+    n_term_collected = []
+    for i, terms in enumerate(term_sets):
+        output = ""
+        for term_type in terms.values():
+            for term_mass_dim in term_type.values():
+                for term in term_mass_dim:
+                    output += f"+{term:c}\n"
+        n_terms = number_terms(terms)
+        n_term_collected.append(n_terms)
+        with open(output_path / f"all_terms{n_terms}_{i}.h", "w") as file:
+            file.write(output)
+    form = f"""Off statistics;
+#include declarations_general.h # coefficient
+#include declarations_general.h # indices
+#include declarations_general.h # tensors
+#include declarations_general.h # operators
+
+Local expr0 =
+#include all_terms{n_term_collected[0]}_0.h
+;
+Local expr1 =
+#include all_terms{n_term_collected[1]}_1.h
+;
+
+Local expr = expr0 - expr1;
+.sort
+Drop expr0, expr1;
+
+* Bring indices of epsilons in order:
+Multiply replace_([su2eps],[su2epsA]);
+.sort
+Multiply replace_([su2epsA],[su2eps]);
+.sort
+Multiply replace_([su3eps],[su3epsA]);
+.sort
+Multiply replace_([su3epsA],[su3eps]);
+.sort
+Multiply replace_([sl2Ceps],[sl2CepsA]);
+.sort
+Multiply replace_([sl2CepsA],[sl2Ceps]);
+.sort
+
+Bracket yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [su2dK], [su3dK], [sl2CdK], [flavdK], T, gamma, TSU2, TSU3, H, [H+], G, W, B, GL, GR, WL, WR, BL, BR, D, l, lbar, L, [L+], e, ebar, [e_C], [e_C+], u, ubar, [u_C], [u_C+], b, bbar, [d_C], [d_C+], q, qbar, Q, [Q+];
+
+#write <{output_path}/diff{n_terms}.h> "%E", expr
+Print +ss;
+.end"""
+    with open(output_path / f"diff{n_terms}_0-{n_terms}_1.frm", "w") as file:
+        file.write(form)
+    run_form(fp_cwd=output_path, filename=output_path / f"diff{n_terms}_0-{n_terms}_1.frm", fp_p=PROJECTION_PATH/ "form_files/general")
+    with open(output_path / f"diff{n_terms}.h", "r") as file:
+        term = file.read()
+        try:
+            term = int(term)
+            print(term)
+        except ValueError:
+            print(f"Difference: {term}")
 
 stop_time = timeit.default_timer()
 logger.info(f"Done in {stop_time - start_time:.2f} sec.")

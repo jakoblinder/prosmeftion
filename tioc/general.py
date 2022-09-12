@@ -241,10 +241,11 @@ def form_antisymDerivative(n_der: int):
                 func += f"{sl2Ceps:s}(Lsl1, Lsl2)"
                 func += " * "
                 func += f"{''.join(red_der)}D2({higgs}(?a)){len(red_per)*')'}"
-                func += f" - "
-                func += f"i_ * FL(Lsl1, Lsl2, {''.join(red_der)}{higgs}(?a){len(red_per)*')'})"
                 if fp_minus_one_RHS:
                     func += ")"
+                func += f" - "
+                func += f"i_ * FL(Lsl1, Lsl2, {''.join(red_der)}{higgs}(?a){len(red_per)*')'})"
+
                 return lHS, func
 
             id_statement1  = f"{sl2Ceps:s}(Lsldot1?LUsldot[i1sldot], Lsldot2?LUsldot[i2sldot])"
@@ -299,10 +300,11 @@ def form_antisymDerivative(n_der: int):
                 func += f"{sl2Ceps:s}(Usldot1, Usldot2)"
                 func += " * "
                 func += f"{''.join(red_der)}D2({higgs}(?a)){len(red_per) * ')'}"
-                func += f" + "
-                func += f"i_ * FR(Usldot1, Usldot2, {''.join(red_der)}{higgs}(?a){len(red_per) * ')'})"
                 if fp_minus_one_RHS:
                     func += ")"
+                func += f" + "
+                func += f"i_ * FR(Usldot1, Usldot2, {''.join(red_der)}{higgs}(?a){len(red_per) * ')'})"
+
                 return lHS, func
 
             id_statement1 = f"{sl2Ceps:s}(Usl1?ULsl[i1sl], Usl2?ULsl[i2sl])"
@@ -337,10 +339,6 @@ def form_antisymDerivative(n_der: int):
     # form += "label 2;\n"
 
     return form
-    # form += "#endprocedure"
-    #
-    # with open(FORM_GENERAL_PATH / "antisymDerivative.prc", "w") as file:
-    #     file.write(form)
 
 @create_procedure(FORM_GENERAL_PATH)
 def form_spinorEOMidentification(n_der: int):

@@ -685,7 +685,6 @@ class Term(Operator, Coefficient):
                                              f"Usl{ind2_2:d}"]
                     elif fieldstrengthtensor == opname["V"]:
                         # TODO: Change index order, so that SL2C-indices are always the first.
-                        # FIXME: Check signs.
                         for j in range(0, nDer + 1):
                             # Adjoint gauge index substitution is of the following form:
                             # W(gaugeadj1,lor1,lor2) = T(gaugeadj1,gauge2,gauge1)*[su2eps](gauge2,gauge3)*W(gauge1,gauge3,lor1,lor2)
@@ -710,7 +709,6 @@ class Term(Operator, Coefficient):
                                              f"gaugeA{ind3_3:d}",
                                              f"gaugeA{ind3_3:d}"]
                     elif fieldstrengthtensor == opname["G"]:
-                        # FIXME: Check signs.
                         for j in range(0, nDer + 1):
                             # Adjoint gauge index substitution is of the following form:
                             # G(cola1,lor1,lor2) = (1/2)*T(cola1,colf4,colf2)*[su3eps](colf1,colf3,colf4)*G(colf1,colf2,colf3,lor1,lor2)

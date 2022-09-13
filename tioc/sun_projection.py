@@ -204,11 +204,6 @@ def renew_indices(ref_term: Summand, fp_exclude_indices: List[Index]) -> Summand
     AND they do not occur in the specified list of indices fp_exclude_indices.
 
     Note: Contractions among tensors, are not replaced.
-    FIXME: Consider a Summand like e.g.:
-    [su2eps](gauge1,gauge13)*[su2eps](gauge3,gauge4)*[sl2Ceps](Usl1,Usl8)*[sl2Ceps](Lsldot3,Lsldot4)
-    *L(Lsl1,gauge1,flav5)*H(gauge3)*D(Lsl8,Usldot4,[H+](gauge4))*[L+](Usldot3,gauge13,flav5)
-    The flavour index flav5 is contracted among the fields!
-    Thus, there cannot be found a corresponding tensor in the substitution and such indices are skipped.
 
     Parameters
     ----------
@@ -397,7 +392,7 @@ def remove_doubles(single_terms):
     return single_terms
 
 def sun_internal_projector(op_type, group):
-    """Construct a projector to impose the 'internal symmetries'."""  # FIXME: What about external symmetries?
+    """Construct a projector to impose the 'internal symmetries'."""
     field_id = 0 #!
     projection_operator = []
     for field, multiplicity in op_type.fields:

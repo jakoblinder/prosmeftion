@@ -434,6 +434,7 @@ class Summand(Summand_Model):
             FL(Lsl1, Lsl2, H(gauge1)), FL(Lsl1, Lsl2, [H+](gauge1)),
             FR(Usldot1, Usldot2, H(gauge1)), FR(Usldot1, Usldot2, [H+](gauge1))
         by a sum of the U(1) and SU(2) field strength tensors B and W.
+        # TODO: Do the same for all fields not just the Higgs.
 
         Parameters
         -------

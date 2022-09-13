@@ -182,10 +182,12 @@ def form_antisymDerivative(n_der: int):
     eps_{a,b}*D2(H(gauge1))
     and the second with
     FL(a,b,H(gauge1)).
-    Note: FL denotes the total left handed part of the fieldstrengthtensor, which originates from the commutator of
+    Note: FL denotes the total left-handed part of the fieldstrengthtensor, which originates from the commutator of
     the covariant derivatives which acting on the Higgsfield. Therefore, only the part of the total Fieldstrength
     tensor for those groups under which the Higgsfield is charged are relavant, i.e. the SU(3) is for example not
     relevant for the Higgsfield.
+
+    # FIXME: Derivative has to be written directly at the field not anywhere -> no substitution for arbitrary permutations of derivatives.
 
     Call by
         #call antisymDerivative
@@ -241,10 +243,13 @@ def form_antisymDerivative(n_der: int):
                 func += f"{sl2Ceps:s}(Lsl1, Lsl2)"
                 func += " * "
                 func += f"{''.join(red_der)}D2({higgs}(?a)){len(red_per)*')'}"
-                if fp_minus_one_RHS:
+                if fp_minus_one_RHS: # FIXME: Not Here, but rather
                     func += ")"
                 func += f" - "
                 func += f"i_ * FL(Lsl1, Lsl2, {''.join(red_der)}{higgs}(?a){len(red_per)*')'})"
+                # FIXME: it should be written here:
+                #  if fp_minus_one_RHS:
+                #     func += ")"
 
                 return lHS, func
 
@@ -300,10 +305,13 @@ def form_antisymDerivative(n_der: int):
                 func += f"{sl2Ceps:s}(Usldot1, Usldot2)"
                 func += " * "
                 func += f"{''.join(red_der)}D2({higgs}(?a)){len(red_per) * ')'}"
-                if fp_minus_one_RHS:
+                if fp_minus_one_RHS: # FIXME: Not Here, but rather
                     func += ")"
                 func += f" + "
                 func += f"i_ * FR(Usldot1, Usldot2, {''.join(red_der)}{higgs}(?a){len(red_per) * ')'})"
+                # FIXME: it should be written here:
+                #  if fp_minus_one_RHS:
+                #     func += ")"
 
                 return lHS, func
 
@@ -366,6 +374,7 @@ def form_spinorEOMidentification(n_der: int):
 
     Permute all indices among the derivatives and take for the field just the next one. Further, contract with the
     epsilontensor in both permutations while considering the correct sign.
+    # FIXME: Derivative has to be written directly at the field not anywhere -> no substitution for arbitrary permutations of derivatives.
 
     Call by
         #call spinorEOMidentification
@@ -549,6 +558,7 @@ def form_fieldstrengthtensorEOMidentification(n_der: int):
 
     Permute all indices among the derivatives and take for the field just the next two. Further, contract with the
     epsilon tensor in both permutations while considering the correct sign.
+    # FIXME: Derivative has to be written directly at the field not anywhere -> no substitution for arbitrary permutations of derivatives.
 
     Call by
         #call fieldstrengthtensorEOMidentification

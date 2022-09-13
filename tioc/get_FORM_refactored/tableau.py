@@ -757,14 +757,14 @@ class LorentzTableau:
                 sign *= Permutation(list(col) + r_col).sign()
             else:
                 l_tab.append([j for j in col if j])
-        return Tableau(tuple(zip(*l_tab))), Tableau(tuple(zip(*reversed(r_tab)))), sign  # FIXME: Why is the r_tab reversed? (It changes nothing, but shouldn't it be unnecessary?)
+        return Tableau(tuple(zip(*l_tab))), Tableau(tuple(zip(*reversed(r_tab)))), sign
 
     @classmethod
     def from_lr_tableaux(cls, l_tab, r_tab, op_class: OpClass):
         """Construct from left- and (conjugated) right-handed tableaux for given class and return the overall sign."""
         N = op_class.N
         tab, sign = [], 1
-        for r_col in reversed(list(zip(*r_tab))):  # FIXME: Reversing necessary due to reverse statement of r_tab above.
+        for r_col in reversed(list(zip(*r_tab))):
             """v3.8
             tab.append(col := [j for j in range(1, N + 1) if j not in r_col])
             """

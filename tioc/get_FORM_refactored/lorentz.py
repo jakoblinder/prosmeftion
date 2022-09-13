@@ -750,7 +750,11 @@ class LR_Tableaux():
         tabs = []  # List[LR_Tableaux, bool]  -> The bool specifies whether EOMs might occur.
         def apply_ibp(lr_tab: LR_Tableaux, N:int):
             """
-            Recursive method applying all ibp relations. FIXME: Should not be recursive, since after each ibp the may occur EOMs in the first field.
+            Recursive method applying all ibp relations.
+            FIXME: Should not be recursive, since after each ibp there may occur EOMs in the first field.
+            FIXME: This is even not enough in order to rename the new derivative indices uniquely only one iteration
+                is allowed in on step.
+            FIXME: Only the outermost derivative should be integrated by parts no other.
             Parameters
             ----------
             lr

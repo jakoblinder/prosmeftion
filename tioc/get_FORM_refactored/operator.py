@@ -231,7 +231,6 @@ class Operator_Model(Index):
             expr += self.name
             non_Derivative_indices = [nonD_index for nonD_index in self.indices if not nonD_index.derIndex]
             ordered_indices = op_indices_in_indstructure_order(ind_structure, non_Derivative_indices)
-            # FIXME: The indices has to be set in the correct order!
             expr += f"({','.join(map(str, ordered_indices))})"  # non_Derivative_indices
 
             expr += n_brackets
@@ -475,7 +474,17 @@ class Field(Operator_Model):
 
         """
         nD = 1
-        # Note: Each derIndex consisting of only a digit should be rewritten in terms of an object() in order to avoid ambiguities.
+        # Note: Each derIndex consisting of only a digit should be rewritten in terms of an object() in order to
+        # avoid ambiguities.
+        # FIXME: This causes also (unnecessary) ambiguities, leading to for example two derivatives with
+        #  a changed order. The ibp algorithm should therefore only replace exact one derivative
+        #  (and this has to be the outermost) in each iteration. Thus only the indices of one derivative should have an
+        #  object() as an identifier and all other derivatives should have ascending identifiers. The new index could
+        #  then just be added. A problem is the D2D3 substitution which brings directly two new derivatives on a field.
+        #  However, in this case the derivatives are contracted which then has to be checked. If the derivatives are
+        #  contracted the order of the derivatives is again arbitrary.
+        #  Note: Even the order in self.indices['Lsl'] is not dependent on the derivative order, but depend only on
+        #  the order of the indices in the corresponding epsilon tensor.
         for derIndexLsl in self.indices['Lsl']:
             if derIndexLsl.derIndex and type(derIndexLsl.derIndex) is int:
                 lsl_nD = derIndexLsl.derIndex
@@ -492,7 +501,7 @@ class Field(Operator_Model):
                 assert found == 2
 
         # old_max = max([index.derIndex for index in self.indices])  # old maximum number of derivatives
-        der_indices = list(set([index.derIndex for index in self.indices if index.derIndex]))
+        der_indices = list(set([index.derIndex for index in self.indices if index.derIndex])) # FIXME: This is the point where effectivelz the order of derivatives might change, since the entries in the set are of arbitrary order.
         # found = {i: 0 for i in range(1, old_max + 1)}
         found = {i: 0 for i in der_indices}
         for i in found.keys():

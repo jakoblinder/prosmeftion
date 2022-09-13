@@ -90,7 +90,7 @@ def main(max_dim = 6, debug=None):
         tex_sorted_terms_wo_doubles(single_terms)
 
     pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
-    single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
+    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
     nterms_before = number_terms(single_terms)
 
     single_terms = replace_eoms(single_terms)
@@ -186,6 +186,8 @@ def main(max_dim = 6, debug=None):
 start_time = timeit.default_timer()
 
 terms = main(args.dimension)
+# fieldstructure = tuple(map(int,list("0100000110000000")))
+# terms = main(args.dimension, debug=fieldstructure)
 
 output = ""
 for term_type in terms.values():

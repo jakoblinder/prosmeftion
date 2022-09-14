@@ -104,6 +104,16 @@ def main(max_dim = 6, debug=None):
     pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
 
+    logger.info("Symmetries terms.")
+    single_terms = rfr(single_terms)
+
+    nterms_before = number_terms(single_terms)
+    single_terms = remove_doubles(single_terms)
+    nterms_after = number_terms(single_terms)
+    logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_without_rfr.p", "wb"))
+    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_without_rfr.p", "rb"))
+
     # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
     single_terms = rearrange_derivatives(single_terms)
 
@@ -126,17 +136,6 @@ def main(max_dim = 6, debug=None):
 
     pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
-
-    logger.info("Symmetries terms.")
-    single_terms = rfr(single_terms)
-
-    nterms_before = number_terms(single_terms)
-    single_terms = remove_doubles(single_terms)
-    nterms_after = number_terms(single_terms)
-    logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_without_rfr.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_without_rfr.p", "rb"))
 
     # FIXME: From here on something happens which is not the same for every run and involves both field strength tensors.
     # test()

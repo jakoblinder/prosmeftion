@@ -1,0 +1,1 @@
+{((1)*F[{lor1,lor2}]**H[{gauge1}]**TT[{gaugeadj1},{gauge2,gauge1}]**V[{gaugeadj1},{lor1,lor2}]**conj[H][{gauge2}])/Ms^2}

@@ -485,7 +485,7 @@ class Possible_Indices(Indices_Model):
             logger.error(f"The type {typ} is not one of the possible types {', '.join(index_types)}")
             sys.exit("STOP")
 
-        if derIndex is "new": assert typ is "sl2C", "For generation of new indices it is necessary to generate all 4 indices at ones with the 'type' sl2C."
+        if derIndex == "new": assert typ == "sl2C", "For generation of new indices it is necessary to generate all 4 indices at ones with the 'type' sl2C."
 
         sentinel = object()
         def count(min, max=None):
@@ -527,7 +527,7 @@ class Possible_Indices(Indices_Model):
         for i in count(fp_min, fp_max):
             spec_derivative = object()  # specify derivative uniquely
             # Use in the following the 'is' (identity) operator instead of '==' (equality operator), since the  euqality operator can be and is overriden by user-defined objects.
-            if derIndex is "new" or type(derIndex) is object: derIndex = spec_derivative
+            if derIndex == "new" or type(derIndex) is object: derIndex = spec_derivative
             if typ == "sl2C":
                 new_index_sl = gen_new_index("Lsl", i, derIndex)
                 new_index_sldot = gen_new_index("Lsldot", i, derIndex)

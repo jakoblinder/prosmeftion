@@ -449,7 +449,7 @@ class Possible_Indices(Indices_Model):
 
         return lsl, usl, lsldot, usldot
 
-    def generate_index(self, typ: str, derIndex: Union[bool, int, str]=False, fp_min: int=1, fp_max: int=None, exclude_indices: List[Index] = []):
+    def generate_index(self, typ: str, exclude_indices: List[Index] = [], derIndex: Union[bool, int, str]=False, fp_min: int=1, fp_max: int=None):
         """
         Call with
             gen_index = summand.possible_indices.generate_index("flav")
@@ -479,13 +479,14 @@ class Possible_Indices(Indices_Model):
         -------
         Returns a generator object, which generates unused indices of the specified typ.
         """
+        assert type(derIndex) in [bool, int, str], 'derIndex is of the wrong type.'
         index_types = [indextyp for indextyp in index_config.keys()]
         index_types += ["sl2C"]  # generate all 4 types of SL2C-indices at ones -> necessary for derivative index generation in ibp relations.
         if typ not in index_types:
             logger.error(f"The type {typ} is not one of the possible types {', '.join(index_types)}")
             sys.exit("STOP")
 
-        if derIndex == "new": assert typ == "sl2C", "For generation of new indices it is necessary to generate all 4 indices at ones with the 'type' sl2C."
+        if derIndex == "new": assert  typ == "sl2C", "For generation of new indices it is necessary to generate all 4 indices at ones with the 'type' sl2C."
 
         sentinel = object()
         def count(min, max=None):
@@ -526,8 +527,7 @@ class Possible_Indices(Indices_Model):
 
         for i in count(fp_min, fp_max):
             spec_derivative = object()  # specify derivative uniquely
-            # Use in the following the 'is' (identity) operator instead of '==' (equality operator), since the  euqality operator can be and is overriden by user-defined objects.
-            if derIndex == "new" or type(derIndex) is object: derIndex = spec_derivative
+            if derIndex == "new" or type(derIndex) == object: derIndex = spec_derivative
             if typ == "sl2C":
                 new_index_sl = gen_new_index("Lsl", i, derIndex)
                 new_index_sldot = gen_new_index("Lsldot", i, derIndex)

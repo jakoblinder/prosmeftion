@@ -1283,7 +1283,7 @@ def form_declarations(n_der: int):
     form += "AutoDeclare Indices op; * auxiliary index for converting between commuting and noncommuting operators.\n\n"
     form += "* Declare some Symbols for pattern matching\n"
     form += "Symbols k, m;\n"
-    form += "Autodeclare Symbols i;\n"
+    form += "Autodeclare Symbols i, j;\n"
     form += "*--#] indices :\n"  # trailing "\n" important otherwise form will not find the "fold" declarations
 
     form_coefficient_handling()

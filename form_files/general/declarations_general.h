@@ -65,5 +65,5 @@ AutoDeclare Indices op; * auxiliary index for converting between commuting and n
 
 * Declare some Symbols for pattern matching
 Symbols k, m;
-Autodeclare Symbols i;
+Autodeclare Symbols i, j;
 *--#] indices :

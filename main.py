@@ -62,47 +62,64 @@ def main(max_dim = 6, debug=None):
     with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
         file.write(form_declarations(n_der))
 
-    terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
-    del bs_file
-    # pickle.dump(terms, open(CONFIG_PATH / "terms.p", "wb"))
-    # terms = pickle.load(open(CONFIG_PATH / "terms.p", "rb"))
+    # terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
+    # del bs_file
+    # # pickle.dump(terms, open(CONFIG_PATH / "terms.p", "wb"))
+    # # terms = pickle.load(open(CONFIG_PATH / "terms.p", "rb"))
+    #
+    # if args.tex:
+    #     tex_unsorted_terms(terms)
+    #
+    # # Sort terms by type for the projection:
+    # single_terms = get_type(terms)
+    # del terms
+    #
+    # if args.tex:
+    #     tex_sorted_terms(single_terms)
+    #
+    # nterms_before = number_terms(single_terms)
+    # # Remove double terms:
+    # single_terms = remove_doubles(single_terms)
+    #
+    # nterms_after = number_terms(single_terms)
+    #
+    # logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+    #
+    # # print terms
+    # if args.tex:
+    #     tex_sorted_terms_wo_doubles(single_terms)
+    #
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
+    # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
+    #
+    # nterms_before = number_terms(single_terms)
+    #
+    # single_terms = replace_eoms(single_terms)
+    # single_terms = replace_eoms(single_terms)
+    #
+    # nterms_after = number_terms(single_terms)
+    #
+    # logger.info(f"#Terms with EOMs: {nterms_before:d} <-> #Terms with less EOMs: {nterms_after:d}")
+    #
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
+    single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
 
-    if args.tex:
-        tex_unsorted_terms(terms)
+    output = ""
+    H4Hdagger4 = single_terms[(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0)][4]
 
-    # Sort terms by type for the projection:
-    single_terms = get_type(terms)
-    del terms
+    indices = Possible_Indices([])
+    for term in H4Hdagger4:
+        output += f"+{term:c}\n"
+        indices += term.possible_indices
 
-    if args.tex:
-        tex_sorted_terms(single_terms)
+    # Write SL2C and set FORM-file:
+    form_SL2C = declaration_SL2C_sets(indices)
+    with open(PROJECTION_PATH / "commutative_problem/declaration_SL2C.h", "w") as file:
+        file.write(form_SL2C)
 
-    nterms_before = number_terms(single_terms)
-    # Remove double terms:
-    single_terms = remove_doubles(single_terms)
-
-    nterms_after = number_terms(single_terms)
-
-    logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-
-    # print terms
-    if args.tex:
-        tex_sorted_terms_wo_doubles(single_terms)
-
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
-
-    nterms_before = number_terms(single_terms)
-
-    single_terms = replace_eoms(single_terms)
-    single_terms = replace_eoms(single_terms)
-
-    nterms_after = number_terms(single_terms)
-
-    logger.info(f"#Terms with EOMs: {nterms_before:d} <-> #Terms with less EOMs: {nterms_after:d}")
-
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
+    n_terms = len(H4Hdagger4)
+    with open(PROJECTION_PATH / f"H4Hdagger4_terms{n_terms}.h", "w") as file:
+        file.write(output)
 
     # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
     single_terms = rearrange_derivatives(single_terms)

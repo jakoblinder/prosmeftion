@@ -464,59 +464,50 @@ class Field(Operator_Model):
                     index.projection = f"{pre:s}{indtype:s}F{self.field_pos:d}I{counter[indtype]:d}"
                     counter[indtype] += 1
 
-    def reset_derIndex(self):
-        """
-        Recalculate the number of derivatives 'derIndex', which stand on every index.
-        This is important if hte number of derivatives on a field suddenly changes due to for example
-        integration by parts.
-        Returns
-        -------
-
-        """
-        nD = 1
-        # Note: Each derIndex consisting of only a digit should be rewritten in terms of an object() in order to
-        # avoid ambiguities.
-        # FIXME: This causes also (unnecessary) ambiguities, leading to for example two derivatives with
-        #  a changed order. The ibp algorithm should therefore only replace exact one derivative
-        #  (and this has to be the outermost) in each iteration. Thus only the indices of one derivative should have an
-        #  object() as an identifier and all other derivatives should have ascending identifiers. The new index could
-        #  then just be added. A problem is the D2D3 substitution which brings directly two new derivatives on a field.
-        #  However, in this case the derivatives are contracted which then has to be checked. If the derivatives are
-        #  contracted the order of the derivatives is again arbitrary.
-        #  Note: Even the order in self.indices['Lsl'] is not dependent on the derivative order, but depend only on
-        #  the order of the indices in the corresponding epsilon tensor.
-        for derIndexLsl in self.indices['Lsl']:
-            if derIndexLsl.derIndex and type(derIndexLsl.derIndex) is int:
-                lsl_nD = derIndexLsl.derIndex
-                new_nD = object()
-                derIndexLsl.derIndex = new_nD
-                derIndexLsl.lp = LP_Index(self.field_pos, new_nD)
-                found = 1
-                # Find dual index with the same derIndex.
-                for derIndexUsldot in self.indices['Usldot']:
-                    if derIndexUsldot.derIndex == lsl_nD:
-                        derIndexUsldot.derIndex = new_nD
-                        derIndexUsldot.lp = LP_Index(self.field_pos, new_nD)
-                        found += 1
-                assert found == 2
-
-        # old_max = max([index.derIndex for index in self.indices])  # old maximum number of derivatives
-        der_indices = list(set([index.derIndex for index in self.indices if index.derIndex])) # FIXME: This is the point where effectivelz the order of derivatives might change, since the entries in the set are of arbitrary order.
-        # found = {i: 0 for i in range(1, old_max + 1)}
-        found = {i: 0 for i in der_indices}
-        # Note about the naming order:  The index nearest to the field should be 1.
-        for i in list(found.keys())[::-1]:
-            for derIndexLsl in self.indices['Lsl']:
-                if derIndexLsl.derIndex == i:
-                    derIndexLsl.derIndex = nD
-                    derIndexLsl.lp = LP_Index(self.field_pos, nD)
-                    found[i] += 1
-            for derIndexUsldot in self.indices['Usldot']:
-                if derIndexUsldot.derIndex == i:
-                    derIndexUsldot.derIndex = nD
-                    derIndexUsldot.lp = LP_Index(self.field_pos, nD)
-                    found[i] += 1
-            if found[i] == 2: nD += 1
-
-        assert all([i in (0, 2) for i in found.values()]), "Something went wrong in the replacement of derIndex of the derivative indices."
+    # def reset_derIndex(self):
+    #     """
+    #     Recalculate the number of derivatives 'derIndex', which stand on every index.
+    #     This is important if hte number of derivatives on a field suddenly changes due to for example
+    #     integration by parts.
+    #     Returns
+    #     -------
+    #
+    #     """
+    #     nD = 1
+    #     # Note: Each derIndex consisting of only a digit should be rewritten in terms of an object() in order to
+    #     # avoid ambiguities.
+    #     for derIndexLsl in self.indices['Lsl']:
+    #         if derIndexLsl.derIndex and type(derIndexLsl.derIndex) is int:
+    #             lsl_nD = derIndexLsl.derIndex
+    #             new_nD = object()
+    #             derIndexLsl.derIndex = new_nD
+    #             derIndexLsl.lp = LP_Index(self.field_pos, new_nD)
+    #             found = 1
+    #             # Find dual index with the same derIndex.
+    #             for derIndexUsldot in self.indices['Usldot']:
+    #                 if derIndexUsldot.derIndex == lsl_nD:
+    #                     derIndexUsldot.derIndex = new_nD
+    #                     derIndexUsldot.lp = LP_Index(self.field_pos, new_nD)
+    #                     found += 1
+    #             assert found == 2
+    #
+    #     # old_max = max([index.derIndex for index in self.indices])  # old maximum number of derivatives
+    #     der_indices = list(set([index.derIndex for index in self.indices if index.derIndex]))
+    #     # found = {i: 0 for i in range(1, old_max + 1)}
+    #     found = {i: 0 for i in der_indices}
+    #     # Note about the naming order:  The index nearest to the field should be 1.
+    #     for i in list(found.keys())[::-1]:
+    #         for derIndexLsl in self.indices['Lsl']:
+    #             if derIndexLsl.derIndex == i:
+    #                 derIndexLsl.derIndex = nD
+    #                 derIndexLsl.lp = LP_Index(self.field_pos, nD)
+    #                 found[i] += 1
+    #         for derIndexUsldot in self.indices['Usldot']:
+    #             if derIndexUsldot.derIndex == i:
+    #                 derIndexUsldot.derIndex = nD
+    #                 derIndexUsldot.lp = LP_Index(self.field_pos, nD)
+    #                 found[i] += 1
+    #         if found[i] == 2: nD += 1
+    #
+    #     assert all([i in (0, 2) for i in found.values()]), "Something went wrong in the replacement of derIndex of the derivative indices."
 

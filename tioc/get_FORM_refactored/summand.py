@@ -934,7 +934,7 @@ class Summand(Summand_Model):
             for new_index in field_indices[field.field_pos]:
                 field.indices.append(new_index)
             # Recalculate the number of derivatives 'derIndex', which stand on every index.
-            field.reset_derIndex()
+            # field.reset_derIndex()
 
         # Adjust the coefficient
         summand.coeff *= Factor(lr.factor)

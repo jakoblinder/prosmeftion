@@ -184,10 +184,8 @@ def form_antisymDerivative(n_der: int):
     FL(a,b,H(gauge1)).
     Note: FL denotes the total left-handed part of the fieldstrengthtensor, which originates from the commutator of
     the covariant derivatives which acting on the Higgsfield. Therefore, only the part of the total Fieldstrength
-    tensor for those groups under which the Higgsfield is charged are relavant, i.e. the SU(3) is for example not
+    tensor for those groups under which the Higgsfield is charged are relavant, i.e. the SU(3) for example is not
     relevant for the Higgsfield.
-
-    # FIXME: Derivative has to be written directly at the field not anywhere -> no substitution for arbitrary permutations of derivatives.
 
     Call by
         #call antisymDerivative
@@ -204,9 +202,11 @@ def form_antisymDerivative(n_der: int):
     -------
 
     """
-    # form = "#procedure antisymDerivative\n"
     form = "$found = 0;\n"
     assert n_der >= 2
+
+    n_der = 2  # TODO: At the moment only substitutions of at most 2 derivatives are possible, since otherwise derivatives would have to be permuted, i.e. this function has to be updated and the Leibniz (product) rule has to be implemented.
+
     cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
     sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
     higgs = op_config["bosonfields"]["H"]["mathematica"]["H"]  # 'H'
@@ -243,13 +243,10 @@ def form_antisymDerivative(n_der: int):
                 func += f"{sl2Ceps:s}(Lsl1, Lsl2)"
                 func += " * "
                 func += f"{''.join(red_der)}D2({higgs}(?a)){len(red_per)*')'}"
-                if fp_minus_one_RHS: # FIXME: Not Here, but rather
-                    func += ")"
                 func += f" - "
                 func += f"i_ * FL(Lsl1, Lsl2, {''.join(red_der)}{higgs}(?a){len(red_per)*')'})"
-                # FIXME: it should be written here:
-                #  if fp_minus_one_RHS:
-                #     func += ")"
+                if fp_minus_one_RHS:
+                    func += ")"
 
                 return lHS, func
 
@@ -305,13 +302,10 @@ def form_antisymDerivative(n_der: int):
                 func += f"{sl2Ceps:s}(Usldot1, Usldot2)"
                 func += " * "
                 func += f"{''.join(red_der)}D2({higgs}(?a)){len(red_per) * ')'}"
-                if fp_minus_one_RHS: # FIXME: Not Here, but rather
-                    func += ")"
                 func += f" + "
                 func += f"i_ * FR(Usldot1, Usldot2, {''.join(red_der)}{higgs}(?a){len(red_per) * ')'})"
-                # FIXME: it should be written here:
-                #  if fp_minus_one_RHS:
-                #     func += ")"
+                if fp_minus_one_RHS:
+                   func += ")"
 
                 return lHS, func
 
@@ -374,7 +368,6 @@ def form_spinorEOMidentification(n_der: int):
 
     Permute all indices among the derivatives and take for the field just the next one. Further, contract with the
     epsilontensor in both permutations while considering the correct sign.
-    # FIXME: Derivative has to be written directly at the field not anywhere -> no substitution for arbitrary permutations of derivatives.
 
     Call by
         #call spinorEOMidentification
@@ -393,7 +386,9 @@ def form_spinorEOMidentification(n_der: int):
     """
     form = ""
 
-    assert n_der >= 2
+    assert n_der >= 1
+    n_der = 1  # TODO: At the moment only substitutions of at most 1 derivative is possible, since otherwise derivatives would have to be permuted, i.e. this function has to be updated and the Leibniz (product) rule has to be implemented.
+
     cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
     sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
     l = op_config["fermionfields"]["L"]["mathematica"]["L"]
@@ -558,7 +553,6 @@ def form_fieldstrengthtensorEOMidentification(n_der: int):
 
     Permute all indices among the derivatives and take for the field just the next two. Further, contract with the
     epsilon tensor in both permutations while considering the correct sign.
-    # FIXME: Derivative has to be written directly at the field not anywhere -> no substitution for arbitrary permutations of derivatives.
 
     Call by
         #call fieldstrengthtensorEOMidentification
@@ -577,7 +571,9 @@ def form_fieldstrengthtensorEOMidentification(n_der: int):
     """
     form = ""
 
-    assert n_der >= 2
+    assert n_der >= 1
+    n_der = 1  # TODO: At the moment only substitutions of at most 1 derivative is possible, since otherwise derivatives would have to be permuted, i.e. this function has to be updated and the Leibniz (product) rule has to be implemented.
+
     cov = op_config["fermionfields"]["D"]["mathematica"]["cov"]  # 'D'
     sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]  # '[sl2Ceps]'
     bl = op_config["bosonfields"]["BL"]["mathematica"]["BL"]

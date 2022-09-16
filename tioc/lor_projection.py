@@ -110,7 +110,7 @@ def form_sortDerivativesIBP():
         return idst
 
     form = ""
-    form += "repeat;\n"
+    # form += "repeat;\n"
 
     form += "* D1D2H*D1D2H+ = -D1D1D2H*D2H+:\n"
     form += id_ibp_HHdagger4(((1, 3), (2, 4)), ((2, 1, 3), (4,)), sign="-")
@@ -160,7 +160,7 @@ def form_sortDerivativesIBP():
     form += id_ibp_HHdagger4(((1, 3, 4, 2), ()), ((3, 4, 2), (1,)), sign="-")
     form += "\n"
 
-    form += "endrepeat;\n"
+    # form += "endrepeat;\n"
     return form
 
 def rearrange_derivatives(single_terms):
@@ -442,7 +442,7 @@ def rearrange_derivatives(single_terms):
                         p[1] * q[1]))
 
             form = ""
-            form += "repeat;\n"
+            # form += "repeat;\n"
 
             form += "* D1D2D1H*D2H+ = ...:\n"
             for eps in epss:
@@ -507,7 +507,7 @@ def rearrange_derivatives(single_terms):
                 form += f"*{cov}(Lsl1,Usldot1,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))*{wr}(gauge1,{gauge3},Usldot2,Usldot3)*{su2eps}({gauge3},{gauge4})"
 
                 form += ");\n"
-            form += "endrepeat;\n"
+            # form += "endrepeat;\n"
             return form
 
         form_commuteDerivatives()
@@ -751,7 +751,13 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
 
                 print(f"{summand:c}")
 
-                tabs = summand.lr.remove_ibp(summand.op_class.N)
+                derivatives = {i: der[1] for i, der in enumerate(summand.fieldstructure, start=1)}
+                if any([nD > 1 for nD in derivatives.values()]) and summand.d > 4:
+                    logger.error(f"The integration by parts of the summand ({summand.fieldstructure}) where one field has more than 1 derivative before is not supported.")
+                    sys.exit("STOP")
+                assert len(derivatives) == summand.op_class.N
+
+                tabs = summand.lr.remove_ibp(derivatives)
 
                 tabs_without_Schouten = []
                 if not skip_schouten_ids:

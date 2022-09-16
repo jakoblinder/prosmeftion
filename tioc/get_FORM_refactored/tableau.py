@@ -669,7 +669,7 @@ class Young_Tableau(Tableau):
 # print(yt.get_number(1,1))
 # print(yt.get_number(1,2))
 # for i in yt.replace_entry(1,2):
-# FIXME: Wofür wird diese Methode gebraucht? Warum werden die indices nur iterative getauscht?
+# Wofür wird diese Methode gebraucht? Warum werden die indices nur iterative getauscht?
 #     print(type(i))
 #     print(f"{i:nice}")
 # print(f"{yt:nice}")

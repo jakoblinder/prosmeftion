@@ -201,7 +201,7 @@ class LR_Tableaux():
 
         return lorentz_tab, sign
 
-    def ibp(self, derivative: LP_Index, N: int):
+    def ibp(self, derivative: LP_Index, derivatives: Dict):
         """
 
         Parameters
@@ -209,14 +209,16 @@ class LR_Tableaux():
         lr = LR_tableaux(l_tab, r_tab, factor)
         derivative: LP_Index
             This index specifies the derivative, which should be integrated by parts:
-        N
-            Number of fields in the operator.
+        derivatives
+            Number of derivatives on each field.
 
         Returns
         -------
 
         """
-        lr = self.copy()  # lr has to be deeply copied in order to not change the given lr.
+        N = len(derivatives)  # Number of fields in the operator.
+
+        lr = self.copy()  # lr has to be deeply copied in order not to change the given lr.
         assert lr.l_tab.ncols() == 1
         assert lr.r_tab.ncols() == 1
 
@@ -227,6 +229,7 @@ class LR_Tableaux():
             l_row_index_der, column = l_tab_index
             assert column == 0
             del l_tab_index
+            del column
             found += 1
 
         r_tab_index = lr.r_tab.index_lp(derivative)
@@ -234,34 +237,38 @@ class LR_Tableaux():
             r_row_index_der, column = r_tab_index
             assert column == 0
             del r_tab_index
+            del column
             found += 1
         # Note: l_row_index_der and r_row_index_der denote the row in LH and RH-tableau where the derivative Index sits.
 
         if found != 2:
-            logger.warning("No index was found for the given LP_Index. Therefore, no ibp was made.")
-            return lr
+            logger.error("No index was found for the given LP_Index. Therefore, no ibp was made.")
+            sys.exit("STOP")
+            # return lr
         else:
-            # Indices of the derivative Indices where found and the integration by parts can be done.
+            # Indices of the derivative Indices were found and the integration by parts can be done.
             tabs = []
-            spec_derivative = object()  # specify uniquely the derivative
             for i in range(1, N + 1):  # iterate over all possible field positions
                 if i == derivative.fp:  # except the one which should be integrated
                     continue
                 else:
                     lr_cp = lr.copy()  # !
-                    # Change the field position and specify the derivative 'position' uniquely
-                    lr_cp.l_tab[l_row_index_der, 0].lp = LP_Index(field_pos=i, derIndex=spec_derivative)
-                    lr_cp.l_tab[l_row_index_der, 0].derIndex = spec_derivative
+                    # Change the field position and specify the derivative 'position' as a new derivative.
+                    # The new derIndex has to be one larger than the old total number of derivatives nD.
+                    # Note, that derivatives are counted from 1 to nD.
+                    new_derIndex = derivatives[i] + 1
+                    lr_cp.l_tab[l_row_index_der, 0].lp = LP_Index(field_pos=i, derIndex=new_derIndex)
+                    lr_cp.l_tab[l_row_index_der, 0].derIndex = new_derIndex
 
-                    lr_cp.r_tab[r_row_index_der, 0].lp = LP_Index(field_pos=i, derIndex=spec_derivative)
-                    lr_cp.r_tab[r_row_index_der, 0].derIndex = spec_derivative
+                    lr_cp.r_tab[r_row_index_der, 0].lp = LP_Index(field_pos=i, derIndex=new_derIndex)
+                    lr_cp.r_tab[r_row_index_der, 0].derIndex = new_derIndex
                     # Sign changes due to ibp
                     lr_cp *= (-1)
 
                     tabs.append(lr_cp)
             return tabs
 
-    def der_23(self, der2: LP_Index, der3: LP_Index, N: int):
+    def der_23(self, der2: LP_Index, der3: LP_Index, derivatives: Dict):
         """
         Replace a derivative on field 2 and a derivative on field 3 which are completely contracted, by
         a sum of derivatives on other fields.
@@ -272,63 +279,63 @@ class LR_Tableaux():
             This index specifies the derivative on field 2, which should replaced.
         der3: LP_Index
             This index specifies the derivative on field 3, which should replaced.
-        N
-            Number of fields in the operator.
+        derivatives
+            Number of derivatives on each field.
 
         Returns
         -------
 
         """
+        N = len(derivatives)  # Number of fields in the operator.
         lr = self.copy()  # lr has to be deeply copied in order to not change the given lr.
         assert lr.l_tab.ncols() == 1
         assert lr.r_tab.ncols() == 1
 
-        print(f"{lr:lp}")
+        # print(f"{lr:lp}")
 
         found = 0
 
-        l_tab_index = lr.l_tab.index_lp(der2)
-        if l_tab_index:
-            l_row_index_der2, column = l_tab_index
+        l_tab_index2 = lr.l_tab.index_lp(der2)
+        if l_tab_index2:
+            l_row_index_der2, column = l_tab_index2
             assert column == 0
-            del l_tab_index
+            del l_tab_index2
             del column
             found += 1
 
-        r_tab_index = lr.r_tab.index_lp(der2)
-        if r_tab_index:
-            r_row_index_der2, column = r_tab_index
+        r_tab_index2 = lr.r_tab.index_lp(der2)
+        if r_tab_index2:
+            r_row_index_der2, column = r_tab_index2
             assert column == 0
-            del r_tab_index
+            del r_tab_index2
             del column
             found += 1
 
-        l_tab_index = lr.l_tab.index_lp(der3)
-        if l_tab_index:
-            l_row_index_der3, column = l_tab_index
+        l_tab_index3 = lr.l_tab.index_lp(der3)
+        if l_tab_index3:
+            l_row_index_der3, column = l_tab_index3
             assert column == 0
-            del l_tab_index
+            del l_tab_index3
             del column
             found += 1
 
-        r_tab_index = lr.r_tab.index_lp(der3)
-        if r_tab_index:
-            r_row_index_der3, column = r_tab_index
+        r_tab_index3 = lr.r_tab.index_lp(der3)
+        if r_tab_index3:
+            r_row_index_der3, column = r_tab_index3
             assert column == 0
-            del r_tab_index
+            del r_tab_index3
             del column
             found += 1
 
         # Note: l_row_index_der2 and r_row_index_der2 denote the row in LH and RH-tableau where the derivative Index sits.
 
         if found != 4:
-            logger.warning("No index was found for the given LP_Index. Therefore, no ibp was made.")
-            return lr
+            logger.error("No index was found for the given LP_Index. Therefore, no ibp was made.")
+            sys.exit("STOP")
+            # return lr
         else:
             # Indices of the derivative Indices where found and the integration by parts can be done.
             tabs = []
-            spec_derivative2 = object()  # specify uniquely the derivative
-            spec_derivative3 = object()
             # specify an additional sign if the initial indices where in the wrong order:
             # Wished order would be:
             # -----   -----
@@ -343,21 +350,31 @@ class LR_Tableaux():
             if r_row_index_der2 > r_row_index_der3:
                 sign *= (-1)
 
-            # Contracted derivatives on first field (-> see formula)
+            # The new derIndex has to be one larger than the old total number of derivatives nD.
+            # However, on the outermost derivatives of field 2 and 3 are newly distributed, i.e. their old maximum
+            # number of derivatives has to be decreased bz one for the new derivatives.
+            derivatives[2] -= 1
+            derivatives[3] -= 1
 
+            # Contracted derivatives on first field (-> see formula in masterthesis)
             lr_cp = lr.copy()  # !
+
             # Change the field position and specify the derivative 'position' uniquely
-            lr_cp.l_tab[l_row_index_der2, 0].lp = LP_Index(field_pos=1, derIndex=spec_derivative2)
-            lr_cp.l_tab[l_row_index_der2, 0].derIndex = spec_derivative2
+            # The new derIndex has to be one larger than the old total number of derivatives nD.
+            # Note, that derivatives are counted from 1 to nD.
+            new_derIndex2 = derivatives[1] + 1
+            new_derIndex3 = derivatives[1] + 2
+            lr_cp.l_tab[l_row_index_der2, 0].lp = LP_Index(field_pos=1, derIndex=new_derIndex2)
+            lr_cp.l_tab[l_row_index_der2, 0].derIndex = new_derIndex2
 
-            lr_cp.r_tab[r_row_index_der2, 0].lp = LP_Index(field_pos=1, derIndex=spec_derivative2)
-            lr_cp.r_tab[r_row_index_der2, 0].derIndex = spec_derivative2
+            lr_cp.r_tab[r_row_index_der2, 0].lp = LP_Index(field_pos=1, derIndex=new_derIndex2)
+            lr_cp.r_tab[r_row_index_der2, 0].derIndex = new_derIndex2
 
-            lr_cp.l_tab[l_row_index_der3, 0].lp = LP_Index(field_pos=1, derIndex=spec_derivative3)
-            lr_cp.l_tab[l_row_index_der3, 0].derIndex = spec_derivative3
+            lr_cp.l_tab[l_row_index_der3, 0].lp = LP_Index(field_pos=1, derIndex=new_derIndex3)
+            lr_cp.l_tab[l_row_index_der3, 0].derIndex = new_derIndex3
 
-            lr_cp.r_tab[r_row_index_der3, 0].lp = LP_Index(field_pos=1, derIndex=spec_derivative3)
-            lr_cp.r_tab[r_row_index_der3, 0].derIndex = spec_derivative3
+            lr_cp.r_tab[r_row_index_der3, 0].lp = LP_Index(field_pos=1, derIndex=new_derIndex3)
+            lr_cp.r_tab[r_row_index_der3, 0].derIndex = new_derIndex3
             # Factor 1/2 (-> see formula) and no ibp sign!
             lr_cp *= (1 / 2)
             # Possible additional sign due to wrong order in the initial indices:
@@ -372,17 +389,26 @@ class LR_Tableaux():
                     else:
                         lr_cp = lr.copy()  # !
                         # Change the field position and specify the derivative 'position' uniquely
-                        lr_cp.l_tab[l_row_index_der2, 0].lp = LP_Index(field_pos=i, derIndex=spec_derivative2)
-                        lr_cp.l_tab[l_row_index_der2, 0].derIndex = spec_derivative2
+                        # The new derIndex has to be one larger than the old total number of derivatives nD.
+                        # Note, that derivatives are counted from 1 to nD.
+                        if i == j:
+                            new_derIndex2 = derivatives[i] + 1
+                            new_derIndex3 = derivatives[i] + 2
+                        else:
+                            new_derIndex2 = derivatives[i] + 1
+                            new_derIndex3 = derivatives[j] + 1
 
-                        lr_cp.r_tab[r_row_index_der2, 0].lp = LP_Index(field_pos=i, derIndex=spec_derivative2)
-                        lr_cp.r_tab[r_row_index_der2, 0].derIndex = spec_derivative2
+                        lr_cp.l_tab[l_row_index_der2, 0].lp = LP_Index(field_pos=i, derIndex=new_derIndex2)
+                        lr_cp.l_tab[l_row_index_der2, 0].derIndex = new_derIndex2
 
-                        lr_cp.l_tab[l_row_index_der3, 0].lp = LP_Index(field_pos=j, derIndex=spec_derivative3)
-                        lr_cp.l_tab[l_row_index_der3, 0].derIndex = spec_derivative3
+                        lr_cp.r_tab[r_row_index_der2, 0].lp = LP_Index(field_pos=i, derIndex=new_derIndex2)
+                        lr_cp.r_tab[r_row_index_der2, 0].derIndex = new_derIndex2
 
-                        lr_cp.r_tab[r_row_index_der3, 0].lp = LP_Index(field_pos=j, derIndex=spec_derivative3)
-                        lr_cp.r_tab[r_row_index_der3, 0].derIndex = spec_derivative3
+                        lr_cp.l_tab[l_row_index_der3, 0].lp = LP_Index(field_pos=j, derIndex=new_derIndex3)
+                        lr_cp.l_tab[l_row_index_der3, 0].derIndex = new_derIndex3
+
+                        lr_cp.r_tab[r_row_index_der3, 0].lp = LP_Index(field_pos=j, derIndex=new_derIndex3)
+                        lr_cp.r_tab[r_row_index_der3, 0].derIndex = new_derIndex3
                         # Factor 1/2 (-> see formula)
                         lr_cp *= (1/2)
                         # Sign changes due to ibp
@@ -414,15 +440,21 @@ class LR_Tableaux():
 
     def is_in(self, i: Union[LP_Index, int]=default, j: Union[LP_Index, int]=default, k: Union[LP_Index, int]=default, l: Union[LP_Index, int]=default) -> Union[bool, Tuple[int]]:
         """
-        TODO: Check
         Search for specific rows in l_tab and r_tab numbered by
         l_tab = [[i], [j]]
         r_tab = [[k], [l]]
         if specific entry is not given it is assumed that this entry is arbitrary.
         i, j, k, l are either given in terms of LP_Indices to specify that they are a derivative, or they are just an
         integer specifying the field position only.
+        # TODO: For dimension 6 operators there cannot occure an operator at this stage where one field has more than
+        #  one derivative. For larger mass dimension it could happen that one field with to derivatives has to be integrated,
+        #  but the specific derivative is not the outermost one. Thus, in this case this method should be updated to return
+        #  only the outermost derivative and otherwise a prescription how the commutation of derivatives has to be done.
         If they are LP_Indices the 'derIndex' can also be used to specify which of the i, j, k or l belong to which
         derivative, by giving the corresponding i, j, k or l the same 'derIndex' attribute.
+
+        Note: For derivatives, all possibilities will be returned, but if for i & j or k & l only field indices are given,
+              not all possibilities are returned, but only the first found one.
 
         Parameters
         ----------
@@ -465,8 +497,21 @@ class LR_Tableaux():
             assert [type(m) is LP_Index for m in (k,l)].count(True) > 0
 
 
-        # Find candidate rows in left tableau:
-        der_i = []  # if
+        # Find candidate rows in left tableau: If 'i' is a LP_Index, i.e. a derivative Index, this list will contain
+        # all derivative indices of the 'i'-th field, regardless of their id or contraction. Note however, that i & j
+        # specify the left-handed tableau and k & l the right-handed one. Thus, in der_i & der_j are canidates for
+        # undottet (Usl) indices and in der_k & der_l are candidates for dotted (Lsldot) indices.
+        # Consider for example the tableaux
+        # l_tab:    r_tab:
+        # -----     -----
+        # |1-1|     |1-1|
+        # ----- and -----
+        # |3-1|     |3-1|
+        # -----     -----
+        # and i = LP_Index(1-der), j = default, k = LP_Index(1-der), l = default.
+        # This would give for the candidate list:
+        # left = right = False; der_i = [(0, 1-1)]; der_j = []; der_k = [(0, 1-1)]; der_l = [].
+        der_i = []
         der_j = []
         left = False
 
@@ -513,7 +558,7 @@ class LR_Tableaux():
                     der_i.append((m, col[1, 0].lp))
                     der_j.append((m, col[0, 0].lp))
 
-        # If der_i has entries, i is an LP_Index and rows with corresponding entries where found.
+        # If der_i has entries, i is an LP_Index and columns with corresponding entries where found.
         # I.e. already at this place it we know that if left == False and both der_i and der_j are empty, nothing was found
         if not left and not der_i and not der_j:
             return False
@@ -578,6 +623,26 @@ class LR_Tableaux():
             assert not der_i and not der_j and not der_k and not der_l
             return left, right
 
+        # Consider now an more elaborate example (the blanks can be everything):
+        # l_tab:        r_tab:
+        # ---------     ---------
+        # |   |1-2|     |1-2|   |
+        # --------- and ---------
+        # |1-1|   |     |   |1-1|
+        # ---------     ---------
+        # and i = LP_Index(1-der), j = default, k = LP_Index(1-der), l = default.
+        # This would give for the candidate list:
+        # left = right = False;
+        # der_i = [(0, 1-1), (1, 1-2)]; der_j = []; der_k = [(0, 1-2), (1, 1-1)]; der_l = [].
+        # Note: The order of i & j and k & l is not important.
+        # Since there are now multiple candidates for the columns the output should become a list.
+        # Each list contains the column where the left and right indices are and the explicit LP_Index of the found derivative.
+        # Furthermore, the List should be sorted in ascending order of the derivatives. In the example case the following
+        # should  be returned:
+        # [(l_col, r_col, LP_Index), ...] = [(0, 1, 1-1), (1, 0, 1-2)]
+
+        found_columns = []
+
         if der_i and der_j:
             # Both i and j are derivatives and for both candidates where found.
             # Find a possible match in der_k and der_l.
@@ -587,64 +652,64 @@ class LR_Tableaux():
                     for cand_i in der_i:
                         for cand_k in der_k:
                             if cand_i[1] == cand_k[1]:
-                                return cand_i[0], cand_k[0], cand_i[1]
+                                found_columns.append((cand_i[0], cand_k[0], cand_i[1]))
                 elif i == k and j == l:
                     # i and k should be indices of the same derivative and j and l should be indices of the same derivative
                     for cand_i, cand_j in zip(der_i, der_j):
                         for cand_k, cand_l in zip(der_k, der_l):
                             if cand_i[1] == cand_k[1] and cand_j[1] == cand_l[1]:
-                                return cand_i[0], cand_k[0], cand_i[1], cand_j[1]
+                                found_columns.append((cand_i[0], cand_k[0], cand_i[1], cand_j[1]))
                 elif i != k and j == l:
                     # j and l should be indices of the same derivative, but i and k not, or it is at least not demanded for them.
                     for cand_j in der_j:
                         for cand_l in der_l:
                             if cand_j[1] == cand_l[1]:
-                                return cand_j[0], cand_l[0], cand_j[1]
+                                found_columns.append((cand_j[0], cand_l[0], cand_j[1]))
 
                 elif i == l and j != k:
                     # i and l should be indices of the same derivative, but j and k not, or it is at least not demanded for them.
                     for cand_i in der_i:
                         for cand_l in der_l:
                             if cand_i[1] == cand_l[1]:
-                                return cand_i[0], cand_l[0], cand_i[1]
+                                found_columns.append((cand_i[0], cand_l[0], cand_i[1]))
                 elif i == l and j == k:
                     # i and l should be indices of the same derivative and j and k should be indices of the same derivative
                     for cand_i, cand_j in zip(der_i, der_j):
                         for cand_k, cand_l in zip(der_k, der_l):
                             if cand_i[1] == cand_l[1] and cand_j[1] == cand_k[1]:
-                                return cand_i[0], cand_l[0], cand_i[1], cand_j[1]
+                                found_columns.append((cand_i[0], cand_l[0], cand_i[1], cand_j[1]))
                 elif i != l and j == k:
                     # j and k should be indices of the same derivative, but i and l not, or it is at least not demanded for them.
                     for cand_j in der_j:
                         for cand_k in der_k:
                             if cand_j[1] == cand_k[1]:
-                                return cand_j[0], cand_k[0], cand_j[1]
+                                found_columns.append((cand_j[0], cand_k[0], cand_j[1]))
             elif der_k:
                 if i == k:
                     # i and k should be indices of the same derivative, but j and l not, or it is at least not demanded for them.
                     for cand_i in der_i:
                         for cand_k in der_k:
                             if cand_i[1] == cand_k[1]:
-                                return cand_i[0], cand_k[0], cand_i[1]
+                                found_columns.append((cand_i[0], cand_k[0], cand_i[1]))
                 elif j == k:
                     # j and k should be indices of the same derivative, but i and l not, or it is at least not demanded for them.
                     for cand_j in der_j:
                         for cand_k in der_k:
                             if cand_j[1] == cand_k[1]:
-                                return cand_j[0], cand_k[0], cand_j[1]
+                                found_columns.append((cand_j[0], cand_k[0], cand_j[1]))
             elif der_l:
                 if i == l:
                     # i and l should be indices of the same derivative, but j and k not, or it is at least not demanded for them.
                     for cand_i in der_i:
                         for cand_l in der_l:
                             if cand_i[1] == cand_l[1]:
-                                return cand_i[0], cand_l[0], cand_i[1]
+                                found_columns.append((cand_i[0], cand_l[0], cand_i[1]))
                 elif j == l:
                     # j and l should be indices of the same derivative, but i and k not, or it is at least not demanded for them.
                     for cand_j in der_j:
                         for cand_l in der_l:
                             if cand_j[1] == cand_l[1]:
-                                return cand_j[0], cand_l[0], cand_j[1]
+                                found_columns.append((cand_j[0], cand_l[0], cand_j[1]))
         elif der_i:
             # Remember the given candidate also respects that j was default or int.
             if der_k and der_l:
@@ -653,27 +718,27 @@ class LR_Tableaux():
                     for cand_i in der_i:
                         for cand_k in der_k:
                             if cand_i[1] == cand_k[1]:
-                                return cand_i[0], cand_k[0], cand_i[1]
+                                found_columns.append((cand_i[0], cand_k[0], cand_i[1]))
                 elif i == l:
                     # i and l should be indices of the same derivative, but j and k not, or it is at least not demanded for them.
                     for cand_i in der_i:
                         for cand_l in der_l:
                             if cand_i[1] == cand_l[1]:
-                                return cand_i[0], cand_l[0], cand_i[1]
+                                found_columns.append((cand_i[0], cand_l[0], cand_i[1]))
             elif der_k:
                 if i == k:
                     # i and k should be indices of the same derivative, but j and l not, or it is at least not demanded for them.
                     for cand_i in der_i:
                         for cand_k in der_k:
                             if cand_i[1] == cand_k[1]:
-                                return cand_i[0], cand_k[0], cand_i[1]
+                                found_columns.append((cand_i[0], cand_k[0], cand_i[1]))
             elif der_l:
                 if i == l:
                     # i and l should be indices of the same derivative, but j and k not, or it is at least not demanded for them.
                     for cand_i in der_i:
                         for cand_l in der_l:
                             if cand_i[1] == cand_l[1]:
-                                return cand_i[0], cand_l[0], cand_i[1]
+                                found_columns.append((cand_i[0], cand_l[0], cand_i[1]))
         elif der_j:
             if der_k and der_l:
                 if j == k:
@@ -681,29 +746,32 @@ class LR_Tableaux():
                     for cand_j in der_j:
                         for cand_k in der_k:
                             if cand_j[1] == cand_k[1]:
-                                return cand_j[0], cand_k[0], cand_j[1]
+                                found_columns.append((cand_j[0], cand_k[0], cand_j[1]))
                 elif j == l:
                     # j and l should be indices of the same derivative, but i and k not, or it is at least not demanded for them.
                     for cand_j in der_j:
                         for cand_l in der_l:
                             if cand_j[1] == cand_l[1]:
-                                return cand_j[0], cand_l[0], cand_j[1]
+                                found_columns.append((cand_j[0], cand_l[0], cand_j[1]))
             elif der_k:
                 if j == k:
                     # j and k should be indices of the same derivative, but i and l not, or it is at least not demanded for them.
                     for cand_j in der_j:
                         for cand_k in der_k:
                             if cand_j[1] == cand_k[1]:
-                                return cand_j[0], cand_k[0], cand_j[1]
+                                found_columns.append((cand_j[0], cand_k[0], cand_j[1]))
             elif der_l:
                 if j == l:
                     # j and l should be indices of the same derivative, but i and k not, or it is at least not demanded for them.
                     for cand_j in der_j:
                         for cand_l in der_l:
                             if cand_j[1] == cand_l[1]:
-                                return cand_j[0], cand_l[0], cand_j[1]
+                                found_columns.append((cand_j[0], cand_l[0], cand_j[1]))
 
-        return False
+        if found_columns:
+            return sorted(found_columns, key=lambda x: x[2].derIndex)
+        else:
+            return False
 
     def eom(self, N: int):
         """
@@ -738,216 +806,209 @@ class LR_Tableaux():
 
         return False
 
-
-    def remove_ibp(self, N:int):
+    def remove_ibp(self, derivatives:Dict):
         """
 
+        Parameters
+        ----------
+        derivatives
+            List containing the number of derivatives which are acting on each fiel. For example
+            WL*H*D2H+ would have an dictionary
+            {1:0, 2:0, 3:2}.
         Returns
         -------
 
         """
-        lr = self.copy()  # lr has to be deeply copied in order to not change the given lr.
+        N = len(derivatives)
+        lr_tab = self.copy()  # lr has to be deeply copied in order to not change the given lr.
         tabs = []  # List[LR_Tableaux, bool]  -> The bool specifies whether EOMs might occur.
-        def apply_ibp(lr_tab: LR_Tableaux, N:int):
-            """
-            Recursive method applying all ibp relations.
-            FIXME: Should not be recursive, since after each ibp there may occur EOMs in the first field.
-            FIXME: This is even not enough in order to rename the new derivative indices uniquely only one iteration
-                is allowed in on step.
-            FIXME: Only the outermost derivative should be integrated by parts no other.
-            Parameters
-            ----------
-            lr
+        # TODO: For dimensions higher than 6, there occure more than one derivative on each fiel, thus it has to made sure that only the outermost derivative should be integrated by parts no other.
+        # Due to possible EOMs, do not apply the ibp relations directly again -> remove EOMs first.
+        logger.debug(f"{lr_tab:lp}")
+        der1 = object()
+        der2 = object()
 
-            Returns
-            -------
-
-            """
-            print(f"{lr_tab:lp}")
-            der1 = object()
-            der2 = object()
-            # if lr := lr_tab.is_in(i=LP_Index(2, der1), j=LP_Index(3, der2), k=LP_Index(2, der1), l=LP_Index(3, der2)):
-            #     l = lr[0]
-            #     r = lr[1]
-            #     der_LP = lr[2]
-            #     extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
-            #     print(f"{extracted_lr_tab:lp}")
-            #     print("----------------")
-
-            if lr := lr_tab.is_in(i=LP_Index(1,der1), k=LP_Index(1,der1)):
-                # -----   -----
-                # |1-1|   |1-1|
-                # ----- X -----
-                # |j  |   |l  |
-                # -----   -----
-                l = lr[0]
-                r = lr[1]
-                der_LP = lr[2]
+        if lr := lr_tab.is_in(i=LP_Index(1,der1), k=LP_Index(1,der1)):
+            # -----   -----
+            # |1-1|   |1-1|
+            # ----- X -----
+            # |j  |   |l  |
+            # -----   -----
+            if len(lr) > 1:
+                logger.error("Handling of to candidates not supported at the moment.")
+                sys.exit("STOP")
+            else:
+                lr = lr[0]
+            l = lr[0]
+            r = lr[1]
+            der_LP = lr[2]
+            # The dimension four Term D2H*H+ -> +H*D2H+ has to be considered separately, since the derivatives are contracted:
+            if derivatives == {1: 2, 2: 0}:
+                lr_tab_cp = lr_tab.copy()
+                for i, l_tab_ele in enumerate(lr_tab.l_tab.iter_row()):
+                    if l_tab_ele[0].lp.fp == 1:
+                        lr_tab_cp.l_tab[i,0].lp.fp = 2
+                    elif l_tab_ele[0].lp.fp == 2:
+                        lr_tab_cp.l_tab[i,0].lp.fp = 1
+                for i, r_tab_ele in enumerate(lr_tab.r_tab.iter_row()):
+                    if r_tab_ele[0].lp.fp == 1:
+                        lr_tab_cp.r_tab[i,0].lp.fp = 2
+                    elif r_tab_ele[0].lp.fp == 2:
+                        lr_tab_cp.r_tab[i,0].lp.fp = 1
+                tabs.append((lr_tab_cp, True))
+            else:
                 # Get the corresponding rows from lr_tab and do the ibp with them
                 extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:,l], lr_tab.r_tab[:,r], lr_tab.factor)
                 # Integrate the selected rows by parts
-                tabs_tmp = extracted_lr_tab.ibp(der_LP, N)
+                tabs_tmp = extracted_lr_tab.ibp(der_LP, derivatives)
                 # Reinsert the new rows again
                 for new_lr_tab in tabs_tmp:
                     lr_tab_cp = lr_tab.copy()
                     lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
                     lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
                     lr_tab_cp.factor = new_lr_tab.factor
-                    # Check whether there could occur EOMs
-                    if lr_tab_cp.eom(N):
-                        # There might be an EOM
-                        # Do not apply to each lr_tableaux again all possible ibp relations, because the 'ibp' method also
-                        # write derivatives again on the first field. These could be EOMs, but the algorithm here
-                        # doesn't know that. Thus, the EOMs need to be removed first and afterwards the algorithm
-                        # can be applied again.
-                        tabs.append((lr_tab_cp, True))
-                    else:
-                        # No EOM occur in this step. The next iteration can already be done
-                        apply_ibp(lr_tab_cp, N)
 
-            elif lr := lr_tab.is_in(i=LP_Index(2,der1), k=LP_Index(2,der1), l=1):
-                # -----   -----
-                # |2-1|   |2-1|
-                # ----- X -----
-                # |j  |   |1  |
-                # -----   -----
-                l = lr[0]
-                r = lr[1]
-                der_LP = lr[2]
-                # Get the corresponding rows from lr_tab and do the ibp with them
-                extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
-                # Integrate the selected rows by parts
-                tabs_tmp = extracted_lr_tab.ibp(der_LP, N)
-                # Reinsert the new rows again
-                for new_lr_tab in tabs_tmp:
-                    lr_tab_cp = lr_tab.copy()
-                    lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
-                    lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
-                    lr_tab_cp.factor = new_lr_tab.factor
-                    # Check whether there could occur EOMs
-                    if lr_tab_cp.eom(N):
-                        # Due to possible EOMs, do not apply the ibp relations directly again -> remove EOMs first.
-                        tabs.append((lr_tab_cp, True))
-                    else:
-                        # No EOM occur in this step. The next iteration can already be done
-                        apply_ibp(lr_tab_cp, N)
+                    tabs.append((lr_tab_cp, True))
 
-            elif lr := lr_tab.is_in(i=LP_Index(2,der1), j=1, k=LP_Index(2,der1)):
-                # -----   -----
-                # |2-1|   |2-1|
-                # ----- X -----
-                # |1  |   |l  |
-                # -----   -----
-                l = lr[0]
-                r = lr[1]
-                der_LP = lr[2]
-                # Get the corresponding rows from lr_tab and do the ibp with them
-                extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
-                # Integrate the selected rows by parts
-                tabs_tmp = extracted_lr_tab.ibp(der_LP, N)
-                # Reinsert the new rows again
-                for new_lr_tab in tabs_tmp:
-                    lr_tab_cp = lr_tab.copy()
-                    lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
-                    lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
-                    lr_tab_cp.factor = new_lr_tab.factor
-                    # Check whether there could occur EOMs
-                    if lr_tab_cp.eom(N):
-                        # Due to possible EOMs, do not apply the ibp relations directly again -> remove EOMs first.
-                        tabs.append((lr_tab_cp, True))
-                    else:
-                        # No EOM occur in this step. The next iteration can already be done
-                        apply_ibp(lr_tab_cp, N)
-
-            elif lr := lr_tab.is_in(i=LP_Index(3,der1), j=2, k=LP_Index(3,der1), l=1):
-                # -----   -----
-                # |3-1|   |3-1|
-                # ----- X -----
-                # |2  |   |1  |
-                # -----   -----
-                l = lr[0]
-                r = lr[1]
-                der_LP = lr[2]
-                # Get the corresponding rows from lr_tab and do the ibp with them
-                extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
-                # Integrate the selected rows by parts
-                tabs_tmp = extracted_lr_tab.ibp(der_LP, N)
-                # Reinsert the new rows again
-                for new_lr_tab in tabs_tmp:
-                    lr_tab_cp = lr_tab.copy()
-                    lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
-                    lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
-                    lr_tab_cp.factor = new_lr_tab.factor
-                    # Check whether there could occur EOMs
-                    if lr_tab_cp.eom(N):
-                        # Due to possible EOMs, do not apply the ibp relations directly again -> remove EOMs first.
-                        tabs.append((lr_tab_cp, True))
-                    else:
-                        # No EOM occur in this step. The next iteration can already be done
-                        apply_ibp(lr_tab_cp, N)
-
-            elif lr := lr_tab.is_in(i=LP_Index(3,der1), j=1, k=LP_Index(3,der1), l=2):
-                # -----   -----
-                # |3-1|   |3-1|
-                # ----- X -----
-                # |1  |   |2  |
-                # -----   -----
-                l = lr[0]
-                r = lr[1]
-                der_LP = lr[2]
-                # Get the corresponding rows from lr_tab and do the ibp with them
-                extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
-                # Integrate the selected rows by parts
-                tabs_tmp = extracted_lr_tab.ibp(der_LP, N)
-                # Reinsert the new rows again
-                for new_lr_tab in tabs_tmp:
-                    lr_tab_cp = lr_tab.copy()
-                    lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
-                    lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
-                    lr_tab_cp.factor = new_lr_tab.factor
-                    # Check whether there could occur EOMs
-                    if lr_tab_cp.eom(N):
-                        # Due to possible EOMs, do not apply the ibp relations directly again -> remove EOMs first.
-                        tabs.append((lr_tab_cp, True))
-                    else:
-                        # No EOM occur in this step. The next iteration can already be done
-                        apply_ibp(lr_tab_cp, N)
-
-            elif lr := lr_tab.is_in(i=LP_Index(2,der1), j=LP_Index(3,der2), k=LP_Index(2,der1), l=LP_Index(3,der2)):
-                # -----   -----
-                # |2-1|   |2-1|
-                # ----- X -----
-                # |3-1|   |3-1|
-                # -----   -----
-                l = lr[0]
-                r = lr[1]
-                der_LP2 = lr[2]  # i
-                der_LP3 = lr[3]  # j
-                # Get the corresponding rows from lr_tab and do the ibp with them
-                extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
-                # Integrate the selected rows by parts
-                tabs_tmp = extracted_lr_tab.der_23(der_LP2, der_LP3, N)
-                # Reinsert the new rows again
-                for new_lr_tab in tabs_tmp:
-                    lr_tab_cp = lr_tab.copy()
-                    lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
-                    lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
-                    lr_tab_cp.factor = new_lr_tab.factor
-                    # Do not apply to each lr_tableaux again all possible ibp relation, because the 'der_23' method also
-                    # write derivatives again on the first field. These are of course EOMs, but the algorithm here
-                    # doesn't know that. Thus, the EOMs need to be removed first and afterwards the algorithm
-                    # can be applied again.
-                    # Check whether there could occur EOMs
-                    if lr_tab_cp.eom(N):
-                        # Due to possible EOMs, do not apply the ibp relations directly again -> remove EOMs first.
-                        tabs.append((lr_tab_cp, True))
-                    else:
-                        # No EOM occur in this step. The next iteration can already be done
-                        apply_ibp(lr_tab_cp, N)
+        elif lr := lr_tab.is_in(i=LP_Index(2,der1), k=LP_Index(2,der1), l=1):
+            # -----   -----
+            # |2-1|   |2-1|
+            # ----- X -----
+            # |j  |   |1  |
+            # -----   -----
+            if len(lr) > 1:
+                logger.error("Handling of to candidates not supported at the moment.")
+                sys.exit("STOP")
             else:
-                tabs.append((lr_tab, False))
+                lr = lr[0]
+            l = lr[0]
+            r = lr[1]
+            der_LP = lr[2]
+            # Get the corresponding rows from lr_tab and do the ibp with them
+            extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
+            # Integrate the selected rows by parts
+            tabs_tmp = extracted_lr_tab.ibp(der_LP, derivatives)
+            # Reinsert the new rows again
+            for new_lr_tab in tabs_tmp:
+                lr_tab_cp = lr_tab.copy()
+                lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
+                lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
+                lr_tab_cp.factor = new_lr_tab.factor
 
-        apply_ibp(lr, N)
+                tabs.append((lr_tab_cp, True))
+
+        elif lr := lr_tab.is_in(i=LP_Index(2,der1), j=1, k=LP_Index(2,der1)):
+            # -----   -----
+            # |2-1|   |2-1|
+            # ----- X -----
+            # |1  |   |l  |
+            # -----   -----
+            if len(lr) > 1:
+                logger.error("Handling of to candidates not supported at the moment.")
+                sys.exit("STOP")
+            else:
+                lr = lr[0]
+            l = lr[0]
+            r = lr[1]
+            der_LP = lr[2]
+            # Get the corresponding rows from lr_tab and do the ibp with them
+            extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
+            # Integrate the selected rows by parts
+            tabs_tmp = extracted_lr_tab.ibp(der_LP, derivatives)
+            # Reinsert the new rows again
+            for new_lr_tab in tabs_tmp:
+                lr_tab_cp = lr_tab.copy()
+                lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
+                lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
+                lr_tab_cp.factor = new_lr_tab.factor
+
+                tabs.append((lr_tab_cp, True))
+
+        elif lr := lr_tab.is_in(i=LP_Index(3,der1), j=2, k=LP_Index(3,der1), l=1):
+            # -----   -----
+            # |3-1|   |3-1|
+            # ----- X -----
+            # |2  |   |1  |
+            # -----   -----
+            if len(lr) > 1:
+                logger.error("Handling of to candidates not supported at the moment.")
+                sys.exit("STOP")
+            else:
+                lr = lr[0]
+            l = lr[0]
+            r = lr[1]
+            der_LP = lr[2]
+            # Get the corresponding rows from lr_tab and do the ibp with them
+            extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
+            # Integrate the selected rows by parts
+            tabs_tmp = extracted_lr_tab.ibp(der_LP, derivatives)
+            # Reinsert the new rows again
+            for new_lr_tab in tabs_tmp:
+                lr_tab_cp = lr_tab.copy()
+                lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
+                lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
+                lr_tab_cp.factor = new_lr_tab.factor
+
+                tabs.append((lr_tab_cp, True))
+
+        elif lr := lr_tab.is_in(i=LP_Index(3,der1), j=1, k=LP_Index(3,der1), l=2):
+            # -----   -----
+            # |3-1|   |3-1|
+            # ----- X -----
+            # |1  |   |2  |
+            # -----   -----
+            if len(lr) > 1:
+                logger.error("Handling of to candidates not supported at the moment.")
+                sys.exit("STOP")
+            else:
+                lr = lr[0]
+            l = lr[0]
+            r = lr[1]
+            der_LP = lr[2]
+            # Get the corresponding rows from lr_tab and do the ibp with them
+            extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
+            # Integrate the selected rows by parts
+            tabs_tmp = extracted_lr_tab.ibp(der_LP, derivatives)
+            # Reinsert the new rows again
+            for new_lr_tab in tabs_tmp:
+                lr_tab_cp = lr_tab.copy()
+                lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
+                lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
+                lr_tab_cp.factor = new_lr_tab.factor
+
+                tabs.append((lr_tab_cp, True))
+
+        elif lr := lr_tab.is_in(i=LP_Index(2,der1), j=LP_Index(3,der2), k=LP_Index(2,der1), l=LP_Index(3,der2)):
+            # -----   -----
+            # |2-1|   |2-1|
+            # ----- X -----
+            # |3-1|   |3-1|
+            # -----   -----
+            if len(lr) > 1:
+                logger.error("Handling of to candidates not supported at the moment.")
+                sys.exit("STOP")
+            else:
+                lr = lr[0]
+            l = lr[0]
+            r = lr[1]
+            der_LP2 = lr[2]  # i
+            der_LP3 = lr[3]  # j
+            # Get the corresponding rows from lr_tab and do the ibp with them
+            extracted_lr_tab = LR_Tableaux(lr_tab.l_tab[:, l], lr_tab.r_tab[:, r], lr_tab.factor)
+            # Integrate the selected rows by parts
+            tabs_tmp = extracted_lr_tab.der_23(der_LP2, der_LP3, derivatives)
+            # Reinsert the new rows again
+            for new_lr_tab in tabs_tmp:
+                lr_tab_cp = lr_tab.copy()
+                lr_tab_cp.l_tab[:, l] = new_lr_tab.l_tab[:, 0]
+                lr_tab_cp.r_tab[:, r] = new_lr_tab.r_tab[:, 0]
+                lr_tab_cp.factor = new_lr_tab.factor
+
+                tabs.append((lr_tab_cp, True))
+
+        else:
+            tabs.append((lr_tab, False))
+
 
         return tabs
 

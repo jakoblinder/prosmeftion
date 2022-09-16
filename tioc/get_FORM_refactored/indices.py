@@ -481,12 +481,9 @@ class Possible_Indices(Indices_Model):
         """
         assert type(derIndex) in [bool, int, str], 'derIndex is of the wrong type.'
         index_types = [indextyp for indextyp in index_config.keys()]
-        index_types += ["sl2C"]  # generate all 4 types of SL2C-indices at ones -> necessary for derivative index generation in ibp relations.
         if typ not in index_types:
             logger.error(f"The type {typ} is not one of the possible types {', '.join(index_types)}")
             sys.exit("STOP")
-
-        if derIndex == "new": assert  typ == "sl2C", "For generation of new indices it is necessary to generate all 4 indices at ones with the 'type' sl2C."
 
         sentinel = object()
         def count(min, max=None):
@@ -526,23 +523,11 @@ class Possible_Indices(Indices_Model):
                     return index
 
         for i in count(fp_min, fp_max):
-            spec_derivative = object()  # specify derivative uniquely
-            if derIndex == "new" or type(derIndex) == object: derIndex = spec_derivative
-            if typ == "sl2C":
-                new_index_sl = gen_new_index("Lsl", i, derIndex)
-                new_index_sldot = gen_new_index("Lsldot", i, derIndex)
-                if new_index_sl is continue_object or new_index_sldot is continue_object:
-                    continue
-                else:
-                    lsl, usl = new_index_sl
-                    lsldot, usldot = new_index_sldot
-                    yield lsl, lsldot, usl, usldot
+            new_index = gen_new_index(typ, i, derIndex)
+            if new_index is continue_object:
+                continue
             else:
-                new_index = gen_new_index(typ, i, derIndex)
-                if new_index is continue_object:
-                    continue
-                else:
-                    yield new_index
+                yield new_index
 
 class Indices_Summand(Indices_Model):
     indices: Tuple[Index]  # Tuple of indices in one term.

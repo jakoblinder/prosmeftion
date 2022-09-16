@@ -544,9 +544,6 @@ class Possible_Indices(Indices_Model):
                 else:
                     yield new_index
 
-
-
-
 class Indices_Summand(Indices_Model):
     indices: Tuple[Index]  # Tuple of indices in one term.
     tex_indices: Dict  # Dictionary for each index containing the unique tex name.

@@ -109,17 +109,17 @@ class Operator_Model(Index):
         match_sl2C = re.finditer(r"(" + cov + r"\((?P<index1>" + ind_pat + r"),(?P<index2>" + ind_pat + r"))", expression)
         matches_sl2C = list(match_sl2C)
         if any(matches_lor):
-            for i, v in enumerate(matches_lor):
+            for i, v in zip(range(len(matches_lor), 0, -1), matches_lor):
                 index = v.group("index")
-                der_indices.append(Index(index, derIndex=i+1))
+                der_indices.append(Index(index, derIndex=i))
             nD = len(matches_lor)
             op = expression[matches_lor[-1].end(): (-1)*len(matches_lor)]
         elif any(matches_sl2C):
-            for i, v in enumerate(matches_sl2C):
+            for i, v in zip(range(len(matches_sl2C), 0, -1), matches_sl2C):
                 index1 = v.group("index1")
                 index2 = v.group("index2")
-                der_indices.append(Index(index1, derIndex=i+1))
-                der_indices.append(Index(index2, derIndex=i+1))
+                der_indices.append(Index(index1, derIndex=i))
+                der_indices.append(Index(index2, derIndex=i))
             nD = len(matches_sl2C)
             op = expression[matches_sl2C[-1].end()+1: (-1) * len(matches_sl2C)]
         else:
@@ -214,7 +214,7 @@ class Operator_Model(Index):
             expr = ""
             if self.nD > 0:
                 # Term contain derivatives
-                for i in range(1, self.nD + 1):
+                for i in range(self.nD, 0, -1):
                     lsl = [der_index for der_index in self.indices['Lsl'] if der_index.derIndex == i]
                     assert len(lsl) == 1
                     if not lsl:
@@ -504,7 +504,8 @@ class Field(Operator_Model):
         der_indices = list(set([index.derIndex for index in self.indices if index.derIndex])) # FIXME: This is the point where effectivelz the order of derivatives might change, since the entries in the set are of arbitrary order.
         # found = {i: 0 for i in range(1, old_max + 1)}
         found = {i: 0 for i in der_indices}
-        for i in found.keys():
+        # Note about the naming order:  The index nearest to the field should be 1.
+        for i in list(found.keys())[::-1]:
             for derIndexLsl in self.indices['Lsl']:
                 if derIndexLsl.derIndex == i:
                     derIndexLsl.derIndex = nD

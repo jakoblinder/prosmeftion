@@ -14,7 +14,9 @@ from tioc.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_de
 from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms, tex_sorted_terms_before_sun  # , main
 from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
 from tioc.get_FORM_refactored.tableau import test
+from tioc.get_FORM_refactored.indices import Possible_Indices
 from tioc.get_FORM_refactored.rfr import rfr
+from tioc.general import declaration_SL2C_sets
 
 # configure logger
 timestamp = datetime.now()
@@ -104,9 +106,10 @@ def main(max_dim = 6, debug=None):
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
     single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
 
-    output = ""
+
     H4Hdagger4 = single_terms[(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0)][4]
 
+    output = ""
     indices = Possible_Indices([])
     for term in H4Hdagger4:
         output += f"+{term:c}\n"
@@ -118,6 +121,7 @@ def main(max_dim = 6, debug=None):
         file.write(form_SL2C)
 
     n_terms = len(H4Hdagger4)
+
     with open(PROJECTION_PATH / f"H4Hdagger4_terms{n_terms}.h", "w") as file:
         file.write(output)
 

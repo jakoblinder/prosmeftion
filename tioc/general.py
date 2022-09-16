@@ -1370,14 +1370,15 @@ def declaration_SL2C_sets(indices) -> str:
     form += f"Set ULsl: {set_ulsl};\n"
     form += f"Set LUsldot: {set_lusldot};\n"
     form += f"Set ULsldot: {set_ulsldot};\n"
+    form += "\n"
 
+    form += "* Auxiliary sets\n"
     # Sets for contraction for all other indices except SL2C-indices:
     for index_name in index_config.keys():
         if index_name not in ["Lsl", "Usl", "Lsldot", "Usldot"]:
             indices_typ = indices[index_name]
-            if indices_typ:
-                ind_aux = id_indices(index_name, indices_typ, max_ind)
-                form += f"Set {index_name}: {', '.join(ind_aux)}, {indices_typ};\n"
+            ind_aux = id_indices(index_name, indices_typ, max_ind)
+            form += f"Set {index_name}: {', '.join(ind_aux + list(map(str, indices_typ)))};\n"
 
     return form
 

@@ -11,7 +11,8 @@ from tioc import CONFIG_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, n_der, get_bas
 from tioc.general import form_declarations
 
 from tioc.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
-from tioc.projection import converttoSL2C, tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms, tex_sorted_terms_before_sun  # , main
+from tioc.converttoSL2C import converttoSL2C
+from tioc.tex import tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms, tex_sorted_terms_before_sun
 from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
 from tioc.get_FORM_refactored.tableau import test
 from tioc.get_FORM_refactored.indices import Possible_Indices

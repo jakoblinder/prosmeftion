@@ -629,7 +629,7 @@ def form_fieldstrengthtensorEOMidentification(n_der: int):
                 # extract remaining indices, i.e. without 1 in the same order they occurred in the permutation.
                 red_per = [i for i in fp_per if i not in (1,)]
                 red_der = [f"{cov:s}(Lsl{i:d}, Usldot{i:d}, " for i in red_per]
-                # TODO: Change index order, so that SL2C-indices are always the first (change in get_BS folder first.
+                # TODO: Change index order, so that SL2C-indices are always the first (change in sl2c folder first.
                 func += f"{''.join(red_der)}EOM(`field', Lsl{field_ind2:d}, Usldot{der_ind:d}, ?a, ?b){len(red_per) * ')'}"
                 if fp_minus_one_RHS:
                     func += ")"

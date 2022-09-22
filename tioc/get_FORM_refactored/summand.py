@@ -240,6 +240,25 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         else:
             return Indices_Summand(indices_expr.indices)
 
+    @property
+    def possible_indices(self):
+        """
+        All possibly in addition occurring indices which have to be declared for FORM, before FORM is run are saved in
+        the attribute _possible_indices, except the ones which occur for sure in the expression, since those are the
+        indices of the operators.
+        However, since the attribute possible_indices should return also the "for sure" indices, those are added
+        manually. The philosophy is that the declaration of to many indices is better than to less.
+        Returns
+        -------
+
+        """
+        self._possible_indices += Possible_Indices([index for index in list(self.indices).copy() if not isinstance(index, Dummy_Index)])
+        return self._possible_indices
+
+    @possible_indices.setter
+    def possible_indices(self, fp_possible_indices):
+        self._possible_indices = fp_possible_indices
+
     def copy(self):
         """
         Returns a copy of the object.

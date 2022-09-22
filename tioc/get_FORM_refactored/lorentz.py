@@ -1,3 +1,4 @@
+from __future__ import annotations  # To type hint a method with the type of the enclosing class. Alternatively write the type hint as a string.
 import logging
 import sys
 from fractions import Fraction
@@ -13,7 +14,6 @@ logger = logger_autoeft.getChild(__name__)
 
 default = object()  # Default value for functions
 class LR_Tableaux():
-
     l_tab: Young_Tableau  # l_tab and r_tab are normal order, i.e. the field position indices are
     r_tab: Young_Tableau  # increasing in each column from top to bottom.
     factor: Fraction
@@ -201,7 +201,7 @@ class LR_Tableaux():
 
         return lorentz_tab, sign
 
-    def ibp(self, derivative: LP_Index, derivatives: Dict):
+    def ibp(self, derivative: LP_Index, derivatives: Dict) -> List[LR_Tableaux]:
         """
 
         Parameters

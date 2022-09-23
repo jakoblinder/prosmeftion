@@ -740,7 +740,7 @@ class Summand(Summand_Model):
             #  EOM of the left-handed field strength tensor of SU(2), WL
             # Note: The SU2-indices are explicitly symmetrized.
             id_statement3 = f"EOM({wl},{lsl1}?Lsl,{usldot1}?Usldot,{gauge1}?gauge,{gauge2}?gauge) ="
-            rHS2 = f" - {g2} * ("
+            rHS2 = f" - ({g2}/2) * ("  # Factor 1/2 necessary for explicit symmetrization of SU2 indices.
             def gauge_indices(gaugei, gaugek):
                 """For the symmetrization of the SU2-indices."""
                 output = f" + i_ * ( {cov}({lsl1},{usldot1},{higgs}({gaugei})) * {higgs_dagger}({gaugek})"

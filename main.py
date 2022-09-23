@@ -141,7 +141,7 @@ def main(max_dim = 6, debug=None):
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_without_rfr.p", "rb"))
 
     # test()
-    # Apply ibp and schouten ids up to the point where all tableaus, are SSYT:
+    # Apply ibp and schouten ids up to the point where all tableaux, are SSYT:
     # Note due to the replacement of contracted derivative on the second and third field,
     # this has to be done iteratively while removing always the EOMs before the next iteration
     if debug:

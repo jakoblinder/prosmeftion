@@ -60,15 +60,16 @@ def write_texfile_and_create_pdf(pdfname="terms"):
 
 @write_texfile_and_create_pdf("terms_unsorted")
 def tex_unsorted_terms(terms):
-    tex = []
-    for term in terms:
-        tex.append((term.name, f"{term:tex}"))
     latex = ""
-    for name, v in tex:
-        latex += r"\paragraph{" + f"{name:s}" + "}\n"
-        latex += r"\begin{dmath}" + "\n"
-        latex += v + "\n"
-        latex += r"\end{dmath}" + "\n"
+
+    for term in terms:
+        latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
+        for summand in term.terms:
+            latex += r"\begin{align}" + "\n"
+            latex += "\t" + r"\begin{autobreak}" + "\n"
+            latex += f"+{summand:tex}" + "\n"
+            latex += "\t" + r"\end{autobreak}" + "\n"
+            latex += r"\end{align}" + "\n"
 
     return latex
 
@@ -81,9 +82,11 @@ def tex_sorted_terms(single_terms):
             latex += r"\section*{" + re.sub(r"'", "", term_type_nD.name) + "}\n"
             for term in term_type_nD:
                 latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
-                latex += r"\begin{dmath}" + "\n"
-                latex += f"{term:tex}\n"
-                latex += r"\end{dmath}" + "\n"
+                latex += r"\begin{align}" + "\n"
+                latex += "\t" + r"\begin{autobreak}" + "\n"
+                latex += f"+{term:tex}\n"
+                latex += "\t" + r"\end{autobreak}" + "\n"
+                latex += r"\end{align}" + "\n"
 
     return latex
 
@@ -95,9 +98,11 @@ def tex_sorted_terms_wo_doubles(single_terms):
             latex += r"\section*{" + re.sub(r"'", "", term_type_nD.name) + "}\n"
             for term in term_type_nD:
                 latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
-                latex += r"\begin{dmath}" + "\n"
-                latex += f"{term:tex}\n"
-                latex += r"\end{dmath}" + "\n"
+                latex += r"\begin{align}" + "\n"
+                latex += "\t" + r"\begin{autobreak}" + "\n"
+                latex += f"+{term:tex}\n"
+                latex += "\t" + r"\end{autobreak}" + "\n"
+                latex += r"\end{align}" + "\n"
 
     return latex
 
@@ -109,9 +114,11 @@ def tex_sorted_terms_before_sun(single_terms):
             latex += r"\section*{" + re.sub(r"'", "", term_type_nD.name) + "}\n"
             for term in term_type_nD:
                 latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
-                latex += r"\begin{dmath}" + "\n"
-                latex += f"{term:tex}\n"
-                latex += r"\end{dmath}" + "\n"
+                latex += r"\begin{align}" + "\n"
+                latex += "\t" + r"\begin{autobreak}" + "\n"
+                latex += f"+{term:tex}\n"
+                latex += "\t" + r"\end{autobreak}" + "\n"
+                latex += r"\end{align}" + "\n"
 
     return latex
 
@@ -123,9 +130,11 @@ def tex_sorted_terms_wo_eoms(single_terms):
             latex += r"\section*{" + re.sub(r"'", "", term_type_nD.name) + "}\n"
             for term in term_type_nD:
                 latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
-                latex += r"\begin{dmath}" + "\n"
-                latex += f"{term:tex}\n"
-                latex += r"\end{dmath}" + "\n"
+                latex += r"\begin{align}" + "\n"
+                latex += "\t" + r"\begin{autobreak}" + "\n"
+                latex += f"+{term:tex}\n"
+                latex += "\t" + r"\end{autobreak}" + "\n"
+                latex += r"\end{align}" + "\n"
 
     return latex
 
@@ -152,9 +161,11 @@ def tex_terms_sorted_sun_projection(single_terms, max_dim:int=6):
                     name_form = "".join([f"{name}{nD}" for name, nD in name_of_term])
                     latex_terms += r"\paragraph{" + f"{name_form:s}" + "}\n"
                     for term in terms_specific:
-                        latex_terms += r"\begin{dmath}" + "\n"
-                        latex_terms += f"{term:tex}\n"
-                        latex_terms += r"\end{dmath}" + "\n"
+                        latex_terms += r"\begin{align}" + "\n"
+                        latex_terms += "\t" + r"\begin{autobreak}" + "\n"
+                        latex_terms += f"+{term:tex}\n"
+                        latex_terms += "\t" + r"\end{autobreak}" + "\n"
+                        latex_terms += r"\end{align}" + "\n"
 
                 latex_sun_tensors = ""
                 if term_mass_dim.sun_projection_tensors:
@@ -181,7 +192,7 @@ def tex_terms_sorted_sun_projection(single_terms, max_dim:int=6):
                                 for tensor in monom.tensors:
                                     for index in tensor.indices:
                                         index.tex = ref_indices[index.expr]
-                        latex_sun_tensors += r"\paragraph{" + f"{sun_group:s}-Basis Tensors" + "}\n"
+                        latex_sun_tensors += r"\paragraph{" + "".join((map(lambda x: rf"\{x}" if x == "_" else x, f"{sun_group}"))) + "-Basis Tensors" + "}\n"  # escape '_' in paragraph.
                         latex_sun_tensors += r"\begin{align}" + "\n"
                         latex_sun_tensors += f"{sun_tensors:tex}"
                         latex_sun_tensors += r"\end{align}" + "\n"

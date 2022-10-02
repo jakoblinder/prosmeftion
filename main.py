@@ -166,6 +166,10 @@ def main(max_dim = 6, debug=None):
 
     if args.tex:
         tex_sorted_terms_before_sun(single_terms)
+
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
+    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_before_sun.p", "rb"))
+
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, basis, max_dim)
 

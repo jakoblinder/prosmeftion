@@ -110,11 +110,11 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         # Build tex expression:
         mult_sign = ''  # '*'
         tex_expr = ""
-        tensors = mult_sign.join([f"{op:tex}" for op in self.tensors])
-        fields = mult_sign.join([f"{op:tex}" for op in self.fields])
-        tex_expr += rf"{self.coeff:tex}\\" + mult_sign
+        tensors = f"\n{mult_sign}".join([f"{op:tex}" for op in self.tensors])
+        fields = f"\n{mult_sign}".join([f"{op:tex}" for op in self.fields])
+        tex_expr += rf"{self.coeff:tex}" + f"\n{mult_sign}"
         if tensors:
-            tex_expr += f"{tensors}{mult_sign}{fields}"
+            tex_expr += f"{tensors}\n{mult_sign}{fields}"
         else:
             tex_expr += f"{fields}"
 

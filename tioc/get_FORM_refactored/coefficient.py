@@ -181,14 +181,43 @@ class Coefficient_Model(ABC):
             tex = re.sub(r"frac\((?P<nominator>[^+-]+),(?P<denominator>[^+-]+)\)",
                          r"\\" + r"frac{\g<nominator>}{\g<denominator>}", tex)
 
-            # The Expression should look like: bbracket(<a bunch of terms here>)*Ms^-n -> \left(<a bunch of terms here>\right)*M_{s}^{-n}
-            tex = re.sub(r"bbracket\((?P<summands>.+)\)\*" + escape_regex(op_config["coefficients"]["Ms"]["tex"]) + r"\^(?P<exponent>-?\d{1,2})",
-                         r"\\" + r"left(" + r"\g<summands>" + r"\\" + rf"right)*" + op_config["coefficients"]["Ms"]["tex"] + r"^{\g<exponent>}", tex)
+            # Two cases:
+            #  i.) The Expression should look like: bbracket(<a bunch of terms here>)*Ms^-n -> \biggl(<a bunch of terms here>\biggr)*M_{s}^{-n}
+            # ii.) Substitute terms where n = 0, i.e. Ms^n = 1, i.e. bbracket(<a bunch of terms here>) -> \biggl(<a bunch of terms here>\biggr)
+            # Extract now the summand and the Ms scaling.
+            # i.):
+            match_Ms = re.search(r"bbracket\((?P<summands>.+)\)\*" + escape_regex(op_config["coefficients"]["Ms"]["tex"]) + r"\^(?P<exponent>-?\d{1,2})", tex)
+            # ii.):
+            match_wo_Ms = re.search(r"bbracket\((?P<summands>.+)\)\Z", tex)
 
-            # Subistute terms where n = 0, i.e. Ms^n = 1:
-            tex = re.sub(r"bbracket\((?P<summands>.+)\)\Z",
-                         r"\\" + r"left(" + r"\g<summands>" + r"\\" + r"right)",
-                         tex)
+            if match_Ms:
+                summands = match_Ms.group("summands")
+                ms_exponent = match_Ms.group("exponent")
+            elif match_wo_Ms:
+                summands = match_wo_Ms.group("summands")
+                ms_exponent = False
+            else:
+                logger.error(f"Summands and Ms coefficient cannot be identified in coefficient {output}.")
+                sys.exit("STOP")
+
+            assert summands
+            # Each summand in <a bunch of terms here> should be written in a new line as required by the 'autobreak' package.
+            # Remember therefore that +- signs may only appear before a new summand or maybe a minus sign appears in an exponent.
+            summands = re.sub(r"(?P<sign>(?<!\^)[\+\-])", "\n" + r"\g<sign>", summands)
+
+            tex = r"\biggl(" + f"\n{summands:s}" + r"\biggr)"
+
+            if ms_exponent:
+                tex += f"*{op_config['coefficients']['Ms']['tex']}^" + "{" + f"{ms_exponent:s}" + "}"
+            # # The Expression should look like: bbracket(<a bunch of terms here>)*Ms^-n -> \left(<a bunch of terms here>\right)*M_{s}^{-n}
+            # tex = re.sub(r"bbracket\((?P<summands>.+)\)\*" + escape_regex(op_config["coefficients"]["Ms"]["tex"]) + r"\^(?P<exponent>-?\d{1,2})",
+            #              r"\\" + r"biggl(" + r"\g<summands>" + r"\\" + rf"biggr)*" + op_config["coefficients"]["Ms"]["tex"] + r"^{\g<exponent>}", tex)
+            #
+            # # Substitute terms where n = 0, i.e. Ms^n = 1:
+            # tex = re.sub(r"bbracket\((?P<summands>.+)\)\Z",
+            #              r"\\" + r"biggl(" + r"\g<summands>" + r"\\" + r"biggr)",
+            #              tex)
+
             multSign = ""
             tex = re.sub(r"\*", f"{multSign} ", tex)
         else:

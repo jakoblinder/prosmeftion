@@ -16,7 +16,7 @@ from tioc.tex import tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_d
 from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
 from tioc.get_FORM_refactored.tableau import test
 from tioc.get_FORM_refactored.indices import Possible_Indices
-from tioc.get_FORM_refactored.rfr import rfr
+from tioc.get_FORM_refactored.rfr import rfr, rfr_sun
 from tioc.general import declaration_SL2C_sets
 
 # configure logger
@@ -169,6 +169,9 @@ def main(max_dim = 6, debug=None):
 
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_before_sun.p", "rb"))
+
+    single_terms = rfr_sun(single_terms)
+    # single_terms = remove_doubles(single_terms)
 
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, basis, max_dim)

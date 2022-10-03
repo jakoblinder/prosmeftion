@@ -153,19 +153,31 @@ class Operators_Model(MutableMapping):
             sys.exit("STOP")
 
     def __setitem__(self, key, value):
-        type_check1 = [isinstance(key, int), key > 0 if isinstance(key, int) else False, isinstance(key, slice)]
+        type_check1 = [isinstance(key, int), key > 0 if isinstance(key, int) else False, isinstance(key, slice), isinstance(key, str)]
         if not any(type_check1):
-            logger.error("Key has to be of typ int and >= 0 or of type slice.")
+            logger.error("Key has to be of typ int and >= 0, of type slice or of type string.")
             sys.exit("STOP")
         type_check2 = [isinstance(value, Tensor), isinstance(value, Field)]
-        if not any(type_check2):
-            logger.error("The value which will be set has to be of type Tensor or Field.")
+        type_check3 = [isinstance(value, Fields), isinstance(value, Tensors)]
+        if not any(type_check2) and not any(type_check3):
+            logger.error("The value which will be set has to be of type Tensor, Field, Tensors or Fields.")
             sys.exit("STOP")
-        logger.debug(f"The operator {self.operators[key]:s} will be rewritten with {value:s}.")
-        operators = list(self.operators)
-        operators[key] = value
-        self.operators = tuple(operators)
+        if any(type_check3):
+            assert len(self[key]) == len(value), "The list of values which will be set to the chosen list has to be of the same length."
 
+        logger.debug(f"The operator(s) {self[key]:s} will be rewritten with {value:s}.")
+        # if any(type_check2):
+        #     operators = list(self.operators)
+        #     operators[key] = value
+        #     self.operators = tuple(operators)
+        # elif any(type_check3):
+        operators = list(self.operators)
+        if isinstance(key, str) or isinstance(key, slice):
+            for op_old, op_new in zip(self[key], value):
+                operators[type(self).index(operators, op_old)] = op_new.copy()
+        else:
+            operators[key] = value
+        self.operators = tuple(operators)
     def __delitem__(self, key):
         type_check = [isinstance(key, int), key > 0 if isinstance(key, int) else False, isinstance(key, slice),  isinstance(key, str)]
         if not any(type_check):

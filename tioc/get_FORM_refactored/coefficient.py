@@ -186,14 +186,16 @@ class Coefficient_Model(ABC):
             # ii.) Substitute terms where n = 0, i.e. Ms^n = 1, i.e. bbracket(<a bunch of terms here>) -> \biggl(<a bunch of terms here>\biggr)
             # Extract now the summand and the Ms scaling.
             # i.):
-            match_Ms = re.search(r"bbracket\((?P<summands>.+)\)\*" + escape_regex(op_config["coefficients"]["Ms"]["tex"]) + r"\^(?P<exponent>-?\d{1,2})", tex)
+            match_Ms = re.match(r"(?P<sign>.*)bbracket\((?P<summands>.+)\)\*" + escape_regex(op_config["coefficients"]["Ms"]["tex"]) + r"\^(?P<exponent>-?\d{1,2})", tex)
             # ii.):
-            match_wo_Ms = re.search(r"bbracket\((?P<summands>.+)\)\Z", tex)
+            match_wo_Ms = re.match(r"(?P<sign>.*)bbracket\((?P<summands>.+)\)\Z", tex)
 
             if match_Ms:
+                sign = match_Ms.group("sign")
                 summands = match_Ms.group("summands")
                 ms_exponent = match_Ms.group("exponent")
             elif match_wo_Ms:
+                sign = match_wo_Ms.group("sign")
                 summands = match_wo_Ms.group("summands")
                 ms_exponent = False
             else:
@@ -205,7 +207,7 @@ class Coefficient_Model(ABC):
             # Remember therefore that +- signs may only appear before a new summand or maybe a minus sign appears in an exponent.
             summands = re.sub(r"(?P<sign>(?<!\^)[\+\-])", "\n" + r"\g<sign>", summands)
 
-            tex = r"\biggl(" + f"\n{summands:s}" + r"\biggr)"
+            tex = rf"{sign}" + r"\biggl(" + f"\n{summands:s}" + r"\biggr)"
 
             if ms_exponent:
                 tex += f"*{op_config['coefficients']['Ms']['tex']}^" + "{" + f"{ms_exponent:s}" + "}"

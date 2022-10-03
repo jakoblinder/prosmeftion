@@ -67,7 +67,7 @@ def tex_unsorted_terms(terms):
         for summand in term.terms:
             latex += r"\begin{align}" + "\n"
             latex += "\t" + r"\begin{autobreak}" + "\n"
-            latex += f"+{summand:tex}" + "\n"
+            latex += f"{summand:tex}" + "\n"
             latex += "\t" + r"\end{autobreak}" + "\n"
             latex += r"\end{align}" + "\n"
 
@@ -84,7 +84,7 @@ def tex_sorted_terms(single_terms):
                 latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
                 latex += r"\begin{align}" + "\n"
                 latex += "\t" + r"\begin{autobreak}" + "\n"
-                latex += f"+{term:tex}\n"
+                latex += f"{term:tex}\n"
                 latex += "\t" + r"\end{autobreak}" + "\n"
                 latex += r"\end{align}" + "\n"
 
@@ -100,7 +100,7 @@ def tex_sorted_terms_wo_doubles(single_terms):
                 latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
                 latex += r"\begin{align}" + "\n"
                 latex += "\t" + r"\begin{autobreak}" + "\n"
-                latex += f"+{term:tex}\n"
+                latex += f"{term:tex}\n"
                 latex += "\t" + r"\end{autobreak}" + "\n"
                 latex += r"\end{align}" + "\n"
 
@@ -116,7 +116,7 @@ def tex_sorted_terms_before_sun(single_terms):
                 latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
                 latex += r"\begin{align}" + "\n"
                 latex += "\t" + r"\begin{autobreak}" + "\n"
-                latex += f"+{term:tex}\n"
+                latex += f"{term:tex}\n"
                 latex += "\t" + r"\end{autobreak}" + "\n"
                 latex += r"\end{align}" + "\n"
 
@@ -132,7 +132,7 @@ def tex_sorted_terms_wo_eoms(single_terms):
                 latex += r"\paragraph{" + f"{term.name:s}" + "}\n"
                 latex += r"\begin{align}" + "\n"
                 latex += "\t" + r"\begin{autobreak}" + "\n"
-                latex += f"+{term:tex}\n"
+                latex += f"{term:tex}\n"
                 latex += "\t" + r"\end{autobreak}" + "\n"
                 latex += r"\end{align}" + "\n"
 
@@ -163,7 +163,7 @@ def tex_terms_sorted_sun_projection(single_terms, max_dim:int=6):
                     for term in terms_specific:
                         latex_terms += r"\begin{align}" + "\n"
                         latex_terms += "\t" + r"\begin{autobreak}" + "\n"
-                        latex_terms += f"+{term:tex}\n"
+                        latex_terms += f"{term:tex}\n"
                         latex_terms += "\t" + r"\end{autobreak}" + "\n"
                         latex_terms += r"\end{align}" + "\n"
 

@@ -246,9 +246,9 @@ def rfr_sun(single_terms):
                         term_sym.replace_SUN_indices_by_projection_indices()
                         # Keep only the tensors in this symmetrized form:
                         term_tensors_sym_only = term_sym.copy()
-                        for sun_group in [group for group in term_sym.gaugeTensorsSUN.keys() if term_sym.gaugeTensorsSUN[group]]:  # term_mass_dim.sun_projection_matrix.keys():
-                            term_tensors_sym_only.fields[sun_group] = term.fields[sun_group]
-                        # summand.gaugeIndicesforProjection_tensors()
+                        term_tensors_sym_only.fields = term.fields
+                        # for sun_group in [group for group in term_sym.gaugeTensorsSUN.keys() if term_sym.gaugeTensorsSUN[group]]:
+                        #     term_tensors_sym_only.fields[sun_group] = term.fields[sun_group]
                         terms.append(Term([term_tensors_sym_only], name_form))
 
             else:

@@ -6,7 +6,7 @@ from copy import copy
 from fractions import Fraction
 from math import factorial
 from typing import Iterator, List, Tuple, Dict, Union
-from tioc import model
+from tioc import model, op_config
 from tioc.get_FORM_refactored.term import Term
 from tioc.get_FORM_refactored.summand import Summand
 from tioc.get_FORM_refactored.coefficient import Factor
@@ -202,33 +202,28 @@ def rfr(single_terms):
     return single_terms
 
 def rfr_sun(single_terms):
-    """
-    Symmetrize fields in the same way as rfr(), but keep only the gauge group tensors from the expressions so that
-    indices in gauge group tensors are symmetrized but building block order stays the same.
-
-    Otherwise, the derivative order from the ibp algorithm would be destroyed.
-
-    Parameters
-    ----------
-    single_terms
-
-    Returns
-    -------
-
-    """
     terms = []
     for term_type in single_terms.values():
         for term_mass_dim in term_type.values():
             if any([n_field > 1 for n_field in term_mass_dim.field_content.values()]):
                 # At least one field occurs at least twice:
-                logger.info(f"SUN tensor indices of the terms with field content {term_mass_dim.field_content} are (anti-)symmetrized.")
+                logger.info(f"Terms with field content {term_mass_dim.field_content} are (anti-)symmetrized.")
                 n_fields = sum(term_mass_dim.field_content.values())  # number of fields in the term
+
                 for term in term_mass_dim.terms:
                     symmetrized_terms = []
                     field_indices = list(range(1, n_fields + 1))
                     symmetrizations = []
                     n = 1
                     for field_name, n_field in term.fieldcounter_stripped.items():
+                        if field_name not in (op_config["bosonfields"]["H"]["autoeft"]["H"], op_config["bosonfields"]["H"]["autoeft"]["[H+]"]):
+                            # Substitution only possible for Higgs fields
+                            n += n_field
+                            continue
+                        elif not all([term.fieldstructure[i][1] == 0 for i in range(n-1, n-1 + n_field)]):
+                            #  No derivatives on the corresponding fields.
+                            n += n_field
+                            continue
                         if n_field > 1:
                             if model.fields[field_name].ac:
                                 sym_antisym = "A"
@@ -236,20 +231,22 @@ def rfr_sun(single_terms):
                                 sym_antisym = "S"
                             symmetrizations.append((list(range(n, n + n_field)), sym_antisym))
                         n += n_field
+                    if not symmetrizations:
+                        # Fields are not symmetrized due to the occurrence of derivatives.
+                        logger.info(
+                            f"Indices of terms with field content {term_mass_dim.field_content} are not symmetrized.")
+                        for term in term_mass_dim.terms:
+                            name_form = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])
+                            terms.append(Term([term], name_form))
+                        continue
                     sym_field_indices = symmetrize(field_indices, symmetrizations)
                     for field_indices in sym_field_indices:
                         symmetrized_terms.append(shift_fields(term, field_indices))
 
-                    term.replace_SUN_indices_by_projection_indices()
+
                     for term_sym in symmetrized_terms:
                         name_form = "".join([f"{name}{nD}" for name, nD in term_sym.fieldstructure])
-                        term_sym.replace_SUN_indices_by_projection_indices()
-                        # Keep only the tensors in this symmetrized form:
-                        term_tensors_sym_only = term_sym.copy()
-                        term_tensors_sym_only.fields = term.fields
-                        # for sun_group in [group for group in term_sym.gaugeTensorsSUN.keys() if term_sym.gaugeTensorsSUN[group]]:
-                        #     term_tensors_sym_only.fields[sun_group] = term.fields[sun_group]
-                        terms.append(Term([term_tensors_sym_only], name_form))
+                        terms.append(Term([term_sym], name_form))
 
             else:
                 # no field occurs at least twice
@@ -261,6 +258,86 @@ def rfr_sun(single_terms):
     single_terms = get_type(terms)
 
     return single_terms
+
+# def rfr_sun(single_terms):
+#     """
+#     Symmetrize fields in the same way as rfr(), but keep only the gauge group tensors from the expressions so that
+#     indices in gauge group tensors are symmetrized but building block order stays the same.
+#
+#     Otherwise, the derivative order from the ibp algorithm would be destroyed.
+#
+#     Parameters
+#     ----------
+#     single_terms
+#
+#     Returns
+#     -------
+#
+#     """
+#     terms = []
+#     for term_type in single_terms.values():
+#         for term_mass_dim in term_type.values():
+#             if any([n_field > 1 for n_field in term_mass_dim.field_content.values()]):
+#                 # At least one field occurs at least twice:
+#                 logger.info(f"SUN tensor indices of the terms with field content {term_mass_dim.field_content} are (anti-)symmetrized.")
+#                 n_fields = sum(term_mass_dim.field_content.values())  # number of fields in the term
+#                 for term in term_mass_dim.terms:
+#                     symmetrized_terms = []
+#                     field_indices = list(range(1, n_fields + 1))
+#                     symmetrizations = []
+#                     n = 1
+#                     sym_indices = []
+#                     for field_name, n_field in term.fieldcounter_stripped.items():
+#                         if field_name not in (op_config["bosonfields"]["H"]["autoeft"]["H"], op_config["bosonfields"]["H"]["autoeft"]["[H+]"]):
+#                             # Substitution only possible for Higgs fields
+#                             n += n_field
+#                             continue
+#                         elif not all([term.fieldstructure[i][1] == 0 for i in range(n-1, n-1 + n_field)]):
+#                             #  No derivatives on the corresponding fields.
+#                             n += n_field
+#                             continue
+#                         if n_field > 1:
+#                             if model.fields[field_name].ac:
+#                                 sym_antisym = "A"
+#                             else:
+#                                 sym_antisym = "S"
+#                             sym_indices = list(range(n, n + n_field))
+#
+#                             symmetrizations.append((sym_indices, sym_antisym))
+#                         n += n_field
+#                     if not symmetrizations:
+#                         # Fields are not symmetrized due to the occurrence of derivatives.
+#                         logger.info(f"Indices of terms with field content {term_mass_dim.field_content} are not symmetrized.")
+#                         for term in term_mass_dim.terms:
+#                             name_form = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])
+#                             terms.append(Term([term], name_form))
+#                         continue
+#
+#                     sym_field_indices = symmetrize(field_indices, symmetrizations)
+#                     for field_indices in sym_field_indices:
+#                         symmetrized_terms.append(shift_fields(term, field_indices))
+#
+#                     term.replace_SUN_indices_by_projection_indices()
+#                     for term_sym in symmetrized_terms:
+#                         name_form = "".join([f"{name}{nD}" for name, nD in term_sym.fieldstructure])
+#                         term_sym.replace_SUN_indices_by_projection_indices()
+#                         # Keep only the tensors in this symmetrized form:
+#                         term_tensors_sym_only = term_sym.copy()
+#                         term_tensors_sym_only.fields = term.fields
+#                         # for sun_group in [group for group in term_sym.gaugeTensorsSUN.keys() if term_sym.gaugeTensorsSUN[group]]:
+#                         #     term_tensors_sym_only.fields[sun_group] = term.fields[sun_group]
+#                         terms.append(Term([term_tensors_sym_only], name_form))
+#
+#             else:
+#                 # no field occurs at least twice
+#                 logger.info(f"For terms with field content {term_mass_dim.field_content} no field occurs at least twice.")
+#                 for term in term_mass_dim.terms:
+#                     name_form = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])
+#                     terms.append(Term([term], name_form))
+#
+#     single_terms = get_type(terms)
+#
+#     return single_terms
 
 if __name__ == "__main__":
     # a = symmetrize_list((2, [1,2,3,4,5]), [3,1,5], True)

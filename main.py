@@ -1,5 +1,4 @@
 import logging.config
-import pickle  # For development purposes only, to save time in debugging.
 import timeit
 from argparse import ArgumentParser
 from datetime import datetime
@@ -91,9 +90,6 @@ def main(input_file, max_dim = 6, debug=None):
     if args.tex:
         tex_sorted_terms_wo_doubles(inputfilename, single_terms)
 
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
-
     nterms_before = number_terms(single_terms)
 
     single_terms = replace_eoms(single_terms)
@@ -103,17 +99,11 @@ def main(input_file, max_dim = 6, debug=None):
 
     logger.info(f"#Terms with EOMs: {nterms_before:d} <-> #Terms with less EOMs: {nterms_after:d}")
 
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
-
     # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
     single_terms = rearrange_derivatives(single_terms)
 
     single_terms = replace_eoms(single_terms)  # (D^2H) * (D^2H+) -> ... + ~ H+ * H * H * (D^2H+) + ... => need to replace eom again.
     single_terms = replace_eoms(single_terms)
-
-    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
     nterms_before = number_terms(single_terms)
     # Remove double terms:
@@ -126,9 +116,6 @@ def main(input_file, max_dim = 6, debug=None):
     if args.tex:
         tex_sorted_terms_wo_eoms(inputfilename, single_terms)
 
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
-
     logger.info("Symmetries terms.")
     single_terms = rfr(single_terms)
 
@@ -136,10 +123,7 @@ def main(input_file, max_dim = 6, debug=None):
     single_terms = remove_doubles(single_terms)
     nterms_after = number_terms(single_terms)
     logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_without_rfr.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_without_rfr.p", "rb"))
 
-    # test()
     # Apply ibp and schouten ids up to the point where all tableaux, are SSYT:
     # Note due to the replacement of contracted derivative on the second and third field,
     # this has to be done iteratively while removing always the EOMs before the next iteration
@@ -152,8 +136,6 @@ def main(input_file, max_dim = 6, debug=None):
         single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim)
         number_iterations += 1
         single_terms = replace_eoms(single_terms)
-        # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_test.p", "wb"))
-        # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_test.p", "rb"))
         # Remove double terms:
         single_terms = remove_doubles(single_terms)
         nterms_after = number_terms(single_terms)
@@ -165,9 +147,6 @@ def main(input_file, max_dim = 6, debug=None):
 
     if args.tex:
         tex_sorted_terms_before_sun(inputfilename, single_terms)
-
-    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_before_sun.p", "rb"))
 
     single_terms = rfr_sun(single_terms)
     # single_terms = remove_doubles(single_terms)
@@ -184,18 +163,12 @@ def main(input_file, max_dim = 6, debug=None):
     if args.tex:
         tex_terms_sorted_sun_projection(inputfilename, single_terms, max_dim)
 
-    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
-
-
     return single_terms
 
 
 start_time = timeit.default_timer()
 
 terms = main(input_file, args.dimension)
-# fieldstructure = tuple(map(int,list("0100000110000000")))
-# terms = main(args.dimension, debug=fieldstructure)
 
 output = ""
 for term_type in terms.values():

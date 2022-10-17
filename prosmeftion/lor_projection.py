@@ -177,152 +177,12 @@ def rearrange_derivatives(single_terms):
     -------
 
     """
-    # def contracted_with_field(term: Summand, ref_index: Index) -> int:
-    #     if ref_index.typ == "Usldot":
-    #         tensors = term.tensors["sldot"]
-    #     elif ref_index.typ == "Lsl":
-    #         tensors = term.tensors["sl"]
-    #     # else:
-    #     #     tensors = term.tensors
-    #
-    #     # Find contracted tensor and save the other index on that tensor:
-    #     found_index = False
-    #     for tensor in tensors:
-    #         for i, index in enumerate(tensor.indices):
-    #             if index == ref_index.dual_index:
-    #                 found_index = index
-    #                 if i == 0:
-    #                     other_index = tensor.indices[1]
-    #                 else:
-    #                     other_index = tensor.indices[0]
-    #                 break
-    #         if found_index: break
-    #
-    #     # Find field which is contracted with other_index:
-    #     for field in term.fields:
-    #         if other_index.dual_index.is_in(field.indices):
-    #             pos = field.field_pos
-    #             break
-    #
-    #     return pos
-    #
-    # def ibp_2_fields(term: Summand, before: int, afterwards: int, derIndices: List[Index]):
-    #     """
-    #
-    #     Parameters
-    #     ----------
-    #     term
-    #     before: int
-    #         Field position on which the derivative acts before (1 or 2)
-    #     afterwards
-    #         Field position on which the derivative should act afterwards (1 or 2).
-    #     derIndices
-    #         These are the indices of the derivative which are then removed from the one field and attached to the other field.
-    #     Returns
-    #     -------
-    #
-    #     """
-    #     assert len(term.fields) == 2, "This function is only allowed for a term with exactly 2 fields."
-    #     assert before in (1,2) and afterwards in (1,2)
-    #     assert before != afterwards
-    #     assert len(derIndices) == 2, "A derivative has to have 2 indices."
-    #
-    #     for derIndex in derIndices:
-    #         for i, field_index in enumerate(term.fields[before-1].indices):
-    #             if derIndex == field_index:
-    #                 del term.fields[before-1].indices[i]
-    #
-    #     # Recalculate the number of derivatives 'derIndex', which stand on every index.
-    #     term.fields[before-1].reset_derIndex()
-    #
-    #     # Before appending the indices to the other field, adjust the 'derIndex' attribute of those indices:
-    #     for der_index in derIndices:
-    #         der_index.derIndex = term.fields[afterwards-1].nD + 1
-    #
-    #     # Append indices
-    #     for derIndex in derIndices:
-    #         term.fields[afterwards - 1].indices.append(derIndex)
-    #
-    #     # Multiply coefficient of the term by (-1), since we have done essentially a partial integration.
-    #     term.coeff *= Factor("-1")
-    #
-    #     return term
-    #
-    # def balance_derivatives(term: Summand):
-    #     """
-    #     (Recursive function)
-    #     Go through each derivative and check if it is contracted with a derivative on the other field.
-    #     If yes -> ibp, i.e. deleted indices of the derivative on the one field, but store them (!), in order to
-    #     insert the indices on the other field and multiply the coefficient by (-1).
-    #     Note: After deleting the indices from the one field, the derIndex attribute of the remaining derivative
-    #     indices on this field have to be set newly. When appending the indices to the other field derIndex will
-    #     become just nD + 1.
-    #     Parameters
-    #     ----------
-    #     term
-    #
-    #     Returns
-    #     -------
-    #
-    #     """
-    #     derFields = {}
-    #     for field in term.fields:
-    #         derIndices = {der: [] for der in range(1, field.nD + 1)}
-    #         for index in field.indices["sl"]:
-    #             if index.derIndex:
-    #                 derIndices[index.derIndex].append(index)
-    #         for index in field.indices["sldot"]:
-    #             if index.derIndex:
-    #                 derIndices[index.derIndex].append(index)
-    #
-    #         derIndices_contracted_crosswise = {
-    #             der: all([field.field_pos != contracted_with_field(term, derIndices[der][i]) for i in range(2)]) for der
-    #             in range(1, field.nD + 1)}
-    #         derFields[field.field_pos] = (derIndices, derIndices_contracted_crosswise)
-    #     assert len(derFields) == 2
-    #     # Termination condition:
-    #     if all([all(not crossed for crossed in ind_cross[1].values()) for ind_cross in derFields.values()]) and all([field.nD <= 2 for field in term.fields]):
-    #         return term
-    #     else:
-    #         if len(derFields[1][1]) == 2 and len(derFields[2][1]) == 2:
-    #             # 2 derivatives on both fields, both with crossed indices
-    #             # Move the first derivative of the first field
-    #             term = ibp_2_fields(term, before=1, afterwards=2, derIndices=derFields[1][0][1])
-    #             return balance_derivatives(term)
-    #         elif len(derFields[1][1]) == 4 and len(derFields[2][1]) == 0:
-    #             # 4 derivatives on the first field.
-    #             # Move the first derivative of the first field
-    #             term = ibp_2_fields(term, before=1, afterwards=2, derIndices=derFields[1][0][1])
-    #             return balance_derivatives(term)
-    #         elif len(derFields[1][1]) == 0 and len(derFields[2][1]) == 4:
-    #             # 4 derivatives on the first field.
-    #             # Move the first derivative of the first field
-    #             term = ibp_2_fields(term, before=2, afterwards=1, derIndices=derFields[2][0][1])
-    #             return balance_derivatives(term)
-    #         else:
-    #             # 3 derivatives on the first field and 1 on the second or 3 derivatives on the second field and 1 on the first.
-    #             # Move the one derivative from field which has 3 derivatives, where the indices are contracted cross wise.
-    #             nD1 = len(derFields[1][1])  #  Number of derivatives acting on the first field
-    #             nD2 = len(derFields[2][1])  #  Number of derivatives acting on the second field
-    #             assert nD1 != nD2
-    #             if nD1 > nD2:
-    #                 der = list(derFields[1][1].values()).index(True) + 1
-    #                 term = ibp_2_fields(term, before=1, afterwards=2, derIndices=derFields[1][0][der])
-    #             elif nD1 < nD2:
-    #                 der = list(derFields[2][1].values()).index(True) + 1
-    #                 term = ibp_2_fields(term, before=2, afterwards=1, derIndices=derFields[2][0][der])
-    #             return balance_derivatives(term)
-
     try:
         nD4_h2h_dagger2 = single_terms[(0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0)][4]
         logger.info(f"Commutate derivatives in nD=4 and H:1, H+:1.")
     except KeyError:
         logger.info("There is no term with nD=4 and H:1, H+:1 and thus no derivatives need to be rearranged.")
         return single_terms
-
-    # for term in nD4_h2h_dagger2.terms:
-    #     term = balance_derivatives(term)
-    #     term.name = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])
 
     # Write every operator as D1D1D2H*D1Hdagger or D1D2D1H*D2Hdagger
     expression = ""
@@ -420,16 +280,9 @@ def rearrange_derivatives(single_terms):
             Commute derivatives.
             """
             gen_index_gauge = summand.possible_indices.generate_index("gauge")  # get a new, i.e. unused SU2 index with 'next(gen_index_gauge)'
-            # gen_index_sl = summand.possible_indices.generate_index("Lsl")  # next(gen_index_sl) will generate new Lsl and new Usl index
-            # gen_index_sldot = summand.possible_indices.generate_index("Lsldot")
 
             gauge3 = next(gen_index_gauge)
             gauge4 = next(gen_index_gauge)
-
-            # lsl1, usl1 = next(gen_index_sl)
-            # lsl2, usl2 = next(gen_index_sl)
-            # lsldot1, usldot1 = next(gen_index_sldot)
-            # lsldot2, usldot2 = next(gen_index_sldot)
 
             epss = []  # contains epsilons of the LHS and the corresponding sign of the RHS corresponding to permutations of indices.
 
@@ -442,7 +295,6 @@ def rearrange_derivatives(single_terms):
                         p[1] * q[1]))
 
             form = ""
-            # form += "repeat;\n"
 
             form += "* D1D2D1H*D2H+ = ...:\n"
             for eps in epss:
@@ -507,7 +359,6 @@ def rearrange_derivatives(single_terms):
                 form += f"*{cov}(Lsl1,Usldot1,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))*{wr}(gauge1,{gauge3},Usldot2,Usldot3)*{su2eps}({gauge3},{gauge4})"
 
                 form += ");\n"
-            # form += "endrepeat;\n"
             return form
 
         form_commuteDerivatives()
@@ -746,10 +597,7 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
                     term_list.append(summand)
                     continue
 
-                # print(f"{lr.r_tab:fp}")
-                # print(f"{lr.l_tab:fp}")
-
-                print(f"{summand:c}")
+                logger.info(f"{summand:c}")
 
                 derivatives = {i: der[1] for i, der in enumerate(summand.fieldstructure, start=1)}
                 if any([nD > 1 for nD in derivatives.values()]) and summand.d > 4:
@@ -772,9 +620,9 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
                     tabs_without_Schouten = tabs
 
                 for new_lr in tabs_without_Schouten:
-                    print(f"{new_lr[0]:lp}")
+                    logger.info(f"{new_lr[0]:lp}")
                     term = summand.get_term_from_lr_tabs(new_lr[0])
-                    print(f"{term:c}")
+                    logger.info(f"{term:c}")
                     term_list.append(term)
 
                 for new_lr in tabs_without_Schouten:
@@ -782,52 +630,12 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
                         if new_lr[1]:
                             # EOMs might still occur
                             term_check.append(False)
-                            print("False: EOM")
                         elif lTs := new_lr[0].from_lr_tableaux(summand.op_class):
                             lorentz_tab, sign = lTs[0], lTs[1]
                             term_check.append(lorentz_tab.is_ssyt)
-                            if not lorentz_tab.is_ssyt:
-                                print("False: No SSYT")
                         else:
-                            print("False: else")
                             term_check.append(False)
                     # assert lorentz_tab.is_ssyt, f"At this point this should be a SSYT, but it is:\n{lorentz_tab:nice}"
-                print("=======================================")
-                # # Change the derivative structure by only changing the tableau indices (no sign change):
-                # spec_derivative = object()
-                # lr_copy = lr.copy()
-                # del lr
-                #
-                # lr_copy.l_tab[0,0].lp = LP_Index(1, spec_derivative)
-                # lr_copy.l_tab[0, 0].derIndex = spec_derivative  # 1
-                # lr_copy.r_tab[0, 0].lp = LP_Index(1, spec_derivative)
-                # lr_copy.r_tab[0, 0].derIndex = spec_derivative  # 1
-                #
-                # term = summand.get_term_from_lr_tabs(lr_copy)
-                # # Infer from the l_tab and r_tab the derivative structure for a given field structure:
-                # print("------------------------------------------")
-                # print(f"{term:c}")
-                # print(f"{term.lr:lp}")
-                # # Integration by parts of derivative on first field
-                # tabs1 = term.lr.ibp(LP_Index(1,1), summand.op_class.N)
-                # # Integration by parts of derivative on second field
-                # tabs2 = term.lr.ibp(LP_Index(2,1), summand.op_class.N)
-                #
-                # #print both terms
-                # print("Integration by parts of derivative on first field:")
-                # for lr in tabs1:
-                #     print(f"{lr:fp}")
-                #     term1 = summand.get_term_from_lr_tabs(lr)
-                #     print(f"{term1:c}")
-                #
-                # print("Integration by parts of derivative on second field:")
-                # for lr in tabs2:
-                #     print(f"{lr:fp}")
-                #     term1 = summand.get_term_from_lr_tabs(lr)
-                #     print(f"{term1:c}")
-                # print("Old term:")
-                # print(f"{term:c}")
-                # print("=> Old term stays the same!")
 
     term_list_Term = [Term([term], term.name) for term in term_list]
     single_terms = get_type(term_list_Term)

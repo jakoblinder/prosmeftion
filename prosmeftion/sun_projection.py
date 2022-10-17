@@ -7,15 +7,15 @@ from typing import List, Dict
 import sage.all
 import sage.matrix as mx
 from sage.rings.rational_field import QQ
-from tioc.get_FORM_refactored.basisTensors import MonBasisTensor, SymBasisTensor, MonBasisTensors, SymBasisTensors
-from tioc.get_FORM_refactored.index import Index
-from tioc.get_FORM_refactored.indices import Indices_Operator
-from tioc.get_FORM_refactored.operator import Tensor
-from tioc.get_FORM_refactored.operators import Tensors
-from tioc.get_FORM_refactored.read_write import get_terms
-from tioc.get_FORM_refactored.summand import Summand
-# from tioc.get_FORM.form_read_in import Term_Model, Term_s
-from tioc.get_FORM_refactored.term import Term, TermType
+from .yProjection.basisTensors import MonBasisTensor, SymBasisTensor, MonBasisTensors, SymBasisTensors
+from .yProjection.index import Index
+from .yProjection.indices import Indices_Operator
+from .yProjection.operator import Tensor
+from .yProjection.operators import Tensors
+from .yProjection.read_write import get_terms
+from .yProjection.summand import Summand
+# from .get_FORM.form_read_in import Term_Model, Term_s
+from .yProjection.term import Term, TermType
 
 from autoeft.invariants import SUNTableau, field_projection_operator, symmetrize_tensors
 from autoeft.model import SUNGroup

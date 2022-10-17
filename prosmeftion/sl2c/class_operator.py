@@ -4,8 +4,8 @@ import sys
 from yaml import safe_load
 from typing import Dict, List, Tuple
 
-from tioc import opname, CONFIG_PATH
-# from tioc.class_index import Index
+from prosmeftion import opname, CONFIG_PATH
+# from prosmeftion.class_index import Index
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild("operator")

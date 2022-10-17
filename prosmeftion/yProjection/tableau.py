@@ -7,8 +7,8 @@ from typing import Iterator, List, Tuple, Dict, Union
 from sage.combinat.permutation import Permutation
 from sage.combinat.skew_tableau import SkewTableau
 
-from tioc import n_der, op_config, model
-from tioc.get_FORM_refactored.index import Index, LP_Index
+from prosmeftion import n_der, op_config, model
+from .index import Index, LP_Index
 
 # from autoeft.combinat import Tableau
 # from autoeft.invariants import LorentzTableau

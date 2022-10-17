@@ -6,8 +6,8 @@ import subprocess
 from pathlib import Path
 from abc import ABC, abstractmethod
 
-from tioc import run_form, op_config, coeff
-from tioc import escape_regex, PROJECTION_PATH, FORM_PATH, FORM_GENERAL_PATH
+from prosmeftion import run_form, op_config, coeff
+from prosmeftion import escape_regex, PROJECTION_PATH, FORM_PATH, FORM_GENERAL_PATH
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild("coefficient")
 

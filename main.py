@@ -7,17 +7,17 @@ from pathlib import Path
 
 from yaml import safe_load
 
-from tioc import CONFIG_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, n_der, get_basis, run_form
-from tioc.general import form_declarations
+from prosmeftion import CONFIG_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, n_der, get_basis, run_form
+from prosmeftion.general import form_declarations
 
-from tioc.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
-from tioc.converttoSL2C import converttoSL2C
-from tioc.tex import tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms, tex_sorted_terms_before_sun
-from tioc.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
-from tioc.get_FORM_refactored.tableau import test
-from tioc.get_FORM_refactored.indices import Possible_Indices
-from tioc.get_FORM_refactored.rfr import rfr, rfr_sun
-from tioc.general import declaration_SL2C_sets
+from prosmeftion.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
+from prosmeftion.converttoSL2C import converttoSL2C
+from prosmeftion.tex import tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms, tex_sorted_terms_before_sun
+from prosmeftion.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
+from prosmeftion.yProjection.tableau import test
+from prosmeftion.yProjection.indices import Possible_Indices
+from prosmeftion.yProjection.rfr import rfr, rfr_sun
+from prosmeftion.general import declaration_SL2C_sets
 
 # configure logger
 timestamp = datetime.now()
@@ -45,6 +45,8 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+input_file = args.matched.resolve()  # "exampleOutputBS.m"
+#  input_file.stem
 logconfig['handlers']['console']['level'] = logging.getLevelName(args.logLevel)
 logging.config.dictConfig(logconfig)
 
@@ -57,28 +59,25 @@ def number_terms(single_terms):
             nterms += len(terms_n)
     return nterms
 
-def main(max_dim = 6, debug=None):
+def main(input_file, max_dim = 6, debug=None):
     # get basis up to max_dim mass dimension
     basis = get_basis(max_dim)
-    bs_file = args.matched.resolve()  # "exampleOutputBS.m"
+    inputfilename = input_file.stem
 
     with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
         file.write(form_declarations(n_der))
 
-    terms = converttoSL2C(bs_file, header=args.skip, pprint=False)
-    del bs_file
-    # pickle.dump(terms, open(CONFIG_PATH / "terms.p", "wb"))
-    # terms = pickle.load(open(CONFIG_PATH / "terms.p", "rb"))
+    terms = converttoSL2C(input_file, header=args.skip, pprint=False)
 
     if args.tex:
-        tex_unsorted_terms(terms)
+        tex_unsorted_terms(inputfilename, terms)
 
     # Sort terms by type for the projection:
     single_terms = get_type(terms)
     del terms
 
     if args.tex:
-        tex_sorted_terms(single_terms)
+        tex_sorted_terms(inputfilename, single_terms)
 
     nterms_before = number_terms(single_terms)
     # Remove double terms:
@@ -90,7 +89,7 @@ def main(max_dim = 6, debug=None):
 
     # print terms
     if args.tex:
-        tex_sorted_terms_wo_doubles(single_terms)
+        tex_sorted_terms_wo_doubles(inputfilename, single_terms)
 
     pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
@@ -125,7 +124,7 @@ def main(max_dim = 6, debug=None):
     logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
 
     if args.tex:
-        tex_sorted_terms_wo_eoms(single_terms)
+        tex_sorted_terms_wo_eoms(inputfilename, single_terms)
 
     pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
@@ -165,7 +164,7 @@ def main(max_dim = 6, debug=None):
     logger.info(f"After {number_iterations:d} iterations of the ibp algorithm all ibp relations and Schouten identities are applied.")
 
     if args.tex:
-        tex_sorted_terms_before_sun(single_terms)
+        tex_sorted_terms_before_sun(inputfilename, single_terms)
 
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_before_sun.p", "rb"))
@@ -183,7 +182,7 @@ def main(max_dim = 6, debug=None):
     logger.info(f"Terms after SUN projection: {nterms_after_sun_projection:d}")
 
     if args.tex:
-        tex_terms_sorted_sun_projection(single_terms,max_dim)
+        tex_terms_sorted_sun_projection(inputfilename, single_terms, max_dim)
 
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
@@ -194,7 +193,7 @@ def main(max_dim = 6, debug=None):
 
 start_time = timeit.default_timer()
 
-terms = main(args.dimension)
+terms = main(input_file, args.dimension)
 # fieldstructure = tuple(map(int,list("0100000110000000")))
 # terms = main(args.dimension, debug=fieldstructure)
 
@@ -205,7 +204,7 @@ for term_type in terms.values():
             output += f"+{term:c}\n"
 n_terms = number_terms(terms)
 
-with open(PROJECTION_PATH / f"all_terms{n_terms}.h", "w") as file:
+with open(PROJECTION_PATH / f"{input_file.stem:s}_all_terms{n_terms}.h", "w") as file:
     file.write(output)
 
 stop_time = timeit.default_timer()

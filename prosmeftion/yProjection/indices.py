@@ -7,7 +7,7 @@ from collections.abc import MutableMapping
 from abc import ABC, abstractmethod
 from copy import copy
 
-from tioc import CONFIG_PATH, index_pattern, index_config
+from prosmeftion import CONFIG_PATH, index_pattern, index_config
 from .index import Index, Dummy_Index
 
 logger_autoeft = logging.getLogger("autoeft.projection")

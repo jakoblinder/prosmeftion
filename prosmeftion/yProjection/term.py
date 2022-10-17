@@ -6,8 +6,8 @@ from typing import Dict, List
 import sage.all
 import sage.matrix as mx
 from sage.rings.rational_field import QQ
-from tioc import model
-from tioc.get_FORM_refactored.basisTensors import SymBasisTensors
+from prosmeftion import model
+from .basisTensors import SymBasisTensors
 
 from .indices import Indices_Term, Indices_Summand
 from .summand import Summand

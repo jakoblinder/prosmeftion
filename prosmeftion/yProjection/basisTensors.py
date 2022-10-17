@@ -6,7 +6,7 @@ from copy import copy
 from typing import Dict, List, Tuple
 from collections.abc import MutableMapping
 
-from tioc import model, op_config, index_config, get_SUN_name
+from prosmeftion import model, op_config, index_config, get_SUN_name
 from .operator import Tensor, Field, Operator_Model
 from .operators import Tensors
 from .coefficient import Factor

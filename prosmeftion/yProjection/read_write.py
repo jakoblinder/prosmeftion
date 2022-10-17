@@ -6,11 +6,11 @@ from pathlib import Path
 from yaml import safe_load
 from typing import Dict, List, Tuple
 
-from tioc import CONFIG_PATH, PROJECTION_PATH, FORM_GENERAL_PATH, FORM_PATH, op_config, mathematica, escape_regex
-from tioc import bosons, fermions, tensors, run_form, op_pattern, index_number_pattern, LATEX_PATH
+from prosmeftion import CONFIG_PATH, PROJECTION_PATH, FORM_GENERAL_PATH, FORM_PATH, op_config, mathematica, escape_regex
+from prosmeftion import bosons, fermions, tensors, run_form, op_pattern, index_number_pattern, LATEX_PATH
 
-from tioc.get_FORM_refactored.term import Term
-from tioc import index_number_pattern as inp
+from .term import Term
+from prosmeftion import index_number_pattern as inp
 INPUT_PATH = PROJECTION_PATH / "BS"
 
 logger_autoeft = logging.getLogger("autoeft.projection")

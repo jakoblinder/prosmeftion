@@ -5,7 +5,7 @@ import sys
 from typing import Dict, List, Tuple
 from abc import ABC, abstractmethod
 
-from tioc import CONFIG_PATH, index_pattern
+from prosmeftion import CONFIG_PATH, index_pattern
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)

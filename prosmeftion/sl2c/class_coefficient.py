@@ -5,12 +5,12 @@ import subprocess
 
 from pathlib import Path
 
-from tioc import coeffname, abbreviation, coeffvalues, escape_regex, PROJECTION_PATH, FORM_PATH
+from prosmeftion import coeffname, abbreviation, coeffvalues, escape_regex, PROJECTION_PATH, FORM_PATH
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild("coefficient")
 
 class Coefficient():
-    """
+    r"""
     A class describing the coefficient in a term.
     Example coefficient (of term 18):
         +At*(-72*(4+3*eps)*kappa*Ms^4*mu+36*At^2*mu*(-3*eps*Ms^2+eps^2*Ms^2-8*Mu^2-8*eps*Mu^2)

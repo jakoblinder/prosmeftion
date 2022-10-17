@@ -7,7 +7,7 @@ from fractions import Fraction
 from typing import Dict, List, Tuple
 from collections.abc import MutableMapping
 
-from tioc import model, op_config, bosons_non_conj, fermions_non_conj, index_config, get_SUN_name
+from prosmeftion import model, op_config, bosons_non_conj, fermions_non_conj, index_config, get_SUN_name
 from .operator import Tensor, Field, Operator_Model
 from .coefficient import Coefficient
 from .indices import Indices_Summand, Indices_Operator

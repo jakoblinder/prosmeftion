@@ -8,18 +8,18 @@ from copy import copy
 import sage.all
 import sage.matrix as mx
 from sage.rings.rational_field import QQ
-from tioc.get_FORM_refactored.term import Term, TermType
-from tioc.get_FORM_refactored.summand import Summand
-from tioc.get_FORM_refactored.coefficient import Factor
-from tioc.get_FORM_refactored.operator import Tensor, Field
-from tioc.get_FORM_refactored.operators import Tensors
-from tioc.get_FORM_refactored.indices import Indices_Operator, Possible_Indices
-from tioc.get_FORM_refactored.index import Index, LP_Index
-from tioc.get_FORM_refactored.read_write import get_terms
-from tioc.sun_projection import get_type
-from tioc.general import create_procedure
-from tioc.get_FORM_refactored.tableau import get_op_class, Young_Tableau
-from tioc.get_FORM_refactored.lorentz import LR_Tableaux
+from .yProjection.term import Term, TermType
+from .yProjection.summand import Summand
+from .yProjection.coefficient import Factor
+from .yProjection.operator import Tensor, Field
+from .yProjection.operators import Tensors
+from .yProjection.indices import Indices_Operator, Possible_Indices
+from .yProjection.index import Index, LP_Index
+from .yProjection.read_write import get_terms
+from .sun_projection import get_type
+from .general import create_procedure
+from .yProjection.tableau import get_op_class, Young_Tableau
+from .yProjection.lorentz import LR_Tableaux
 
 from autoeft.io import load_basis
 from autoeft.sun_projection import tensor_projection

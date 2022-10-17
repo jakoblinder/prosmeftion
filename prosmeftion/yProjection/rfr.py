@@ -6,12 +6,12 @@ from copy import copy
 from fractions import Fraction
 from math import factorial
 from typing import Iterator, List, Tuple, Dict, Union
-from tioc import model, op_config
-from tioc.get_FORM_refactored.term import Term
-from tioc.get_FORM_refactored.summand import Summand
-from tioc.get_FORM_refactored.coefficient import Factor
-from tioc.get_FORM_refactored.operators import Fields
-from tioc.sun_projection import get_type
+from prosmeftion import model, op_config
+from .term import Term
+from .summand import Summand
+from .coefficient import Factor
+from .operators import Fields
+from prosmeftion.sun_projection import get_type
 
 
 logger_autoeft = logging.getLogger("autoeft.projection")

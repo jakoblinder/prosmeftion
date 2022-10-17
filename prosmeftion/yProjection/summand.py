@@ -5,8 +5,8 @@ from typing import Dict, List, Tuple, Union
 from pathlib import Path
 from copy import copy
 
-from tioc import model, op_config, index_config, get_SUN_name
-from tioc.general import create_procedure
+from prosmeftion import model, op_config, index_config, get_SUN_name
+from prosmeftion.general import create_procedure
 
 from .coefficient import Coefficient, Factor
 from .index import Index, Dummy_Index, LP_Index

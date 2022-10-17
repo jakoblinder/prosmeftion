@@ -7,10 +7,10 @@ from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
 from copy import copy
 
-from tioc import CONFIG_PATH, op_config, escape_regex, model, index_config, op_pattern, index_pattern, dummy_index_pattern, op_name_pattern
+from prosmeftion import CONFIG_PATH, op_config, escape_regex, model, index_config, op_pattern, index_pattern, dummy_index_pattern, op_name_pattern
 from .index import Index, Dummy_Index, LP_Index
 from .indices import Indices_Operator
-from tioc import index_number_pattern as inp
+from prosmeftion import index_number_pattern as inp
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)

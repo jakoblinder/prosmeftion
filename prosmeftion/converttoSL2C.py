@@ -15,11 +15,11 @@ from itertools import chain
 from pathlib import Path
 from typing import List
 
-from tioc.sl2c.class_term import Term
+from .sl2c.class_term import Term
 from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values
 from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
-from tioc.get_FORM_refactored.read_write import get_terms
-from tioc.get_FORM_refactored.coefficient import Factor
+from .yProjection.read_write import get_terms
+from .yProjection.coefficient import Factor
 from .sun_projection import equalize_field_indices
 
 # logger_autoeft = logging.getLogger("autoeft")

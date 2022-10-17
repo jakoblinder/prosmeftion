@@ -3,7 +3,7 @@ import re
 import sys
 from typing import List, Tuple
 
-from tioc import opname, opnameSL2C, spinorsSL2C_c, field_config
+from prosmeftion import opname, opnameSL2C, spinorsSL2C_c, field_config
 
 from .class_coefficient import Coefficient
 from .class_operator import Operator, OperatorModel
@@ -541,7 +541,7 @@ class Term(Operator, Coefficient):
     # Fieldstrengthtensor
     #
     def form_fieldstrengthtensorDerivativeHandling(self, nDer=4):  # fieldstrengthtensorDerivativetoCommutative
-        """
+        r"""
         Rewrite fieldstrengthtensors inside a derivative as:
             D(lorA1?lor, B(lor1,lor2))
             = D(lorA1, [B(op0,lor1,lor2)])*(-i_/4)*(

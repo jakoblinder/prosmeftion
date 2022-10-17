@@ -10,11 +10,11 @@ from itertools import chain
 from pathlib import Path
 from typing import List
 
-from tioc.sl2c.class_term import Term
+from prosmeftion.sl2c.class_term import Term
 from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values
 from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
-from tioc.get_FORM_refactored.read_write import get_terms
-from tioc.get_FORM_refactored.coefficient import Factor
+from .yProjection.read_write import get_terms
+from .yProjection.coefficient import Factor
 from .sun_projection import equalize_field_indices
 
 logger_autoeft = logging.getLogger("autoeft.projection")
@@ -37,6 +37,8 @@ def write_texfile_and_create_pdf(pdfname="terms"):
 
             # call wrapped function:
             latex = func(*args, **kwargs)
+            #  args[0]: filename
+            #  args[1]: list of terms
 
             with open(LATEX_PATH / "terms_all.tex", "w") as file:
                 file.write(latex)
@@ -53,13 +55,13 @@ def write_texfile_and_create_pdf(pdfname="terms"):
             else:
                 # Move created pdf to the main projection folder.
                 file_path = LATEX_PATH / "terms.pdf"
-                file_path.rename(PROJECTION_PATH / f"{pdfname:s}.pdf")
+                file_path.rename(PROJECTION_PATH / f"{args[0]:s}_{pdfname:s}.pdf")
         return wrapper_with_func_args
 
     return decorator
 
-@write_texfile_and_create_pdf("terms_unsorted")
-def tex_unsorted_terms(terms):
+@write_texfile_and_create_pdf("irreps")
+def tex_unsorted_terms(inputfilename, terms):
     latex = ""
 
     for term in terms:
@@ -73,8 +75,8 @@ def tex_unsorted_terms(terms):
 
     return latex
 
-@write_texfile_and_create_pdf("terms_sorted")
-def tex_sorted_terms(single_terms):
+@write_texfile_and_create_pdf("sorted")
+def tex_sorted_terms(inputfilename, single_terms):
     single_terms = equalize_field_indices(single_terms)
     latex = ""
     for term_type in single_terms.values():
@@ -90,8 +92,8 @@ def tex_sorted_terms(single_terms):
 
     return latex
 
-@write_texfile_and_create_pdf("terms_sorted_wo_doubles")
-def tex_sorted_terms_wo_doubles(single_terms):
+@write_texfile_and_create_pdf("sorted_wo_doubles")
+def tex_sorted_terms_wo_doubles(inputfilename, single_terms):
     latex = ""
     for term_type in single_terms.values():
         for term_type_nD in term_type.values():
@@ -106,8 +108,8 @@ def tex_sorted_terms_wo_doubles(single_terms):
 
     return latex
 
-@write_texfile_and_create_pdf("tex_sorted_terms_before_sun")
-def tex_sorted_terms_before_sun(single_terms):
+@write_texfile_and_create_pdf("before_sun_projection")
+def tex_sorted_terms_before_sun(inputfilename, single_terms):
     latex = ""
     for term_type in single_terms.values():
         for term_type_nD in term_type.values():
@@ -122,8 +124,8 @@ def tex_sorted_terms_before_sun(single_terms):
 
     return latex
 
-@write_texfile_and_create_pdf("terms_sorted_wo_eoms")
-def tex_sorted_terms_wo_eoms(single_terms):
+@write_texfile_and_create_pdf("sorted_wo_eoms")
+def tex_sorted_terms_wo_eoms(inputfilename, single_terms):
     latex = ""
     for term_type in single_terms.values():
         for term_type_nD in term_type.values():
@@ -138,11 +140,12 @@ def tex_sorted_terms_wo_eoms(single_terms):
 
     return latex
 
-@write_texfile_and_create_pdf("terms_sorted_sun_projection")
-def tex_terms_sorted_sun_projection(single_terms, max_dim:int=6):
+@write_texfile_and_create_pdf("yBasis")
+def tex_terms_sorted_sun_projection(inputfilename, single_terms, max_dim:int=6):
     latex = ""
     for mass_dim in range(2, max_dim + 1):
-        latex += r"\section*{" + f"Mass dimension: {mass_dim:d}" + "}\n"
+        if any([True if term_mass_dim.d == mass_dim else False for term_type in single_terms.values() for term_mass_dim in term_type.values()]):
+            latex += r"\section*{" + f"Mass dimension: {mass_dim:d}" + "}\n"
         for term_type in single_terms.values():
             for term_mass_dim in term_type.values():
                 if term_mass_dim.d is not mass_dim:

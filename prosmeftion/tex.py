@@ -32,7 +32,8 @@ def write_texfile_and_create_pdf(pdfname="terms"):
     """
     def decorator(func):
         def wrapper_with_func_args(*args, **kwargs):
-            logger.info(f"Create texed pdf {pdfname:s}.pdf of all terms.")
+            pdf = f"{args[0]:s}_{pdfname:s}"
+            logger.info(f"Create texed PDF {pdf:s}.pdf of all terms.")
             logger.debug("Create Tex file of all terms.")
 
             # call wrapped function:
@@ -43,7 +44,7 @@ def write_texfile_and_create_pdf(pdfname="terms"):
             with open(LATEX_PATH / "terms_all.tex", "w") as file:
                 file.write(latex)
             try:
-                logger.debug("Construct pdf.")
+                logger.debug("Construct PDF.")
                 # print(subprocess.list2cmdline(["pdflatex", f"-output-directory={LATEX_PATH}", LATEX_PATH / "terms.tex"]))
                 subprocess.run(["pdflatex", f"-output-directory={LATEX_PATH}", LATEX_PATH / "terms.tex"],
                                capture_output=True, text=True, check=True)
@@ -55,7 +56,7 @@ def write_texfile_and_create_pdf(pdfname="terms"):
             else:
                 # Move created pdf to the main projection folder.
                 file_path = LATEX_PATH / "terms.pdf"
-                file_path.rename(PROJECTION_PATH / f"{args[0]:s}_{pdfname:s}.pdf")
+                file_path.rename(PROJECTION_PATH / f"{pdf:s}.pdf")
         return wrapper_with_func_args
 
     return decorator

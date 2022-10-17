@@ -204,7 +204,7 @@ for term_type in terms.values():
             output += f"+{term:c}\n"
 n_terms = number_terms(terms)
 
-with open(PROJECTION_PATH / f"{input_file.stem:s}_all_terms{n_terms}.h", "w") as file:
+with open(PROJECTION_PATH / f"{input_file.stem:s}_yBasis_{n_terms}.h", "w") as file:
     file.write(output)
 
 stop_time = timeit.default_timer()

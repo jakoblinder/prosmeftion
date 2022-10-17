@@ -1,0 +1,96 @@
+# AutoEFT
+
+Automated operator generation for effective field theories.
+
+## Required Programs and External Libraries
+- [Python](https://www.python.org/)
+- [SageMath](https://www.sagemath.org/) (install via package manager or from source)
+- [PyYAML](https://pyyaml.org/) (install via `sage -pip install pyyaml`)
+- [FORM](https://www.nikhef.nl/~form/) (add `form` to your path or provide the executable in `autoeft/form/`)
+
+### Required Versions
+- Python >= 3.8
+- SageMath >= 9.0
+
+### Required Programs and External Libraries
+- autobreak package
+
+## Run Projection
+- python main.py [-h] [-s SKIP] [-t] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] matched
+- matched: input file, e.g. BS/exampleOutputBS.m
+- SKIP: number of line to skip in file
+- t: converted operators are texed
+
+## Example Projects from the thesis
+- Project QDHH+Q+ operator:    python main.py Examples/QDHH+Q+/QDHH+Q+.m -t
+- Project BWHH+   operator:    python main.py Examples/BWHH+/BWHH+.m -t
+- Project dPhi    operator:    python main.py Examples/ScalarToy/dPhi/dPhi.m -t
+- Project Ophi1   operator:    python main.py Examples/ScalarToy/Ophi1/H+HH+1H1.m -t
+- Project Ophi3   operator:    python main.py Examples/ScalarToy/Ophi3/H+H1H+1H.m -t
+- Project output from BSUOLEA: python main.py BS/exampleOutputBS.m -s 22 -t
+
+## Format of the input files and explanation of symbols:
+The input files are Mathematica files so that Mathematica's non-commutative multiplication sign, '**', combines all tensors and fields, defined in the following, in an operator.
+For every operator, a coefficient has to be given (even if it is one), and the operator has to be divided by the appropriate power of the mass scale.
+Every field will be set in the beginning non-commutative and will be sorted by helicity during the algorithm.
+###Fields
+Since the considered EFT is the Standard Model EFT (SMEFT), only SM fields can be present in the input files. They are defined in the following way in the input files:
+| Symbol | Field                         |
+|:-------|:------------------------------|
+| H      | Higgs                         |
+| e      | right-handed leptons          |
+| u      | right-handed up-type quarks   |
+| b      | right-handed down-type quarks |
+| l      | SU(2) lepton doublet          |
+| q      | SU(2) quark doublet           |
+| F      | U(1)  field strength tensor   |
+| V      | SU(2) field strength tensor   |
+| G      | SU(3) field strength tensor   |
+Their conjugates are defined by conj[H] and bar[psi] for any fermion psi. The form of each field is <Name>[{ind1},{ind2},{ind3},...,{indN}]. The indices of each field are written in square brackets, and indices of the same type are combined in groups into curly brackets. Moreover, the order and labels of indices is fixed in the 'op_config.yml' file and is currently {lor,spin,gauge,gaugeadj,colf,cola,flav} = {4d Lorentz index, spinor index, SU(2)-index in fundamental,SU(2)-index in adjoint,SU(3)-index in fundamental,SU(3)-index in adjoint,flavor index}. Internally, SL2C indices Lsl, Usl and Lsldot, Usldot are also defined for subscript, superscript undotted SL2C indices and subscript, superscript dotted SL2C indices. Each index is built from a label and an id comprised of digits and letters.
+Thus, for example, an quark field is defined by q[{spin2}, {gauge2}, {colf1}, {flav2}].
+
+The covariant derivative, 'cov[{lor1},<field>[<indices>]]', acting on a generic field, '<field>[<indices>]', has a Lorentz index and the field on which it acts as arguments.
+
+### Coupling constants
+The coupling constants present in the high-scale model are {lambdah,At,g1,g2,g3,mu,lambdaphi,kappa}, where g1,g2,g3 are the gauge couplings. Ms is the mass of the singlet; Mu is the tachyonic mass of the Higgs, and eps is the epsilon of DREG. Furthermore, L[M1,M2] = Log[M1/M2]. 
+
+### Tensors
+The Yukawa couplings {yu,yd,ye,conj[yu],conj[yd],conj[ye]} carry of course flavour indices.
+For any coupling C, conj[C] is its complex conjugate.
+Moreover, the epsilon tensor for SU(2), su2eps[{gauge1,gauge2}], SU(3), su2eps[{colf1,colf2, colf3}]
+and group generators TT[{gaugeadj1},{gauge1, gauge2}], TT[{cola1},{colf1, colf2}] are defined.
+
+## File structure
+Since the ProSMEFTion program is developed as an extension of AutoEFT, it also relies on the latter or at least its generated basis. The directory structure should therefore have the following form:
+
+autoeft
+├── autoeft
+├── eft
+│   └── ssmeft
+│       ├── 4
+│       ├── 5
+│       └── 6
+├── models
+└── projection
+    ├── BS
+    ├── Examples
+    │   ├── BWHH+
+    │   ├── QDHH+Q+
+    │   └── ScalarToy
+    │       ├── Ophi1
+    │       ├── Ophi3
+    │       └── dPhi
+    ├── Latex
+    ├── config
+    ├── form_files
+    │   └── general
+    └── prosmeftion
+        ├── sl2c
+        └── yProjection
+ 
+The 'autoeft/autoeft' is for the AutoEFT program but does not have to exist. However, the 'eft' directory has to exist. It contains the operators for each dimension generated by AutoEFT for the specific chosen model (in this case, the electroweak part of SMEFT, called 'ssmeft'.). In addition, the model has to be defined in the 'model' directory. The 'projection' folder contains all ProSMEFTion program files, including the chosen input file examples.
+
+
+
+
+

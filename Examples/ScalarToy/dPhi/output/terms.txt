@@ -1,0 +1,8 @@
+0: +Ms^-2*(+1/2)*D(lor1,[H+](gauge1))*H(gauge1)*D(lor1,[H+](gauge2))*H(gauge2)
+===============================
+1: +Ms^-2*(+1/2)*[H+](gauge1)*D(lor1,H(gauge1))*D(lor1,[H+](gauge2))*H(gauge2)
+===============================
+2: +Ms^-2*(+1/2)*D(lor1,[H+](gauge1))*H(gauge1)*[H+](gauge2)*D(lor1,H(gauge2))
+===============================
+3: +Ms^-2*(+1/2)*[H+](gauge1)*D(lor1,H(gauge1))*[H+](gauge2)*D(lor1,H(gauge2))
+===============================

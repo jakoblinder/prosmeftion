@@ -1,0 +1,60 @@
+0: term0: D(lor1,[H+](gauge1))*H(gauge1)*D(lor1,[H+](gauge2))*H(gauge2)
+is converted into:
++
+H(gauge1)
+*H(gauge2)
+*D(Lslgauge15,Usldotgauge15,[H+](gauge1a))
+*D(Lslgauge25,Usldotgauge25,[H+](gauge2a))*(
+-
+1/2
+*[su2eps](gauge2,gauge2a)
+*[su2eps](gauge1,gauge1a)
+*[sl2Ceps](Uslgauge25,Uslgauge15)
+*[sl2Ceps](Lsldotgauge25,Lsldotgauge15)
+)
+===============================
+1: term1: [H+](gauge1)*D(lor1,H(gauge1))*D(lor1,[H+](gauge2))*H(gauge2)
+is converted into:
++
+D(Lslgauge11,Usldotgauge11,H(gauge1))
+*H(gauge2)
+*[H+](gauge1a)
+*D(Lslgauge25,Usldotgauge25,[H+](gauge2a))*(
+-
+1/2
+*[su2eps](gauge2,gauge2a)
+*[su2eps](gauge1,gauge1a)
+*[sl2Ceps](Uslgauge25,Uslgauge11)
+*[sl2Ceps](Lsldotgauge25,Lsldotgauge11)
+)
+===============================
+2: term2: D(lor1,[H+](gauge1))*H(gauge1)*[H+](gauge2)*D(lor1,H(gauge2))
+is converted into:
++
+H(gauge1)
+*D(Lslgauge21,Usldotgauge21,H(gauge2))
+*D(Lslgauge15,Usldotgauge15,[H+](gauge1a))
+*[H+](gauge2a)*(
+-
+1/2
+*[su2eps](gauge2,gauge2a)
+*[su2eps](gauge1,gauge1a)
+*[sl2Ceps](Uslgauge21,Uslgauge15)
+*[sl2Ceps](Lsldotgauge21,Lsldotgauge15)
+)
+===============================
+3: term3: [H+](gauge1)*D(lor1,H(gauge1))*[H+](gauge2)*D(lor1,H(gauge2))
+is converted into:
++
+D(Lslgauge11,Usldotgauge11,H(gauge1))
+*D(Lslgauge21,Usldotgauge21,H(gauge2))
+*[H+](gauge1a)
+*[H+](gauge2a)*(
+-
+1/2
+*[su2eps](gauge2,gauge2a)
+*[su2eps](gauge1,gauge1a)
+*[sl2Ceps](Uslgauge21,Uslgauge11)
+*[sl2Ceps](Lsldotgauge21,Lsldotgauge11)
+)
+===============================

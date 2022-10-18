@@ -1,0 +1,15 @@
+0: term0: [H+](gauge1)*D(lor1,H(gauge1))*D(lor1,[H+](gauge2))*H(gauge2)
+is converted into:
++
+D(Lslgauge11,Usldotgauge11,H(gauge1))
+*H(gauge2)
+*[H+](gauge1a)
+*D(Lslgauge25,Usldotgauge25,[H+](gauge2a))*(
+-
+1/2
+*[su2eps](gauge2,gauge2a)
+*[su2eps](gauge1,gauge1a)
+*[sl2Ceps](Uslgauge25,Uslgauge11)
+*[sl2Ceps](Lsldotgauge25,Lsldotgauge11)
+)
+===============================

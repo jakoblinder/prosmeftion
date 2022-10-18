@@ -1,0 +1,2 @@
+0: +Ms^-2*(+1)*B(lor1,lor2)*H(gauge1)*T(gaugeadj1,gauge2,gauge1)*W(gaugeadj1,lor1,lor2)*[H+](gauge2)
+===============================

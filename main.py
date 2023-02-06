@@ -62,6 +62,7 @@ def number_terms(single_terms):
 def main(input_file, max_dim = 6, debug=None):
     # get basis up to max_dim mass dimension
     basis = get_basis(max_dim)
+
     inputfilename = input_file.stem
 
     with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:

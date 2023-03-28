@@ -9,6 +9,10 @@ from typing import Dict, List, Tuple
 from prosmeftion import CONFIG_PATH, PROJECTION_PATH, FORM_GENERAL_PATH, FORM_PATH, op_config, mathematica, escape_regex
 from prosmeftion import bosons, fermions, tensors, run_form, op_pattern, index_number_pattern, LATEX_PATH
 
+from prosmeftion.pyform.pyform import PyFORM
+from prosmeftion.pyform.newpyform import PyFORM as NPyFORM
+
+
 from .term import Term
 from prosmeftion import index_number_pattern as inp
 INPUT_PATH = PROJECTION_PATH / "BS"
@@ -16,50 +20,25 @@ INPUT_PATH = PROJECTION_PATH / "BS"
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
-def mathematica_to_form(inputfile: Path, outputfile: Path, header: int = 0):
+def mathematica_to_form(ma_expr: str):
     """
 
     Parameters
     ----------
-    inputfile
-        Input file in mathematica format.
-    header
-        Number of lines before the expression starts.
-    header
-        Path to the output file in FORM compatible format. If only a file name is given, the file will be saved at the
-        same location as the inputfile.
+    ma_expr
+        Expression in mathematica format as one string without any linebreaks and spaces.
+
     Returns
     -------
-        Path to the output file.
+        Expression in FORM compatible format as one string without any linebreaks and spaces.
     """
     logger.info("Convert mathematica input in FORM compatible expression.")
-    inputfile = Path(inputfile)
-    if inputfile.parent == Path("."):
-        inputfile = INPUT_PATH / inputfile
-    elif not inputfile.is_absolute():
-        # Relative location w.r.t. to the working directory.
-        inputfile = inputfile.resolve()
-
-    outputfile = Path(outputfile)
-    if outputfile.parent == Path("."):
-        outputfile = INPUT_PATH / outputfile
-    elif not outputfile.is_absolute():
-        # Relative location w.r.t. to the working directory.
-        outputfile = outputfile.resolve()
-
-    with open(inputfile, "r") as infile:
-        for i in range(header):
-            infile.readline()
-        line = infile.read()
-    line = re.sub(r"(\s)*", "", line)  # Replace all whitespaces and newlines: \s = [\t\n\r\f\v]
-    line = line[1:-1] # remove curly braces around expression
-
-    # Replace complex conjugation of Yukawa matrices, by hermitiant conjugation, i.e. swap the indices:
+    # Replace complex conjugation of Yukawa matrices, by hermitian conjugation, i.e. swap the indices:
     # conj[yd][{flav7784, flav7493}] -> conj[yd][{flav7493,flav7784}]
     yukawa = ["yu", "yd", "ye"]
     yukawa_conj = r'|'.join(escape_regex(list(op_config["tensors"][y]["mathematica"].keys())[1]) for y in yukawa)
-    line = re.sub(r"(?P<op>" + yukawa_conj + r")\[\{(?P<index1>flav" + index_number_pattern + r"),(?P<index2>flav" + index_number_pattern + r")\}\]",
-                  r"\g<op>[{\g<index2>,\g<index1>}]", line)
+    ma_expr = re.sub(r"(?P<op>" + yukawa_conj + r")\[\{(?P<index1>flav" + index_number_pattern + r"),(?P<index2>flav" + index_number_pattern + r")\}\]",
+                  r"\g<op>[{\g<index2>,\g<index1>}]", ma_expr)
 
     sub_mathematica = {key: value for typ in mathematica.values() for key, value in typ.items()}
     placeholder = {}
@@ -71,31 +50,28 @@ def mathematica_to_form(inputfile: Path, outputfile: Path, header: int = 0):
             i += 1
         else:
             sub = form
-        line = re.sub(escape_regex(ma), sub, line)
+        ma_expr = re.sub(escape_regex(ma), sub, ma_expr)
 
     # print(placeholder)
     # Remove curly braces around indices
-    line = re.sub(r"\{(?P<index>[a-zA-Z0-9,]+)\}", r"\g<index>", line)
+    ma_expr = re.sub(r"\{(?P<index>[a-zA-Z0-9,]+)\}", r"\g<index>", ma_expr)
     D = sub_mathematica["cov"]
-    while re.search(D + r"\[(?P<squarebrackets>([a-zA-Z0-9,<>\[\]])+)\]", line):
+    while re.search(D + r"\[(?P<squarebrackets>([a-zA-Z0-9,<>\[\]])+)\]", ma_expr):
         # cov[...] -> cov(...) by remembering that regex always tries to match the largest pattern
-        line = re.sub(D + r"\[(?P<squarebrackets>([a-zA-Z0-9,<>\[\]])+)\]",
-            D + r"(\g<squarebrackets>)", line)
+        ma_expr = re.sub(D + r"\[(?P<squarebrackets>([a-zA-Z0-9,<>\[\]])+)\]",
+            D + r"(\g<squarebrackets>)", ma_expr)
     # Replace [Index,Index,...] -> (Index,Index,...)
-    line = re.sub(r"\[(?P<Index>([a-zA-Z0-9,])+)\]",
-                  r"(\g<Index>)", line)
+    ma_expr = re.sub(r"\[(?P<Index>([a-zA-Z0-9,])+)\]",
+                  r"(\g<Index>)", ma_expr)
 
     # replace double product symbol "**" by "*"
-    line = re.sub(r"\*\*", r"*", line)
+    ma_expr = re.sub(r"\*\*", r"*", ma_expr)
 
     # substitute placeholders again
     for p_holder, form in placeholder.items():
-        line = re.sub(escape_regex(p_holder), form, line)
+        ma_expr = re.sub(escape_regex(p_holder), form, ma_expr)
 
-    with open(outputfile, "w") as outfile:
-        outfile.write(line)
-
-    return outputfile
+    return ma_expr
 
 # extract tensors fields, coefficients and so on from form file.
 
@@ -124,7 +100,7 @@ def read_form_1d_table(table_file: Path, table_label: str) -> Tuple[str]:
     return op_list
 
 
-def get_ops(expr: str, groupOps: List[List[str]], dir_name: Path, maxDimLagr:int=6, minDimOp:int=1):
+def get_ops(expr: str, groupOps: List[List[str]]):
     """
     Returns list of single operators.
 
@@ -134,60 +110,91 @@ def get_ops(expr: str, groupOps: List[List[str]], dir_name: Path, maxDimLagr:int
         FORM expression of only the operators.
     groupOps
         List of FORM compatible str representing operators which will be extracted from the term.
-    dir_name
-        Path of FORM files specific to the term.
-    maxDimLagr
-        Maximum mass dimension of the lagrangian operators.
-    minDimOp
-        Mass dimension of the operator with the minimal mass dimension.
     Returns
     -------
     """
-    # maximum number of operators
-    maxNOp = int(maxDimLagr// minDimOp)
-    form = "Function " + ", ".join(tensors) + ";\n"
-    form += "*\n* Indices and functions for derivatives in SL2C notation.\n*\n"
-    form += "Function sigma, sigmabar;\n"
-    form += "Function sigma2, sigmabar2;\n"
-    form += "#include declarations_general.h # coefficient\n"
-    form += "#include declarations_general.h # indices\n"
-    form += "#include declarations_general.h # operators\n"
 
-    form += "\n"
     if type(groupOps) != list:
         groupOps = [groupOps]
 
-    for i, ops in enumerate(groupOps):
-        form += f"Set ops{i:d}: {', '.join(ops)};\n"
-    form += "\n"
-    form += f"Local expression = {expr:s};\n\n"
-    form += "* Maximum numbers of terms in one operators\n"
-    form += f'#define nterms "{3*maxNOp}"\n\n'
-    form += "Format 255;\n"
-    form += "\n"
-    for i in range(len(groupOps)):
-        form += f"#call getOps(ops{i:d}, `nterms')\n"
-    form += "\n"
-    form += "Print +ss;\n"
-    form += ".end"
-    TERM_PATH = FORM_PATH / dir_name
-    TERM_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
-    with open(TERM_PATH / "get_Ops.frm", "w") as file:
-        file.write(form)
-    run_form(fp_cwd=TERM_PATH, filename="get_Ops.frm", fp_p=FORM_GENERAL_PATH)
-    ops = []
-    for i in range(len(groupOps)):
-        file = TERM_PATH / Path(f"ops{i:d}.t")
-        ops.append(read_form_1d_table(file, f"ops{i:d}Tab"))
-        # file.unlink()  # delete tab files
 
-    return ops
+    def retry(tries:int=5):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                for i in range(tries):
+                    try:
+                        print(f"Try {i + 1:d}")
+                        return func(*args, **kwargs)
+                    except ConnectionError:
+                        continue
+            return wrapper
+        return decorator
 
 
-def get_terms(filepath: Path, as_one=False, name:str=""):
+    # Extract the operators via FORM:
+    form_path = Path("getOps.frm")
+
+    @retry()
+    def form():
+        with PyFORM(form_path, 1, prompt="READY", input_dir=FORM_GENERAL_PATH) as form:
+            sets = ""
+            for i, group in enumerate(groupOps):
+                sets += f"Set ops{i:d}: {', '.join(group)};\n"
+
+            form.write(1, sets)
+            form.write(1, expr)
+            form.write(1, len(groupOps) - 1)
+
+            return form.read_all(1)
+
+    res = form()
+
+    # with NPyFORM(form_path, 1, FORM_GENERAL_PATH, "-Z") as form:
+    #     sets = ""
+    #     for i, group in enumerate(groupOps):
+    #         sets += f"Set ops{i:d}: {', '.join(group)};\n"
+    #
+    #     form.write([sets], ["READY"])
+    #     form.write([expr], ["READY"])
+    #     form.write([len(groupOps) - 1], ["READY"])
+    #     res = form.read()
+    #     res = res[0]
+
+    # Extract operator expressions from FORM output:
+    matches = re.finditer(r"ops(\d{1,2}:)", res)
+    if matches:
+        op_group = []
+        matches = list(matches)
+        for i, match in enumerate(matches):
+            if i < len(matches) - 1:
+                ops = res[match.end():matches[i + 1].start()]
+                ops = ops[1:-1]
+            else:
+                ops = res[match.end():]
+                ops = ops[1:-1]
+            if ops:
+                op_group.append(ops.split("\n"))
+            else:
+                op_group.append([])
+    else:
+        logger.error("Should have found something.")
+        sys.exit("STOP")
+
+    for i, ops in enumerate(op_group):
+        if not ops:
+            continue
+        else:
+            for j, op in enumerate(ops):
+                match = re.match(f"ops{i:d}" + r"-(\d{1,2}):\s", op)
+                op_group[i][j] = op[match.end():]
+
+    return op_group
+
+
+def get_terms(expression: str, name:str=""):
     """
-    The terms of the form output are extracted and written in individual Term and Summand objects. Since Terms may consist
-    of multiple summands, each summand is stored as a Summand object and the coefficients are separated for each
+    The terms of the form output are extracted and written in individual Term and Summand objects. Since Terms may
+    consist of multiple summands, each summand is stored as a Summand object and the coefficients are separated for each
     Summand object.
     For Example: A term like a*(c*A*B - d*C*D) is written in to two different Summand objects:
     1. Summand object: Coefficient = a*c, Fields = [A,B]
@@ -195,58 +202,20 @@ def get_terms(filepath: Path, as_one=False, name:str=""):
 
     Parameters
     ----------
-    filepath: Path
-        Path to the inputfile which contains only the expression.
-    as_one: bool
-        If True, all founded terms are written as one Term object.
+    expression: str
+        Form compatible expression, without linebreaks and whitespaces.
     name: str
-        If everything is written in one Term, this name can be specified.
+        If name is specified, everything is written in one Term object, with the specified name.
     Returns
     -------
 
     """
-    if not as_one:
-        assert not name, "The parameter name can only be set, when as_one is True."
-    form = "#include declarations_general.h # coefficient\n"
-    form += "#include declarations_general.h # indices\n"
-    form += "#include declarations_general.h # tensors\n"
-    form += "#include declarations_general.h # operators\n"
-    form += "\n"
-    form += "Local expression = \n"
-    form += f"#include {filepath.name}\n"
-    form += ";\n"
-    form += ".sort\n\n"
-    form += "CFunction coeff;\n"
-    form += f"Bracket {', '.join(tensors + bosons + fermions)};\n"
-    form += ".sort\n"
-    form += "collect coeff;\n"
-    form += ".sort\n\n"
-    form += "CFunction term;\n"
-    form += "putinside term;\n"
-    form += ".sort\n"
-    form += "Format nospaces;\n\n"
-    form += ""
-    form += "Print +s;\n"
-    form += ".end"
-
-    folder = filepath.parent
-    with open(folder / "term_read.frm", "w") as file:
-        file.write(form)
-
-    output = run_form(fp_cwd=folder, filename="term_read.frm", fp_p=folder.parent / "general")
-    pattern = r"Print(\+s{1,2})?;\n{2}expression=\n{1,2}(?P<expression>(.|\n)*);"
-    pattern_short = r"Print(\+s{1,2})?;\n{2}expression=(?P<expression>(.|\n)*);"  # Pattern for extremely short expressions, i.e. fitting in one line.
-    match = re.search(pattern, output)
-    match_short = re.search(pattern_short, output)
-    if match:
-        expression = re.sub(r"(\s)*", "", match.group("expression"))  # Replace all whitespaces and newlines: \s = [\t\n\r\f\v]
-        # expression = match.group("expression")
-    elif match_short:
-        expression = re.sub(r"(\s)*", "", match_short.group("expression"))  # Replace all whitespaces and newlines: \s = [\t\n\r\f\v]
-        # expression = match_short.group("expression")
-    else:
-        logger.error(f"No output term has been found in {output}.")
-        sys.exit("STOP")
+    with PyFORM(FORM_GENERAL_PATH / "getTerms.frm", 1) as form:
+        form.write(1, expression)
+        # Since FORM automatically adds a linebreak after 72 characters, one has to use read_all.
+        # All linebreaks are removed afterwards.
+        expression = form.read_all(1)
+        expression = re.sub(r"(\s)*", "", expression)
 
     # Extract terms:
     matches = re.finditer(r"term", expression)  # Find Terms by identifying always "term".
@@ -268,30 +237,24 @@ def get_terms(filepath: Path, as_one=False, name:str=""):
         match = re.search(r"coeff", term)
         coeff = term[match.end()+1:-1]
         ops = term[:match.start()-1]
+        print("Identify term: ", i)
         if name:
-            t, f = get_ops(expr=ops, groupOps=[tensors, bosons + fermions], dir_name=Path(name), maxDimLagr=6, minDimOp=1)
+            t, f = get_ops(expr=ops, groupOps=[tensors, bosons + fermions])
         else:
-            t, f = get_ops(expr=ops, groupOps=[tensors, bosons + fermions], dir_name=Path(f"term{i:d}"), maxDimLagr=6, minDimOp=1)
+            t, f = get_ops(expr=ops, groupOps=[tensors, bosons + fermions])
         sorted_terms.append({"tensors": t, "fields": f, "coefficient": coeff})
 
-    if as_one:
+    print(sorted_terms)
+
+    if name:
+        # write all written terms as one Term object.
         terms = Term(sorted_terms, name)
     else:
         # terms = [Term([term], f"term{i:d}") for i, term in enumerate(sorted_terms)]
-        terms = list(map(Term, [[term] for term in sorted_terms], [f"term{i:d}" for i in range(len(sorted_terms))]))
-
-    # latex = ""
-    # if type(terms) == list:
-    #     for term in terms:
-    #         latex += r"\paragraph{" + f"{term.name}" + "}\n"
-    #         latex += r"\begin{dmath}" + "\n"
-    #         latex += f"{term:tex} \n"
-    #         latex += r"\end{dmath}" + "\n"
-    #     # with open(LATEX_PATH / "terms_all.tex", "w") as file:
-    #     #     file.write(latex)
-    # else:
-    #     pass
-    #     # print(f"{terms:tex}")
+        terms = []
+        for i, term in enumerate(sorted_terms):
+            terms.append(Term([term], f"term{i:d}"))
+        # terms = list(map(Term, [[term] for term in sorted_terms], [f"term{i:d}" for i in range(len(sorted_terms))]))
 
     return terms
 

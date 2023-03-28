@@ -60,13 +60,16 @@ def number_terms(single_terms):
     return nterms
 
 def main(input_file, max_dim = 6, debug=None):
+    # Maximum number of derivatives
+    nDer = n_der(max_dim)
+
     # get basis up to max_dim mass dimension
     basis = get_basis(max_dim)
 
     inputfilename = input_file.stem
 
     with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
-        file.write(form_declarations(n_der))
+        file.write(form_declarations(nDer))
 
     terms = converttoSL2C(input_file, header=args.skip, pprint=False)
 

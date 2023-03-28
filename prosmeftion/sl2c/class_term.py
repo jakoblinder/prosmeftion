@@ -560,7 +560,7 @@ class Term(Operator, Coefficient):
         Note 2: The additional index 'op0' specifies the position of the fields, which is important for the replacement
                 of commuting fields again with not commuting fields if for example two identical fields are involved.
                 TODO: This form of replacement should be done for all fields not only the fieldstrengthtensors.
-                TODO: The index should corresponce to the field position used also later. Thus, the first index should have the position index 'op1' and not 'op0'.
+                TODO: The index should correspond to the field position used also later. Thus, the first index should have the position index 'op1' and not 'op0'.
         Note 3: Also a "lonely" fieldstrengthtensor is replaced, not only to ensure also the order of the "lonely"
                 fieldstrengthtensors, but for the SU(2) and SU(3) fieldstrengthtensors also to replace the adjoint
                 gauge group indices by fundamental ones:

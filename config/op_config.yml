@@ -133,6 +133,102 @@ tensors:
         - gaugeadj
         - gauge
         - gauge
+    sigma:
+      description: "SL2C sigmamatrix."
+      tex: \sigma
+      mathematica:
+        sigma: sigma
+      index_structure:
+        -
+          - lor
+          - Usl
+          - Lsldot
+        -
+          - lor
+          - Usl
+          - Usldot
+        -
+          - lor
+          - Lsl
+          - Lsldot
+        -
+          - lor
+          - Lsl
+          - Usldot
+    sigmabar:
+      description: "SL2C sigmabar matrix."
+      tex: \bar{\sigma}
+      mathematica:
+        sigmabar: sigmabar
+      index_structure:
+        -
+          - lor
+          - Lsldot
+          - Usl
+        -
+          - lor
+          - Lsldot
+          - Lsl
+        -
+          - lor
+          - Usldot
+          - Usl
+        -
+          - lor
+          - Usldot
+          - Lsl
+    sigma2:
+      description: "SL2C sigmamatrix with two lorentz indices and two undotted SL2C indices."
+      tex: \sigma
+      mathematica:
+        sigma2: sigma2
+      index_structure:
+        -
+          - lor
+          - lor
+          - Usl
+          - Usl
+        -
+          - lor
+          - lor
+          - Lsl
+          - Usl
+        -
+          - lor
+          - lor
+          - Usl
+          - Lsl
+        -
+          - lor
+          - lor
+          - Lsl
+          - Lsl
+    sigmabar2:
+      description: "SL2C sigmamatrix with two lorentz indices and two dotted SL2C indices."
+      tex: \sigma
+      mathematica:
+        sigmabar2: sigmabar2
+      index_structure:
+        -
+          - lor
+          - lor
+          - Usldot
+          - Usldot
+        -
+          - lor
+          - lor
+          - Lsldot
+          - Usldot
+        -
+          - lor
+          - lor
+          - Usldot
+          - Lsldot
+        -
+          - lor
+          - lor
+          - Lsldot
+          - Lsldot
     gamma:
       description: "Dirac gamma matrix considered in weyl representation."
       tex: \gamma

@@ -18,7 +18,7 @@ from typing import List
 from .sl2c.class_term import Term
 from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values
 from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
-from .yProjection.read_write import get_terms
+from .yProjection.read_write import get_terms, mathematica_to_form
 from .yProjection.coefficient import Factor
 from .sun_projection import equalize_field_indices
 
@@ -75,8 +75,10 @@ def expression_raw(filename, header):
         for i in range(header):
             file.readline()
         line = file.read()
-        line = re.sub(r"(\s)*", "", line)  # Replace all whitespaces and newlines: \s = [\t\n\r\f\v]
-        line = line[1:-1]  # remove curly braces around expression
+        # Replace all whitespaces and newlines: \s = [\t\n\r\f\v]
+        line = re.sub(r"(\s)*", "", line)
+        # remove curly braces around expression
+        line = line[1:-1]
     return line
 
 def writefile(filename, list_terms, write=True):
@@ -768,6 +770,9 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
     else:
         expression = expression_raw(INPUT_PATH / inputfile, header)
 
+    form_expr = mathematica_to_form(expression)
+    termstmp = get_terms(form_expr)
+
     coefficient, coperator = findOpandCoeff(expression)
 
     # Create the Term objects and extract on the way all Operators:
@@ -775,8 +780,8 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
     args = list(map(list, zip(*[coefficient, coperator, names])))  # transpose list
 
     logger.info("Read in all terms")
-    with mp.Pool() as pool:  # mp.Pool(20) gives 20 parallel processes
-        terms = pool.map(get_termobject, args)
+    # with mp.Pool() as pool:  # mp.Pool(20) gives 20 parallel processes
+    terms = list(map(get_termobject, args))  # pool.map
 
     del coefficient, coperator, expression
     writefile(PROJECTION_PATH / "terms.txt", terms)

@@ -138,7 +138,7 @@ class Operator_Model(Index):
                     break
                 elif len(form_names) == 2:
                     if name == form_names[1]:
-                        non_conj_name =  form_names[0]
+                        non_conj_name = form_names[0]
                         isconj = True
                         break
                     elif name == form_names[0]:
@@ -214,19 +214,46 @@ class Operator_Model(Index):
             expr = ""
             if self.nD > 0:
                 # Term contain derivatives
-                for i in range(self.nD, 0, -1):
-                    lsl = [der_index for der_index in self.indices['Lsl'] if der_index.derIndex == i]
-                    assert len(lsl) == 1
-                    if not lsl:
-                        logger.error(f"There wasn't an index found for the Lsl index of the {i}-th derivative.")
-                        sys.exit("STOP")
-                    usldot = [der_index for der_index in self.indices['Usldot'] if der_index.derIndex == i]
-                    assert len(usldot) == 1
-                    if not usldot:
-                        logger.error(f"There wasn't an index found for the Usldot index of the {i}-th derivative.")
-                        sys.exit("STOP")
-                    der_Indices = lsl + usldot
-                    expr += f"{cov}({','.join(map(str, der_Indices))},"
+                if self.indices['sl2C']:
+                    for i in range(self.nD, 0, -1):
+                        # Note: "self.indices['Lsl']" statement cannot be used, since all twice occurring indices are removed there.
+                        lsl = []  # Subscript undotted SL2C indices
+                        for index in self.indices:
+                            if index.typ == 'Lsl':
+                                lsl.append(index)
+
+                        lsl_der = [der_index for der_index in lsl if der_index.derIndex == i]
+                        assert len(lsl_der) == 1
+                        if not lsl_der:
+                            logger.error(f"There wasn't an index found for the Lsl index of the {i}-th derivative.")
+                            sys.exit("STOP")
+
+                        usldot = []  # Superscript dotted SL2C indices
+                        for index in self.indices:
+                            if index.typ == 'Usldot':
+                                usldot.append(index)
+
+                        usldot_der = [der_index for der_index in usldot if der_index.derIndex == i]
+                        assert len(usldot_der) == 1
+                        if not usldot_der:
+                            logger.error(f"There wasn't an index found for the Usldot index of the {i}-th derivative.")
+                            sys.exit("STOP")
+                        der_Indices = lsl_der + usldot_der
+                        expr += f"{cov}({','.join(map(str, der_Indices))},"
+                else:
+                    for i in range(self.nD, 0, -1):
+                        # Note: "self.indices['lor']" statement cannot be used, since all twice occurring indices are removed there.
+                        lor = []  # Lorentz indices
+                        for index in self.indices:
+                            if index.typ == 'lor':
+                                lor.append(index)
+
+                        lor_der = [der_index for der_index in lor if der_index.derIndex == i]
+                        assert len(lor_der) == 1
+                        if not lor_der:
+                            logger.error(f"There wasn't an index found for the Lor index of the {i}-th derivative.")
+                            sys.exit("STOP")
+                        expr += f"{cov}({','.join(map(str, lor_der))},"
             n_brackets = self.nD * ")"
             expr += self.name
             non_Derivative_indices = [nonD_index for nonD_index in self.indices if not nonD_index.derIndex]
@@ -303,15 +330,31 @@ class Operator_Model(Index):
         elif type(self) == Field:
             if self.indices['lor']:
                 # Assume that if a lorentz index is present also the derivatives are written in terms of lorentz indices
-                lor = [der_index for der_index in self.indices['lor'] if der_index.derIndex]
-                self._nD = len(lor)
-                return len(lor)
+                # Note: "self.indices['lor']" statement cannot be used, since all twice occurring indices are removed there.
+                lor = [] # Lorentz indices
+                for index in self.indices:
+                    if index.typ == 'lor':
+                        lor.append(index)
+
+                lor_der = [der_index for der_index in lor if der_index.derIndex] # Lorentz indices at a derivative
+                self._nD = len(lor_der)
+                return len(lor_der)
             else:
-                lsl = [der_index for der_index in self.indices['Lsl'] if der_index.derIndex]
-                usldot = [der_index for der_index in self.indices['Usldot'] if der_index.derIndex]
-                assert len(lsl) == len(usldot), "The number of Lsl and Usldot indices ON DERIVATIVES should be equal."
-                self._nD = len(lsl)
-                return len(lsl)
+                # Note: "self.indices['Lsl']" statement cannot be used, since all twice occurring indices are removed there.
+                lsl = []  # Subscript undotted SL2C indices
+                for index in self.indices:
+                    if index.typ == 'Lsl':
+                        lsl.append(index)
+                usldot = []  # Superscript dotted SL2C indices
+                for index in self.indices:
+                    if index.typ == 'Usldot':
+                        usldot.append(index)
+
+                lsl_der = [der_index for der_index in lsl if der_index.derIndex]
+                usldot_der = [der_index for der_index in usldot if der_index.derIndex]
+                assert len(lsl_der) == len(usldot_der), "The number of Lsl and Usldot indices ON DERIVATIVES should be equal."
+                self._nD = len(lsl_der)
+                return len(lsl_der)
 
     @property
     def tex_name(self):

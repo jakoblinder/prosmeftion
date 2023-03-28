@@ -179,8 +179,9 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
                         fieldcount[counted_field] += 1
                         break
             except KeyError:
-                logger.error(f"Field {field.name:s} doesn't have an autoeft translation.")
-                sys.exit("STOP")
+                logger.warning(f"Field {field.name:s} doesn't have an autoeft translation.")
+                return
+                # sys.exit("STOP")
 
         return fieldcount
 
@@ -210,11 +211,12 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         fieldstructure = []
         for field in self.fields:
             try:
-                structure = (projection_to_autoeft[field.name] , field.nD)
+                structure = (projection_to_autoeft[field.name], field.nD)
                 fieldstructure.append(structure)
             except KeyError:
-                logger.error(f"Field {field.name:s} doesn't have an autoeft translation.")
-                sys.exit("STOP")
+                logger.warning(f"Field {field.name:s} doesn't have an autoeft translation.")
+                return
+                # sys.exit("STOP")
 
         return tuple(fieldstructure)
 

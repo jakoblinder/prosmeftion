@@ -139,17 +139,41 @@ def escape_regex(regex):
 # FORM refactored #
 ###################
 #Number of maximal occurring derivatives
-n_der = 4
+
+def n_der(mdim: int):
+    """
+    Calculates the maximum number of derivatives possible for a given mass dimension in the Standard Model (SM).
+    At even mass dimensions, the maximum number of darivatives is d-2, since there are at least 2 Higgs bosons, with
+    a mass dimension of 1 each, necessary to build a gauge invariant structure. Similar, there are at least 2 spinors,
+    with a mass dimension of 3/2 necessary to build a gauge invariant structure. For odd mass dimensions, there are,
+    thus, at most d-3 derivatives possible.
+
+    Parameters
+    ----------
+    mdim
+
+    Returns
+    -------
+        Maximum number of derivatives for gauge invariant SM operators with mass dimension mdim.
+    """
+    if mdim%2:
+        # Odd mass dimension
+        return mdim - 3
+    else:
+        # Even mass dimension
+        return mdim - 2
+
 op_config = configurations("op_config.yml")
 
 def save_set(dictionary, key, value):
-    """Don't overwrite already set values. """
+    """Don't overwrite already set values."""
     if key not in dictionary.keys():
         dictionary[key] = value
 
 def update_opname_and_modelfile(op_dict):
     """
-    Specify default values in op_config and get helicities of the fields and other information from the model file and insert them into the op_config dictionary.
+    Specify default values in op_config and get helicities of the fields and other information from the model file
+    and insert them into the op_config dictionary.
     Parameters
     ----------
     op_dict
@@ -158,10 +182,11 @@ def update_opname_and_modelfile(op_dict):
     -------
         Updated op_config dictionary.
     """
-    # If autoeft name isn't set, the form name without square brackets is taken.
+    # If autoeft name is not set, the form name without square brackets is taken.
     def autoeft_transl(kind, skip = []):
         """
-        Specify kind of fields (str) and which fields are to skip (List[str]) and give auteft translation if not specified.
+        Specify kind of fields (str) and which fields are to skip (List[str])
+        and give autoeft translation if not specified.
         """
         for name, field in op_dict[kind].items():
             if name in skip:
@@ -185,7 +210,7 @@ def update_opname_and_modelfile(op_dict):
         model_field.tex = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex)
         try:
             model_field.tex_hc = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex_hc)
-        except:
+        except AttributeError:
             pass
 
         if "+" in model_field.name:
@@ -199,7 +224,7 @@ def update_opname_and_modelfile(op_dict):
                 save_set(field, "tex", model_field.tex)
                 try:
                     save_set(field, "tex_hc", model_field.tex_hc)
-                except:
+                except KeyError:
                     pass
 
     # write index_structure as list of lists:

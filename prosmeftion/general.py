@@ -18,7 +18,7 @@ def create_procedure(function_path=Path("."), function_name=""):
     form_testfunction
     wrapped by this decorator will generate a procedure of the name
     testfunction.
-    The bodz of the procedure will be indented.
+    The body of the procedure will be indented.
     Parameters of the decorator
     ----------
     function_path: str
@@ -103,6 +103,152 @@ def form_factorizeCoeff():
         file.write(form)
 
     return dimlessConst
+
+def form_getTerms():
+    """
+    Write FORM function which separates terms like a*(c*A*B - d*C*D) into two different terms:
+        +term(a*c*A*B) -term(a*d*C*D)
+    .
+
+    Creates getTerms.frm which has to be called via a pipe proces.
+
+    Returns
+    -------
+
+    """
+    form = "#include declarations_general.h # coefficient\n"
+    form += "#include declarations_general.h # indices\n"
+    form += "#include declarations_general.h # tensors\n"
+    form += "#include declarations_general.h # operators\n"
+    form += "\n"
+    form += "\n#setexternal `PIPE1_'\n"
+    form += "Local expression = \n"
+    form += f"#fromexternal\n"
+    form += ";\n"
+    form += ".sort\n\n"
+    form += "CFunction coeff;\n"
+    form += f"Bracket {', '.join(tensors + bosons + fermions)};\n"
+    form += ".sort\n"
+    form += "collect coeff;\n"
+    form += ".sort\n\n"
+    form += "CFunction term;\n"
+    form += "putinside term;\n"
+    form += ".sort\n"
+    form += "Format nospaces;\n\n"
+    form += ""
+    form += r'#toexternal "%E\n", expression'
+    form += "\n"
+    form += ".end"
+
+    with open(FORM_GENERAL_PATH / "getTerms.frm", "w") as file:
+        file.write(form)
+
+def form_getOps():
+    """
+    Write FORM function which extracts from a term like a*A*c*B the coefficient tensors and fields:
+        coefficient tensors: 1.) a
+                             3.) c
+        fields: 2.) A
+                4.) B
+    .
+
+    Creates getOps.frm which has to be called via a pipe process.
+    Creates also getOps.prc, a procedure called from within getOps.frm.
+
+    Returns
+    -------
+
+    """
+    def form_getOpsprc():
+        """Creates getOps.prc, a procedure called from within getOps.frm."""
+        form = """#procedure getOps(ops)
+* ops: set of non commutable functions
+*   specifies which fields are printed in the table
+	.sort
+	Function f;
+* Max is a preprocessor variable, which tells the maximum possible number of fields and tensors in one operator.
+* This number is allowed to be much larger then the number of ops which really occurs.
+	#define Max "1000"
+	#define matched "0"
+	#define matchedsomething "0"
+	Table `ops'Tab(1:`Max');
+
+	multiply left f;
+	.sort
+	#write "Find ops from set `ops'."
+	#do i= 1, `Max'
+		redefine matchedsomething "0";
+		if (match(f*H?`ops'(?b)));
+			id once f*H?`ops'$fac(?b$arg) = H(?b)*f;
+			redefine matched "1";
+		else;
+*			Print "STOP";
+			redefine matched "0";
+		endif;
+		.sort
+		#if `matched' == 1
+			Fill `ops'Tab(`i') = `$fac'(`$arg');
+			#write "Matched `i': %$(%$)", $fac,$arg
+			#toexternal "`ops'-`i': %$(%$)\n", $fac,$arg
+			redefine matchedsomething "1";
+			goto 1;
+		#endif
+		if (match(f*H?!`ops'(?b)));
+			id once f*H?!`ops'$fac(?b$arg) = H(?b)*f;
+			redefine matchedsomething "1";
+		endif;
+		label 1;
+		.sort
+		#if ((`matched' == 0) && (`matchedsomething' == 1))
+			#write "NoMatched `i': %$(%$)", $fac,$arg
+		#endif
+
+		#if `matchedsomething' == 0
+			#breakdo
+		#endif	
+	#enddo
+	id f = 1;
+#endprocedure
+"""
+        return form
+
+    with open(FORM_GENERAL_PATH / "getOps.prc", "w") as file:
+        file.write(form_getOpsprc())
+
+    form =  "#include declarations_general.h # NCtensors\n"  # Tensors as non-commuting functions.
+    form += "#include declarations_general.h # coefficient\n"
+    form += "#include declarations_general.h # indices\n"
+    form += "#include declarations_general.h # operators\n"
+    form += "\n"
+
+    form += "#setexternal `PIPE1_'\n"
+    form += "#prompt READY\n"
+
+    # Define sets for extraction.
+    form += "#fromexternal\n"
+    form += "\n"
+
+    form += "Local expression=\n"
+    form += "#fromexternal\n"
+
+    form += ";\n\n"
+
+    form += ".sort\n"
+    form += '#fromexternal "ngroups"\n'
+    form += "Format 255;\n"
+    form += "\n"
+
+    form += "#do i=0, `ngroups'\n"
+    form += "\t#toexternal"  + r' "ops`i' + r"'" + r':\n"' + "\n"
+    form += "\t#call getOps(ops`i')\n"
+    form += "#enddo\n"
+
+    form += "\n"
+    form += "Print +ss;\n"
+    form += ".end"
+
+    with open(FORM_GENERAL_PATH / "getOps.frm", "w") as file:
+        file.write(form)
 
 def form_coefficient_handling():
     """
@@ -780,7 +926,6 @@ def form_replaceSigmabyEps():
     sigma = "sigma"
     sigmabar = "sigmabar"
     form = ""
-    # form += "#procedure replaceSigmabyEps\n"
     form += "repeat;\n"
     form += "* Replace sigmabar by sigma.\n"
     form += "\t" + f"id {sigmabar}(?a, Lsldot1?Lsldot, Usl2?Usl, ?b) = {sigma}(?a, Usl2, Lsldot1, ?b);\n"
@@ -810,10 +955,6 @@ def form_replaceSigmabyEps():
     form += "endrepeat;\n"
 
     return form
-    # form += "#endprocedure\n"
-    #
-    # with open(FORM_GENERAL_PATH / "replaceSigmabyEps.prc", "w") as file:
-    #     file.write(form)
 
 @create_procedure(FORM_GENERAL_PATH)
 def form_simplifySL2CEps():
@@ -832,7 +973,6 @@ def form_simplifySL2CEps():
     sigma = "sigma"
     sigmabar = "sigmabar"
     form = ""
-    # form += "#procedure simplifySL2CEps\n"
     form += "repeat;\n"
     form += "* Replace epsilons by Kronecker deltas [sl2CdK](,):\n"
     # TODO: Naming could be done more systematically like for example:
@@ -867,10 +1007,6 @@ def form_simplifySL2CEps():
     form += f"Multiply replace_({sl2CepsA},{sl2Ceps});\n"
 
     return form
-    # form += "#endprocedure\n"
-    #
-    # with open(FORM_GENERAL_PATH / "simplifySL2CEps.prc", "w") as file:
-    #     file.write(form)
 
 def form_replaceSUNGenerators(N:int):
     """
@@ -1174,21 +1310,32 @@ def form_declarations(n_der: int):
     form = ""
     form += "*--#[ tensors :\n"
     form += "CFunction " + ", ".join(tensors) + ";\n"
-    form += "* Indices and functions for derivatives in SL2C notation.\n"
-    form += "CFunction sigma, sigmabar;\n"
-    form += "CFunction sigma2, sigmabar2;\n"
+    # form += "* Indices and functions for derivatives in SL2C notation.\n"
+    # form += "CFunction sigma, sigmabar;\n"
+    # form += "CFunction sigma2, sigmabar2;\n"
     form += "* Auxiliary antisymmetric epsilons, used in combination with replace_.\n"
     eps = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if
            "eps" in tensor_name]
     form += f"CFunction {', '.join(map(lambda text: get_antisymEps(text) + '(antisymmetric)', eps))};\n"  # sl2CepsA(antisymmetric), su2epsA(antisymmetric), su3epsA(antisymmetric)
     form += "\n"
     form += "* Declare Kronecker Delta symbol for Sl2C Indices, because built in can not handle upper and lower (un-)dottet indices.\n"
-    form += "* Since two indices are also symmetric when they are cyclic and vice versa and pattern matching is not allowed for symmetric function but for cyclic it is, [sl2CdK] is declared as cyclic.\n"
+    form += "* Since two indices are also symmetric when they are cyclic and vice versa, and pattern matching is not allowed for symmetric function but for cyclic, [sl2CdK] is declared as cyclic.\n"
     dK = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if
           "dK" in tensor_name]
     form += f"CFunction {', '.join(map(lambda text: text + '(cyclic)', dK))};\n"  # sl2CdK(cyclic), su2dK(cyclic), su3dK(cyclic)
-    form += "\n"
     form += "*--#] tensors :\n"
+
+    #
+    form += "\n"
+    form += "*--#[ NCtensors :\n"
+    form += "Function " + ", ".join(tensors) + ";\n"
+    form += "* Declare Kronecker Delta symbol for Sl2C Indices, because built in can not handle upper and lower (un-)dottet indices.\n"
+    form += "* Since two indices are also symmetric when they are cyclic and vice versa, and pattern matching is not allowed for symmetric function but for cyclic, [sl2CdK] is declared as cyclic.\n"
+    dK = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if
+          "dK" in tensor_name]
+    form += f"Function {', '.join(map(lambda text: text + '(cyclic)', dK))};\n"  # sl2CdK(cyclic), su2dK(cyclic), su3dK(cyclic)
+    form += "*--#] NCtensors :\n"
+
     form += "\n"
     form += "*--#[ coefficient :\n"
     # Coefficient
@@ -1282,6 +1429,8 @@ def form_declarations(n_der: int):
     form += "Autodeclare Symbols i, j;\n"
     form += "*--#] indices :\n"  # trailing "\n" important otherwise form will not find the "fold" declarations
 
+    form_getTerms()
+    form_getOps()
     form_coefficient_handling()
 
     # form_replaceSigmabyEps()

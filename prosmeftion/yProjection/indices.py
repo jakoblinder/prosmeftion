@@ -132,10 +132,8 @@ class Indices_Model(Index, MutableMapping):
                 for index in self.indices:
                     if index.typ == key:
                         index_of_typ.append(index)
-            # if index_of_typ:
+
             return type(self)(tuple(index_of_typ), allow_uncontracted=True)
-            # else:
-            #     return []
         else:
             logger.error(f"Key is of type {type(key)}, but it should be of type int, str or slice.")
             sys.exit("STOP")
@@ -428,13 +426,15 @@ class Possible_Indices(Indices_Model):
             -------
 
             """
+            # TODO: Is the following line correct and necessary?
+            indices = sorted(indices, key=lambda x: str(x.id))
             for index in indices:
                 # check that the dual usl index is in the usl list and if not add him
                 if not index.dual_index.is_in(dual_indices):
                     dual_indices.append(index.dual_index)
                     # sort them again
                     dual_indices = type(self)(sorted(dual_indices, key=lambda x: str(x.id)))
-            # check, that position are correct
+            # check, that positions are correct
             for i, index in enumerate(indices):
                 if not index.dual_index == dual_indices[i]:
                     logger.error(f"The index {index} doesn't have the correct dual index at the right position, but rather {dual_indices[i]}.")

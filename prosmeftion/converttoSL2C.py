@@ -730,6 +730,7 @@ def convertviaform(term):
     """
     # Create FORM files:
     filename = term.name  # f"term{i:d}"
+    # TODO: Update!
     form(term, filename)
     formoutput = run_form(filename)
     formoutput_formatted = print_form(filename,
@@ -740,6 +741,7 @@ def convertviaform(term):
     with open(TERM_PATH / f"{filename}.h", "w") as file:
         formoutput=re.sub(r"(\s)*", "", formoutput)
         file.write(formoutput)
+
     new_term = get_terms(filepath=TERM_PATH / f"{filename}.h", as_one=True, name=term.name)
     for summand in new_term:
         summand.coeff *= Factor(term.coeff.expression)
@@ -771,35 +773,22 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
         expression = expression_raw(INPUT_PATH / inputfile, header)
 
     form_expr = mathematica_to_form(expression)
-    termstmp = get_terms(form_expr)
-
-    coefficient, coperator = findOpandCoeff(expression)
-
-    # Create the Term objects and extract on the way all Operators:
-    names = [f"term{i:d}" for i in range(len(coefficient))]
-    args = list(map(list, zip(*[coefficient, coperator, names])))  # transpose list
+    # Read in terms in the desired object structure:
+    terms = get_terms(form_expr)
 
     logger.info("Read in all terms")
     # with mp.Pool() as pool:  # mp.Pool(20) gives 20 parallel processes
-    terms = list(map(get_termobject, args))  # pool.map
+    # terms = list(map(get_termobject, args))  # pool.map
 
-    del coefficient, coperator, expression
+    # del coefficient, coperator, expression
     writefile(PROJECTION_PATH / "terms.txt", terms)
 
-    # Write a file containing all formatted operators written separately in each line to check the identification:
-    # Create the respective directory
-    if not os.path.exists(PROJECTION_PATH / "check_operators"):
-        os.makedirs(PROJECTION_PATH / "check_operators")
-    # Write the file:
-    for i, v in enumerate(terms):
-        writefile(PROJECTION_PATH / f"check_operators/term{i:d}.txt", v.operators)
-
     # Write formfiles:
-
     logger.info("Run FORM")
 
     # with mp.Pool() as pool:
     #     terms_after_form = list(map(list, zip(*pool.map(convertviaform, terms))))
+    # TODO:
     terms_after_form = list(map(list, zip(*map(convertviaform, terms))))
     ops = terms_after_form[0]
     form_terms = terms_after_form[1]

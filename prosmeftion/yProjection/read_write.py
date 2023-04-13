@@ -6,12 +6,11 @@ from pathlib import Path
 from yaml import safe_load
 from typing import Dict, List, Tuple
 
-from prosmeftion import CONFIG_PATH, PROJECTION_PATH, FORM_GENERAL_PATH, FORM_PATH, op_config, mathematica, escape_regex
+from prosmeftion import CONFIG_PATH, PROJECTION_PATH, FORM_GENERAL_PATH, FORM_PATH, op_config, mathematica, escape_regex\
+#, retry
 from prosmeftion import bosons, fermions, tensors, run_form, op_pattern, index_number_pattern, LATEX_PATH
 
-from prosmeftion.pyform.pyform import PyFORM
-from prosmeftion.pyform.newpyform import PyFORM as NPyFORM
-
+from prosmeftion.pyform.pyformfunction import pyForm
 
 from .term import Term
 from prosmeftion import index_number_pattern as inp
@@ -118,47 +117,30 @@ def get_ops(expr: str, groupOps: List[List[str]]):
         groupOps = [groupOps]
 
 
-    def retry(tries:int=5):
-        def decorator(func):
-            def wrapper(*args, **kwargs):
-                for i in range(tries):
-                    try:
-                        print(f"Try {i + 1:d}")
-                        return func(*args, **kwargs)
-                    except ConnectionError:
-                        continue
-            return wrapper
-        return decorator
-
-
     # Extract the operators via FORM:
     form_path = Path("getOps.frm")
 
-    @retry()
-    def form():
-        with PyFORM(form_path, 1, prompt="READY", input_dir=FORM_GENERAL_PATH) as form:
-            sets = ""
-            for i, group in enumerate(groupOps):
-                sets += f"Set ops{i:d}: {', '.join(group)};\n"
-
-            form.write(1, sets)
-            form.write(1, expr)
-            form.write(1, len(groupOps) - 1)
-
-            return form.read_all(1)
-
-    res = form()
-
-    # with NPyFORM(form_path, 1, FORM_GENERAL_PATH, "-Z") as form:
-    #     sets = ""
-    #     for i, group in enumerate(groupOps):
-    #         sets += f"Set ops{i:d}: {', '.join(group)};\n"
+    # @retry()
+    # def form():
+    #     with PyFORM(form_path, 1, prompt="READY", input_dir=FORM_GENERAL_PATH) as form:
+    #         sets = ""
+    #         for i, group in enumerate(groupOps):
+    #             sets += f"Set ops{i:d}: {', '.join(group)};\n"
     #
-    #     form.write([sets], ["READY"])
-    #     form.write([expr], ["READY"])
-    #     form.write([len(groupOps) - 1], ["READY"])
-    #     res = form.read()
-    #     res = res[0]
+    #         form.write(1, sets)
+    #         form.write(1, expr)
+    #         form.write(1, len(groupOps) - 1)
+    #
+    #         return form.read_all(1)
+    #
+    # res = form()
+
+    sets = ""
+    for i, group in enumerate(groupOps):
+        sets += f"Set ops{i:d}: {', '.join(group)};\n"
+
+    res = pyForm(form_path, [sets, expr, f"{len(groupOps) - 1}" ], "READY", FORM_GENERAL_PATH)
+    res = re.sub(r"[^\S\r\n]*", "", res)  # remove whitespace but no newlines
 
     # Extract operator expressions from FORM output:
     matches = re.finditer(r"ops(\d{1,2}:)", res)
@@ -168,10 +150,9 @@ def get_ops(expr: str, groupOps: List[List[str]]):
         for i, match in enumerate(matches):
             if i < len(matches) - 1:
                 ops = res[match.end():matches[i + 1].start()]
-                ops = ops[1:-1]
             else:
                 ops = res[match.end():]
-                ops = ops[1:-1]
+            ops = ops[1:-1]
             if ops:
                 op_group.append(ops.split("\n"))
             else:
@@ -185,7 +166,7 @@ def get_ops(expr: str, groupOps: List[List[str]]):
             continue
         else:
             for j, op in enumerate(ops):
-                match = re.match(f"ops{i:d}" + r"-(\d{1,2}):\s", op)
+                match = re.match(f"ops{i:d}" + r"-(\d{1,2}):", op)
                 op_group[i][j] = op[match.end():]
 
     return op_group
@@ -210,12 +191,8 @@ def get_terms(expression: str, name:str=""):
     -------
 
     """
-    with PyFORM(FORM_GENERAL_PATH / "getTerms.frm", 1) as form:
-        form.write(1, expression)
-        # Since FORM automatically adds a linebreak after 72 characters, one has to use read_all.
-        # All linebreaks are removed afterwards.
-        expression = form.read_all(1)
-        expression = re.sub(r"(\s)*", "", expression)
+    expression = pyForm(FORM_GENERAL_PATH / "getTerms.frm", [expression], input_dir=FORM_GENERAL_PATH)
+    expression = re.sub(r"(\s)*", "", expression)
 
     # Extract terms:
     matches = re.finditer(r"term", expression)  # Find Terms by identifying always "term".
@@ -237,14 +214,11 @@ def get_terms(expression: str, name:str=""):
         match = re.search(r"coeff", term)
         coeff = term[match.end()+1:-1]
         ops = term[:match.start()-1]
-        print("Identify term: ", i)
         if name:
             t, f = get_ops(expr=ops, groupOps=[tensors, bosons + fermions])
         else:
             t, f = get_ops(expr=ops, groupOps=[tensors, bosons + fermions])
         sorted_terms.append({"tensors": t, "fields": f, "coefficient": coeff})
-
-    print(sorted_terms)
 
     if name:
         # write all written terms as one Term object.
@@ -256,12 +230,8 @@ def get_terms(expression: str, name:str=""):
             terms.append(Term([term], f"term{i:d}"))
         # terms = list(map(Term, [[term] for term in sorted_terms], [f"term{i:d}" for i in range(len(sorted_terms))]))
 
+    print(len(terms))
     return terms
-
-
-
-
-
 
 
 

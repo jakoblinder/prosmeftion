@@ -22,7 +22,8 @@ from prosmeftion.general import declaration_SL2C_sets
 # configure logger
 timestamp = datetime.now()
 logger_autoeft = logging.getLogger("autoeft")
-logger = logging.getLogger("autoeft.projection")
+logger = logger_autoeft.getChild("projection")
+# logger = logging.getLogger("autoeft.projection")
 with open(CONFIG_PATH / "logger.yml", "r") as file:
     logconfig = safe_load(file)
 
@@ -70,6 +71,11 @@ def main(input_file, max_dim = 6, debug=None):
 
     with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
         file.write(form_declarations(nDer))
+
+    # TODO: Move stuff here from Convert to SL2C
+    # Convert from mathematica to FORM
+    # Read terms in to Summand objects.
+    # Only then to Conversion in y-Basis notation.
 
     terms = converttoSL2C(input_file, header=args.skip, pprint=False)
 

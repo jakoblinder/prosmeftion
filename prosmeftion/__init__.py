@@ -143,7 +143,7 @@ def escape_regex(regex):
 def n_der(mdim: int):
     """
     Calculates the maximum number of derivatives possible for a given mass dimension in the Standard Model (SM).
-    At even mass dimensions, the maximum number of darivatives is d-2, since there are at least 2 Higgs bosons, with
+    At even mass dimensions, the maximum number of derivatives is d-2, since there are at least 2 Higgs bosons, with
     a mass dimension of 1 each, necessary to build a gauge invariant structure. Similar, there are at least 2 spinors,
     with a mass dimension of 3/2 necessary to build a gauge invariant structure. For odd mass dimensions, there are,
     thus, at most d-3 derivatives possible.
@@ -384,4 +384,39 @@ def get_expression_from_FORM_output(output: str):
         logger.error(f"No output term has been found in {output}.")
         sys.exit("STOP")
 
+
+# def retry(tries:int=5):
+#     """
+#     Decorator for running FORM via PIPE. Since the PIPE connection doesn't work always, the process sometimes needs
+#     to be restarted. This is what this decorator establishes when it is used like in the following example:
+#
+#     @retry()
+#     def form():
+#         with PyFORM(form_path, 1, prompt="READY", input_dir=<FORM_Path>) as form
+#
+#             form.write(1, "STUFF")
+#
+#             return form.read_all(1)
+#
+#     res = form()
+#
+#     Parameters
+#     ----------
+#     tries:
+#         Number of times the PIPE connection is started again.
+#
+#     Returns
+#     -------
+#
+#     """
+#     def decorator(func):
+#         def wrapper(*args, **kwargs):
+#             for i in range(tries):
+#                 try:
+#                     print(f"Try {i + 1:d}")
+#                     return func(*args, **kwargs)
+#                 except ConnectionError:
+#                     continue
+#         return wrapper
+#     return decorator
 

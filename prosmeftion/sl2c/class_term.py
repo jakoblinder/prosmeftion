@@ -24,7 +24,7 @@ class Term(Operator, Coefficient):
     coeff : str
         Coefficient of the operator.
     cops : str
-        Expression of the fully contracted operators themself matching the coefficient. This expression is rewritten
+        Expression of the fully contracted operators themselves matching the coefficient. This expression is rewritten
         such that is compatible with FORM.
     operators : [Operator, Operator, ...]
         List of the operators in the expression as objects of the Operator class.

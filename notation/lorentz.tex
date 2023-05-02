@@ -1,0 +1,566 @@
+% !TeX root = main.tex
+There exist four different types of Weyl spinors transforming in four different but pairwise equivalent two-dimensional representations of \SLtwoC. For future purposes it is enough to consider only the covariant representation transforming \wrt to $ A \in \SLtwoC $,
+\begin{equation}
+	\begin{aligned}
+		\xi_{\alpha}(\vector{p}) \rightarrow \xi^{\prime}_{\alpha}(\vector{p}) = \tensor{A}{_\alpha^\beta} \xi_{\beta}(\Lambda^{-1}(A) \vector{p}),
+		\label{eq:SL2C1} 
+	\end{aligned}
+\end{equation}
+and the conjugate contravariant representation transforming with $ (A^{-1})^{\dagger} $,
+\begin{equation}
+	\begin{aligned}
+		\bar{\chi}^{\dot{\alpha}}(\vector{p}) \rightarrow \bar{\chi}^{\prime \dot{\alpha}}(\vector{p}) = \bar{\chi}^{\dot{\beta}}(\Lambda^{-1}(A) \vector{p}) \tensor{(A^{-1})}{^*_{\dot{\beta}}^{\dot{\alpha}}}.
+		\label{eq:SL2C2}
+	\end{aligned}
+\end{equation}
+The fermions of the \sm{}, listed in the following subsection, are an example of those.
+
+\subsection{Standard Model Fields} \label{subsec:smFields}
+The \sm{} Lagrangian consists only of three types of fields and their derivatives: A scalar (Higgs) field, different kinds of fermions, and gauge bosons with their corresponding field strength tensors for each gauge group:
+\begin{itemize}
+	\item The Higgs boson $ H_{i} $ and the conjugate Higgs boson $ H^{\dagger, i} $ are both in the scalar representation $ (0,0) $ of the Lorentz group and have an additional fundamental (subscript) and antifundamental (superscript) $ \SU{2}_{W} $ gauge index.
+	\item The fermions are written as Weyl spinors $ \psi_{\alpha} \in (\frac{1}{2}, 0) $ and $ (\psi^{\dagger})^{\dot{\alpha}} \in (0, \frac{1}{2}) $ and are connected to the four component Dirac spinors by the following relations:
+	\begin{equation}
+		\boxed{
+			\begin{alignedat}{5}
+				&l_{\mathrm{L}} = \begin{pmatrix}
+					L_{\alpha} \\
+					0
+				\end{pmatrix}, \quad
+				&&e_{\mathrm{R}} = \begin{pmatrix}
+					0 \\
+					e_{\mathbb{C}}^{\dagger, \dot{\alpha}}
+				\end{pmatrix}, \quad
+				&&q_{\mathrm{L}} = \begin{pmatrix}
+					Q_{\alpha} \\
+					0
+				\end{pmatrix}, \quad
+				&&u_{\mathrm{R}} = \begin{pmatrix}
+					0 \\
+					u_{\mathbb{C}}^{\dagger, \dot{\alpha}}
+				\end{pmatrix}, \quad
+				&&d_{\mathrm{R}} = \begin{pmatrix}
+					0 \\
+					d_{\mathbb{C}}^{\dagger, \dot{\alpha}}
+				\end{pmatrix}, \\[1.5ex]
+				%					Second row
+				&\bar{l}_{\mathrm{L}} = \begin{pmatrix}
+					0, L^{\dagger}_{\dot{\alpha}}
+				\end{pmatrix}, \quad
+				&&\bar{e}_{\mathrm{R}} = \begin{pmatrix}
+					e_{\mathbb{C}}^{\alpha}, 0
+				\end{pmatrix}, \quad
+				&&\bar{q}_{\mathrm{L}} = \begin{pmatrix}
+					0, Q^{\dagger}_{\dot{\alpha}}
+				\end{pmatrix}, \quad
+				&&\bar{u}_{\mathrm{R}} = \begin{pmatrix}
+					u_{\mathbb{C}}^{\alpha}, 0
+				\end{pmatrix}, \quad
+				&&\bar{d}_{\mathrm{R}} = \begin{pmatrix}
+					d_{\mathbb{C}}^{\alpha}, 0
+				\end{pmatrix}.
+			\end{alignedat} \label{eq:quarks}
+		}
+	\end{equation}
+	They are chosen such that $ L $, $ e_{\mathbb{C}} $, $ Q $, $ u_{\mathbb{C}} $ and $ d_{\mathbb{C}} $ are all left-handed fields (s. \cref{tab:fields}).
+	\item The field strength tensors  $ B $, $ \tensor*{W}{^{I}} $ and $ \tensor*{G}{^{A}} $ of the gauge groups $ \U{1}_{\mathrm{Y}} $, $ \SU{2}_{\mathrm{W}} $ and $ \SU{3}_{\mathrm{C}} $ are defined as irreducible representations $ (1,0) $ and $ (0,1) $ of the Lorentz group
+	\begin{equation}
+		\boxed{
+			\begin{alignedat}{5}
+				F_{\mathrm{L} \alpha \beta} :&= \frac{\mi}{2} F_{\mu \nu} \sigma_{\alpha \beta}^{\mu \nu} \in (1,0)
+				&&\text{\ and\ }&&
+				F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} :&&= -\frac{\mi}{2} F^{\mu \nu} \tensor*{\bar{\sigma}}{_{\mu \nu} ^{\dot{\alpha} \dot{\beta}}} \in (0,1)
+				\text{,} \\ 
+				&= \frac{1}{2} F_{\mu \nu} \tensor*{\eps}{_{\dot{\alpha} \dot{\beta}}} \tensor*{(\sigma^{\mu})}{^{\dot{\alpha}}_{\alpha}} \tensor*{(\sigma^{\nu})}{^{\dot{\beta}}_{\beta}}
+				&&\quad&& &&= -\frac{1}{2} F_{\mu \nu} \tensor*{\eps}{^{\alpha \beta}} \tensor*{(\sigma^{\mu})}{^{\dot{\alpha}}_{\alpha}} \tensor*{(\sigma^{\nu})}{^{\dot{\beta}}_{\beta}}
+			\end{alignedat}
+			\label{eq:fieldStrengthTensorsSL2C}
+		}
+	\end{equation}
+	and are symmetric in their spinor indices. The ordinary field strength tensor can be recovered with:
+	\begin{equation}
+		\begin{aligned}
+			F_{\mu \nu} = - \frac{\mi}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} - F_{\mathrm{L} \alpha \beta} \tensor{(\sigma_{\mu \nu})}{^{\alpha \beta}}\Big).
+		\end{aligned}
+		\label{eq:fieldStrengthTensorsOrdinary}
+	\end{equation}
+	In both relations, the encountered $ \sigma $-matrices are defined in \cref{eq:sigma2}.
+	\item Finally, the covariant derivative $ \cov_{\mu} $ transforms in the four vector representation, $ (\tfrac{1}{2}, \tfrac{1}{2}) $, of the Lorentz group:
+	\begin{equation}
+		\begin{aligned}
+			\cov_{\alpha}^{\dot{\alpha}} := \cov_{\mu} \tensor*{(\sigma^{\mu})}{_{\alpha} ^{\dot{\alpha}}} \in (\frac{1}{2}, \frac{1}{2})
+			\quad \Leftrightarrow \quad
+			\boxed{
+				\cov_{\mu} = - \frac{1}{2} \cov^{\dot{\alpha}}_{\alpha} \tensor*{(\sigma_{\mu})}{^{\alpha}_{\dot{\alpha}}}.
+			}
+		\end{aligned}  \label{eq:covDertoSL2C}
+	\end{equation}
+\end{itemize}
+\begin{table}[htb]
+	The complete field content of the standard model is given by:
+	\center
+	\begin{tabular}{|c|cr|ccr|c|r|}
+		\hline
+		Fields                            & $ \SU{2}_{l} \otimes \SU{2}_{r}$ & $h$      & $\SU{3}_{C}$       & $\SU{2}_{W}$ & $ \U{1}_{Y}$ & Flavour  & $ \mathrm{dim}\ \Phi_{i} $ \\[0.65ex]
+		\hline
+		$H_{i}$                           & $(0,0)$                          & 0        & $\mathbf{1}$       & $\mathbf{2}$ & $1 / 2$      & 1       & 1 \\[0.65ex]
+		\hline
+		$L_{\alpha, i}$                   & $\left(\tfrac{1}{2}, 0\right)$    & $-1 / 2$ & $\mathbf{1}$       & $\mathbf{2}$ & $-1 / 2$     & $n_{f}$ & $3 / 2$ \\[0.65ex]
+		$e_{\mathbb{C} \alpha}$           & $\left(\tfrac{1}{2}, 0\right)$    & $-1 / 2$ & $\mathbf{1}$       & $\mathbf{1}$ & 1            & $n_{f}$ & $3 / 2$ \\[0.65ex]
+		$Q_{\alpha, a, i}$                & $\left(\tfrac{1}{2}, 0\right)$    & $-1 / 2$ & $\mathbf{3}$       & $\mathbf{2}$ & $1 / 6$      & $n_{f}$ & $3 / 2$ \\[0.65ex]
+		$u_{\mathbb{C} \alpha}^{a}$       & $\left(\tfrac{1}{2}, 0\right)$    & $-1 / 2$ & $\bar{\mathbf{3}}$ & $\mathbf{1}$ & $-2 / 3$     & $n_{f}$ & $3 / 2$ \\[0.65ex]
+		$d_{\mathbb{C} \alpha}^{a}$       & $\left(\tfrac{1}{2}, 0\right)$    & $-1 / 2$ & $\bar{\mathbf{3}}$ & $\mathbf{1}$ & $1 / 3$      & $n_{f}$ & $3 / 2$ \\[0.65ex]
+		\hline
+		$G_{\mathrm{L} \alpha \beta}^{A}$ & $(1,0)$                          & $-1$     & $\mathbf{8}$       & $\mathbf{1}$ & 0            & 1       & 2 \\[0.65ex]
+		$W_{\mathrm{L} \alpha \beta}^{I}$ & $(1,0)$                          & $-1$     & $\mathbf{1}$       & $\mathbf{3}$ & 0            & 1       & 2 \\[0.65ex]
+		$B_{\mathrm{L} \alpha \beta}$     & $(1,0)$                          & $-1$     & $\mathbf{1}$       & $\mathbf{1}$ & 0            & 1       & 2 \\
+		\hline
+	\end{tabular}
+	\caption{The \sm{} fields are written as irreducible representations of the Lorentz group, and the transformation properties \wrt each gauge group are listed explicitly. For example, $ \bar{\mathbf{3}} $ denotes the antifundamental representation of \SU{3}. Note also that the helicity $ h = j_{r} - j_{l} $ is well-defined, since only the unbroken phase of \smeft{} is considered. This further means that all particles are massless and have a mass dimension of $ \mathrm{dim}\ \Phi_{i} = 1 + |h_{i}| $.}
+	\label{tab:fields}
+\end{table}
+\clearpage
+\subsection{Lorentz and \SLtwoC{} invariant tensors} \label{sec:sigmaRelations}
+There exists a few tensors which are invariant \wrt the transformations given in \cref{eq:SL2C1,eq:SL2C2}. Those are, for example, $ \sigma^{\mu} $ and $ \bar{\sigma}^{\mu} $ are defined with\footnote{The Pauli matrices are defined as: $ \sigma_{1} = \begin{pmatrix}
+		0 & 1 \\
+		1 & 0 
+	\end{pmatrix},
+	\sigma_{2} = \begin{pmatrix}
+		0 & -\mi \\
+		\mi & 0 
+	\end{pmatrix},
+	\sigma_{3} = \begin{pmatrix}
+		1 &  0 \\
+		0 & -1 
+	\end{pmatrix}, 		
+	$ with $ (\sigma^{i})^{\dagger} = \sigma^{i} $ and $ \sigma^{i} \sigma^{j} = \tensor{\delta}{^{ij}} + \mi \tensor{\eps}{^{ijk}} \sigma^{k} $.}
+\begin{equation}
+	\begin{aligned}
+		\boxed{
+			\tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} := (\tensor{\one}{_{\alpha \dot{\alpha}}}, \tensor{(\sigma^{i})}{_{\alpha \dot{\alpha}}})^{\mu}
+			\quad \wedge \quad
+			\tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} := (\tensor{\one}{^{\dot{\alpha} \alpha}}, -\tensor{(\sigma^{i})}{^{\dot{\alpha} \alpha}})^{\mu} \text{.}}
+	\end{aligned}
+\end{equation}
+They are hermitian and traceless. Further, they obey the properties:
+\begin{gather}
+	\bar{\sigma}^{\mu} \sigma^{\nu} + \bar{\sigma}^{\nu} \sigma^{\mu} = 2 \metric^{\mu \nu} \one, \quad
+	\sigma^{\mu} \bar{\sigma}^{\nu} + \sigma^{\nu} \bar{\sigma}^{\mu} = 2 \metric^{\mu \nu} \one, \\
+	\Tr{\bar{\sigma}^{\mu} \sigma^{\nu}} = \Tr{\sigma^{\mu} \bar{\sigma}^{\nu}} \equiv \eps^{\alpha \beta} \eps^{\dot{\alpha} \dot{\beta}} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \tensor{(\sigma^{\nu})}{_{\beta \dot{\beta}}} = 2 \metric^{\mu \nu}
+\end{gather}
+and 
+\begin{equation}
+	\begin{aligned}
+			\boxed{
+		\tensor{(\sigma^{\mu})}{^{\alpha}_{\dot{\alpha}}} \tensor{({\sigma}_{\mu})}{^{\beta}_{\dot{\beta}}} = -2 \tensor{\eps}{^{\alpha \beta}} \tensor{\eps}{_{\dot{\alpha} \dot{\beta}}}
+	\text{,} \quad
+		\tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} = \tensor{\eps}{^{\alpha \beta}} \tensor{\eps}{^{\dot{\alpha} \dot{\beta}}} \tensor{(\sigma^{\mu})}{_{\beta \dot{\beta}}}
+		= \tensor{(\sigma^{\mu})}{^{\alpha \dot{\alpha}}}
+	}
+	\text{.}
+	\end{aligned}
+	\label{eq:sigmabarsigma}
+\end{equation}
+For the combinations of three $ \sigma $-matrices, the following relations can be derived~\cite[p.~16--19]{Dreiner.2010}:
+\begin{equation}
+	\begin{aligned}
+		\tensor{(\sigma^{\mu} \bar{\sigma}^{\nu} \sigma^{\rho})}{_{\alpha \dot{\alpha}}}
+		=& - \tensor{\metric}{^{\mu \nu}} \tensor{(\sigma^{\rho})}{_{\alpha \dot{\alpha}}}
+		+ \tensor{\metric}{^{\mu \rho}} \tensor{(\sigma^{\nu})}{_{\alpha \dot{\alpha}}}
+		- \tensor{\metric}{^{\nu \rho}} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}}
+		- \mi \tensor{\eps}{^{\mu \nu \rho \kappa}} \tensor{(\sigma_{\kappa})}{_{\alpha \dot{\alpha}}} \\
+		\tensor{(\bar{\sigma}^{\mu} \sigma^{\nu} \bar{\sigma}^{\rho})}{_{\dot{\alpha} \alpha}}
+		%		\bar{\sigma}^\mu \sigma^\nu \bar{\sigma}^\rho
+		=& - \tensor{\metric}{^{\mu \nu}}  \tensor{(\bar{\sigma}^{\rho})}{_{\dot{\alpha} \alpha}}
+		+ \tensor{\metric}{^{\mu \rho}} \tensor{(\bar{\sigma}^{\nu})}{_{\dot{\alpha} \alpha}}
+		- \tensor{\metric}{^{\nu \rho}} \tensor{(\bar{\sigma}^{\mu})}{_{\dot{\alpha} \alpha}}
+		+ \mi \tensor{\eps}{^{\mu \nu \rho \kappa}} \tensor{(\bar{\sigma}_{\kappa})}{_{\dot{\alpha} \alpha}}
+		\text{.}
+	\end{aligned} \label{eq:3sigmas}
+\end{equation}
+Dotted and undotted indices can be raised and lowered by the \enquote{metric}-tensor
+\begin{equation}
+	\begin{alignedat}{5}
+		&\tensor{\eps}{^{\alpha \beta}} &&:= \tensor{(\eps)}{^{\alpha \beta}} && = - \tensor{\eps}{^{\beta \alpha}}
+		\text{,} \quad && \quad
+		\tensor{\eps}{^{\dot{\alpha} \dot{\beta}}} &&:= \tensor{(\eps)}{^{\dot{\alpha} \dot{\beta}}}
+		\text{,} \\
+%		
+		&\tensor{\eps}{_{\alpha \beta}} &&:= \tensor{(\eps^{-1})}{_{\alpha \beta}}
+		\text{,} &&\quad &&
+		\quad \tensor{\eps}{_{\dot{\alpha} \dot{\beta}}} &&:= \tensor{(\eps^{-1})}{_{\dot{\alpha} \dot{\beta}}}
+		\text{,} \\
+%
+		&\tensor*{\delta}{^{\alpha} _{\beta}} &&= \tensor{\eps}{^{\alpha \gamma}} \tensor{\eps}{_{\gamma \beta}}
+		\text{,} && \quad && \quad
+		\tensor*{\delta}{^{\dot{\alpha}} _{\dot{\beta}}} &&= \tensor{\eps}{^{\dot{\alpha} \dot{\gamma}}} \tensor{\eps}{_{\dot{\gamma} \beta}}
+		\text{,}
+	\end{alignedat} \label{eq:SL2Cepsilon}
+\end{equation}
+which is invariant w.r.t \SLtwoC-transformation and defined by the matrix\footnote{Our convention $ \tensor{\eps}{^{12}}= +1 = -\tensor{\eps}{_{12}} $ is the same as in \refcite{Li2021, Srednicki.2012}. A change of sign would especially alter the signs in the charge conjugation matrix in \cref{eq:ChargeConjugation}.}
+\begin{equation}
+	\begin{aligned}
+		\eps := + \mi \sigma^{2} = \begin{pmatrix}
+			0 & 1 \\
+			-1 & 0 
+		\end{pmatrix}
+		, \quad
+		\eps = \eps^{*} = - \eps^{\dagger} = -\eps^{\trans} = -\eps^{-1}.
+	\end{aligned}
+\end{equation}
+As can be checked by considering the explicit transformations given in \cref{eq:SL2C1} and \eqref{eq:SL2C1}, the following expressions transform in the correct way and establish, thus, the index raising and lowering: 
+\begin{equation}
+	\begin{aligned}
+		\xi^{\alpha} = \tensor{\eps}{^{\alpha \beta}} \xi_{\beta}
+		\text{,} \quad
+		\xi_{\alpha} = \tensor{\eps}{_{\alpha \beta}} \xi^{\beta}
+		\text{,} \quad
+		\bar{\chi}^{\dot{\alpha}} = \tensor{\eps}{^{\dot{\alpha} \dot{\beta}}} \bar{\chi}_{\dot{\beta}}
+		\text{,} \quad
+		\bar{\chi}_{\dot{\alpha}} = \tensor{\eps}{_{\dot{\alpha} \dot{\beta}}} \bar{\chi}^{\dot{\beta}}
+		\text{.}
+	\end{aligned} \label{eq:raisingANDlowringSL2C}
+\end{equation}
+Further invariant contractions of spinors are defined by
+\begin{equation}
+	\begin{alignedat}{5}
+		\xi_{1} \xi_{2} :=& (\xi_{1})^{\alpha} (\xi_{2})_{\alpha}
+		&&=&& (\xi_{1})_{2} (\xi_{2})_{1} - (\xi_{1})_{1} (\xi_{2})_{2}
+		&&= - (\xi_{1})_{\alpha} (\xi_{2})^{\alpha}
+		\text{,} \\
+		\bar{\chi}_{1} \bar{\chi}_{2} :=& (\bar{\chi}_{1})_{\dot{\alpha}} (\bar{\chi}_{2})^{\dot{\alpha}}
+		&&=&& (\bar{\chi}_{1})^{\dot{1}} (\bar{\chi}_{2})^{\dot{2}} - (\bar{\chi}_{1})^{\dot{2}} (\bar{\chi}_{2})^{\dot{1}} &&
+		\text{.}
+	\end{alignedat}
+\end{equation}
+This definition automatically respects anti-commutation of fermions, e.g. $ \xi \phi = \xi^{\alpha} \phi_{\alpha} = - \phi_{\alpha} \xi^{\alpha} = \phi^{\alpha} \xi_{\alpha} = \phi \xi $.\par
+%
+By considering two \SLtwoC{}-tensors, $ S_{\alpha \beta} $ and $ T^{\dot{\alpha} \dot{\beta}} $, and decomposing each in its symmetric and antisymmetric part, the following relations can be derived:
+\begin{equation}
+	\begin{aligned}
+		\tensor{\eps}{_{\alpha \beta}} \tensor{\eps}{^{\gamma \delta}}
+		= -\tensor*{\delta}{_{\alpha}^{\gamma}} \tensor*{\delta}{_{\beta}^{\delta}}
+		+\tensor*{\delta}{_{\beta}^{\gamma}} \tensor*{\delta}{_{\alpha}^{\delta}}
+		\quad \text{and} \quad
+		\tensor{\eps}{_{\dot{\alpha} \dot{\beta}}} \tensor{\eps}{^{\dot{\gamma} \dot{\delta}}}
+		= -\tensor*{\delta}{_{\dot{\alpha}}^{\dot{\gamma}}} \tensor*{\delta}{_{\dot{\beta}}^{\dot{\delta}}}
+		+\tensor*{\delta}{_{\dot{\beta}}^{\dot{\gamma}}} \tensor*{\delta}{_{\dot{\alpha}}^{\dot{\delta}}}
+		\text{.}
+	\end{aligned} \label{eq:2epsilonsSL2C}
+\end{equation}
+After lowering and raising of indices with \cref{eq:raisingANDlowringSL2C} the Schouten identities follow:
+\begin{equation}
+	\begin{aligned}
+		\tensor{\eps}{^{\alpha \beta}} \tensor{\eps}{^{\gamma \delta}}
+		= \tensor{\eps}{^{\alpha \gamma}} \tensor{\eps}{^{\delta \beta}}
+		+ \tensor{\eps}{^{\alpha \delta}} \tensor{\eps}{^{\beta \gamma}}
+		\text{,} \quad
+		\tensor{\eps}{_{\dot{\alpha} \dot{\beta}}} \tensor{\eps}{_{\dot{\gamma} \dot{\delta}}}
+		= \tensor{\eps}{_{\dot{\alpha} \dot{\gamma}}} \tensor{\eps}{_{\dot{\delta} \dot{\beta}}}
+		+ \tensor{\eps}{_{\dot{\alpha} \dot{\delta}}} \tensor{\eps}{_{\dot{\beta} \dot{\gamma}}}
+		\text{.}
+	\end{aligned}
+\end{equation}
+Define now:
+\begin{equation}
+	\tensor{\left(\sigma^{\mu \nu}\right)}{_{\alpha}^{\beta}} := \frac{i}{2} \tensor{\left(\sigma^{\mu} \bar{\sigma}^{\nu}-\sigma^{\nu} \bar{\sigma}^{\mu}\right)}{_{\alpha}^{\beta}}
+	\text{,} \quad
+	\tensor{\left(\bar{\sigma}^{\mu \nu}\right)}{^{\dot{\alpha}}_{\dot{\beta}}} := \frac{i}{2} \tensor{\left(\bar{\sigma}^{\mu} \sigma^{\nu}-\bar{\sigma}^{\nu} \sigma^{\mu}\right)}{^{\dot{\alpha}}_{\dot{\beta}}}
+	\text{,}
+	\label{eq:sigma2}
+\end{equation}
+and pay attention to the unusual index structure which yields for example:
+\begin{equation}
+	\begin{aligned}
+		\tensor{\left(\sigma^{\mu \nu}\right)}{^{\alpha \beta}} := \frac{i}{2} \tensor{\eps}{^{\alpha \gamma}} (\tensor{(\sigma^{\mu})}{_{\gamma \dot{\gamma}}} \tensor{(\bar{\sigma}^{\nu})}{^{\dot{\gamma} \beta}} - \tensor{(\sigma^{\nu})}{_{\gamma \dot{\gamma}}} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\gamma} \beta}})
+		\text{.}
+	\end{aligned}
+\end{equation}
+These matrices have the following properties:
+\begin{equation}
+	\begin{gathered}
+		\sigma^{\mu \nu} = -\sigma^{\nu \mu}, \quad
+		\bar{\sigma}^{\mu \nu} = -\bar{\sigma}^{\nu \mu}, \quad
+		\bar{\sigma}^{\mu \nu} = \left(\sigma^{\mu \nu}\right)^{\dagger}, \quad
+		\Tr{\sigma^{\mu \nu}} = \Tr{\bar{\sigma}^{\mu \nu}} = 0 , \\
+		%
+		\sigma^{0 i} = -\mi \sigma^{i}, \quad
+		\sigma^{i j} = \epsilon^{i j k} \sigma^{k}, \quad
+		\bar{\sigma}^{0 i} = \mi \sigma^{i}, \quad
+		\bar{\sigma}^{i j} = \epsilon^{i j k} \sigma^{k}, \\
+		%
+		\tensor{\left(\sigma^{\mu \nu}\right)}{_{\alpha \beta}} = \tensor{\left(\sigma^{\mu \nu}\right)}{_{\beta \alpha}}, \quad
+		\tensor{\left(\bar{\sigma}^{\mu \nu}\right)}{_{\dot{\alpha} \dot{\beta}}} = \tensor{\left(\bar{\sigma}^{\mu \nu}\right)}{_{\dot{\beta} \dot{\alpha}}}
+		\text{.}
+	\end{gathered}
+\end{equation}
+The product of two $ \sigma $-matrices can be simplified with:
+\begin{gather}
+	%
+	%	\sigma^{\mu} \bar{\sigma}^{\nu} = \metric^{\mu \nu} \one - \mi \sigma^{\mu \nu}, \quad
+	%	\bar{\sigma}^{\mu} \sigma^{\nu} = \metric^{\mu \nu} \one - \mi \bar{\sigma}^{\mu \nu}, \\
+	\tensor{\eps}{_{\dot{\alpha} \dot{\beta}}} \tensor*{(\sigma^{\mu})}{^{\dot{\alpha}} _{\alpha}} \tensor*{(\bar{\sigma}^{\nu})}{^{\dot{\beta}} _{\beta}}
+	= + \tensor{\eps}{_{\alpha \beta}} \metric^{\mu \nu} + \mi \tensor{\left(\sigma^{\mu \nu}\right)}{_{\alpha \beta}} \label{eq:metricandsigma2}\\
+	\tensor{\eps}{^{\alpha \beta}} \tensor*{(\bar{\sigma}^{\mu})}{^{\dot{\alpha}} _{\alpha}} \tensor*{(\sigma^{\nu})}{^{\dot{\beta}} _{\beta}}
+	= + \tensor{\eps}{^{\dot{\alpha} \dot{\beta}}} \metric^{\mu \nu} + \mi \tensor{\left(\bar{\sigma}^{\mu \nu}\right)}{^{\dot{\alpha} \dot{\beta}}} \label{eq:metricandsigma2bar}
+	\text{.}
+\end{gather}
+Two $ \sigma^{\mu \nu} $- or $ \bar{\sigma}^{\mu \nu} $-matrices obey the relations:
+\begin{gather}
+	\begin{aligned}
+		\boxed{
+			\tensor{\left(\sigma^{\mu \nu}\right)}{^{\alpha_{1} \alpha_{2}}} \tensor{\left(\sigma_{\mu \nu}\right)}{^{\alpha_{3} \alpha_{4}}}
+			= - 4 (\tensor{\eps}{^{\alpha_{1} \alpha_{4}}} \tensor{\eps}{^{\alpha_{2} \alpha_{3}}} + \tensor{\eps}{^{\alpha_{1} \alpha_{3}}} \tensor{\eps}{^{\alpha_{2} \alpha_{4}}})
+			\text{,}
+		}
+		\\
+		\boxed{
+			\tensor{\left(\bar{\sigma}^{\mu \nu}\right)}{_{\dot{\alpha}_{1} \dot{\alpha}_{2}}} \tensor{\left(\bar{\sigma}_{\mu \nu}\right)}{_{\dot{\alpha}_{3} \dot{\alpha}_{4}}}
+			= - 4 (\tensor{\eps}{_{\dot{\alpha}_{1} \dot{\alpha}_{4}}} \tensor{\eps}{_{\dot{\alpha}_{2} \dot{\alpha}_{3}}} + \tensor{\eps}{_{\dot{\alpha}_{1} \dot{\alpha}_{3}}} \tensor{\eps}{_{\dot{\alpha}_{2} \dot{\alpha}_{4}}})
+			\text{,}
+		}
+	\end{aligned} \label{eq:sigmamunuRelation}
+\end{gather}
+for contracted Lorentz indices. For contracted \SLtwoC{}-indices\footnote{
+See \refcite[p.~59]{Li2021} or \refcite[p.~16--19]{Dreiner.2010} for \cref{eq:3sigmas,eq:TrSigSig}.}, the traces are:
+\begin{gather}
+	\begin{aligned}
+		%		\tensor{\left(\sigma^{\mu \nu}\right)}{_{\alpha} ^{\beta}} \tensor{\left(\sigma_{\mu \nu}\right)}{_{\gamma} ^{\delta}}
+		%		= 4 (\tensor*{\delta}{_{\alpha} ^{\delta}} \tensor{\delta}{_{\gamma} ^{\beta}} + \tensor{\eps}{_{\alpha \gamma}} \tensor{\eps}{^{\beta \delta}})&, \quad
+		%		\tensor{\left(\bar{\sigma}^{\mu \nu}\right)}{^{\dot{\alpha}} _{\dot{\beta}}} \tensor{\left(\bar{\sigma}_{\mu \nu}\right)}{^{\dot{\gamma}} _{\dot{\delta}}} 
+		%		= 4 (\tensor*{\delta}{_{\dot{\delta}} ^{\dot{\alpha}}} \tensor*{\delta}{_{\dot{\beta}} ^{\dot{\gamma}}} + \tensor{\eps}{^{\dot{\alpha} {\dot{\gamma}} }} \tensor{\epsilon}{_{\dot{\beta} \dot{\delta}}}),\\
+		\boxed{
+			\tensor{\left(\sigma^{\mu \nu}\right)}{^{\alpha \beta}}
+			\tensor{\left(\bar{\sigma}_{\mu \nu}\right)}{_{\dot{\alpha} \dot{\beta}}}
+			= 0
+			\text{,}
+		}
+	\end{aligned} \label{eq:sigmamunusigmabarmunuRelation}\\
+	%
+	\begin{aligned}
+		\frac{1}{2} \Tr{\sigma^{\mu \nu} \sigma_{\rho \sigma}} \equiv \frac{1}{2} \tensor{(\sigma^{\mu \nu})}{_{\alpha}^{\beta}} \tensor{(\sigma_{\rho \sigma})}{_{\beta}^{\alpha}}
+		&= \delta^{\mu}_{\rho} \delta^{\nu}_{\sigma} - \delta^{\mu}_{\sigma} \delta^{\nu}_{\rho} - \mi \tensor{\eps}{^{\mu \nu}_{\rho \sigma}}, \\
+		\frac{1}{2} \Tr{\bar{\sigma}^{\mu \nu} \bar{\sigma}_{\rho \sigma}} \equiv \frac{1}{2} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}}_{\dot{\beta}}} \tensor{(\bar{\sigma}_{\rho \sigma})}{^{\dot{\beta}}_{\dot{\alpha}}}
+		&= \delta^{\mu}_{\rho} \delta^{\nu}_{\sigma} - \delta^{\mu}_{\sigma} \delta^{\nu}_{\rho} + \mi \tensor{\eps}{^{\mu \nu}_{\rho \sigma}} \label{eq:TrSigSig}
+		\text{.}
+	\end{aligned}
+\end{gather}
+\footnote{
+	The four component epsilon tensor $ \eps^{\mu \nu \rho \sigma} $ is chosen to fulfil $ \eps^{0123} = - \eps_{0123} = + 1 $.
+}Furthermore, the matrices are self- and anti-self dual:
+\begin{equation}
+	\begin{aligned}
+		\sigma^{\mu \nu} = \frac{\mi}{2} \tensor{\epsilon}{^{\mu \nu \rho \sigma}} \sigma_{\rho \sigma} , \quad
+		\bar{\sigma}^{\mu \nu} = -\frac{\mi}{2} \tensor{\epsilon}{^{\mu \nu \rho \sigma}} \bar{\sigma}_{\rho \sigma}
+		\text{,}
+	\end{aligned} \label{eq:dualtity}
+\end{equation}
+and $ \sigma^{\mu \nu}/ 2 $ and $ \bar{\sigma}^{\mu \nu}/ 2 $ are generators of the (projective) representations of $ L_{+}^{\uparrow} $:
+\begin{equation}
+	\begin{alignedat}{3}
+		&\xi_{\alpha}(\vector{p}) &&\rightarrow \xi^{\prime}_{\alpha}(\vector{p}) &&= \tensor{\Big(\operatorname{e}^{-\frac{\mi}{2} \omega_{\mu \nu} \frac{\sigma^{\mu \nu}}{2}}\Big)}{_\alpha^\beta} \xi_{\beta}(\Lambda^{-1} \vector{p}) ,\\
+		&\bar{\chi}^{\dot{\alpha}}(\vector{p}) &&\rightarrow \bar{\chi}^{\prime \dot{\alpha}}(\vector{p}) &&= \tensor{\Big(\operatorname{e}^{-\frac{\mi}{2} \omega_{\mu \nu} \frac{\bar{\sigma}^{\mu \nu}}{2}}\Big)}{^{\dot{\alpha}}_{\dot{\beta}}}
+		\bar{\chi}^{\dot{\beta}}(\Lambda^{-1} \vector{p}).
+	\end{alignedat}
+\end{equation}
+Those are precisely the representations, introduced in \cref{eq:SL2C1,eq:SL2C2}, for the transformations of Weyl spinors.
+\newpage
+\subsection{Dirac bi-spinor field} \label{sec:DiracbiSpinor}
+Let $ \xi_{\alpha} $ and $ \chi_{\alpha} $ be two-component left-handed Weyl spinors (i.e. $ \xi_{\alpha}, \chi_{\alpha} \in (\frac{1}{2}, 0) $). Then, the hermitian conjugate $ (\chi^{\alpha})^{\dagger} = \chi^{\dot{\alpha}} $, after raising an index, transforms as a right-handed Weyl spinor (i.e. $ \chi^{\dot{\alpha}} \in (0, \frac{1}{2}) $). The combination of these independent spinors yields the four-component Dirac bi-spinor:
+\begin{equation}
+	\begin{aligned}
+		\boxed{
+			\psi(x) := \begin{pmatrix}
+				\xi_{\alpha} (x)\\
+				(\chi^{\dagger})^{\dot{\alpha}} (x)
+			\end{pmatrix}
+		}
+		\in \big(\frac{1}{2}, \frac{1}{2}\big).
+	\end{aligned}
+\end{equation}
+Define now the Dirac matrices in the Weyl-representation:
+\begin{equation}
+	\begin{aligned}
+		\boxed{
+			\gamma^{\mu} := \begin{pmatrix}
+				\mymathbb{0}_{2 \times 2} & \tensor{(\sigma^{\mu})}{_{\alpha \dot{\beta}}} \\
+				\tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \beta}} & \mymathbb{0}_{2 \times 2}
+			\end{pmatrix}
+		}
+		, \quad
+		\{\gamma^{\mu}, \gamma^{\nu} \} = 2 \metric^{\mu \nu}.
+	\end{aligned}
+\end{equation}
+Define also the adjoint Dirac-spinor $ \bar{\psi} $:
+\begin{equation}
+	\begin{aligned}
+		\boxed{
+			\bar{\psi}(x) := \begin{pmatrix}
+				\chi^{\alpha} (x), & (\xi^{\dagger})_{\dot{\alpha}} (x)
+			\end{pmatrix}
+			= \psi^{\dagger} (x) \beta ,
+		}
+	\end{aligned}
+\end{equation}
+where $ \beta := \Big(\begin{smallmatrix}
+	\mymathbb{0} & \tensor*{\delta}{^{\dot{\alpha}} _{\dot{\beta}}} \\
+	\tensor*{\delta}{_{\alpha} ^{\beta}}& \mymathbb{0}
+\end{smallmatrix}\Big) $,
+which is numerically identical to $ \gamma^{0} $, but has a slightly different index structure.
+The charge conjugated field is defined as
+\begin{equation}
+	\begin{aligned}
+		\psi^{C} (x) := \begin{pmatrix}
+			\chi_{\alpha} (x)\\
+			(\xi^{\dagger})^{\dot{\alpha}} (x)
+		\end{pmatrix}
+		= C (\bar{\psi})^{\trans} (x) 
+		\quad \Rightarrow
+		\bar{\psi}^{C} (x) = \begin{pmatrix}
+			\xi^{\alpha} (x) & (\chi^{\dagger})_{\dot{\alpha}} (x)
+		\end{pmatrix}
+		= - \psi^{\trans}(x) C^{-1}
+		\text{,}
+	\end{aligned}
+\end{equation}
+with the charge conjugation matrix
+\begin{equation}
+	\begin{aligned}
+		C := \mi \gamma^{0} \gamma^{2} = \begin{pmatrix}
+			\eps_{\alpha \beta} & 0\\
+			0 & \eps^{\dot{\alpha} \dot{\beta}}
+		\end{pmatrix}
+		= \begin{pmatrix}
+			-\eps^{\alpha \beta} & 0\\
+			0 & -\eps_{\dot{\alpha} \dot{\beta}}
+		\end{pmatrix} ,
+	\end{aligned} \label{eq:ChargeConjugation}
+\end{equation}
+$ C = C^{*} = - C^{\dagger} = - C^{\trans} = - C^{-1} $ and $ C^{-1} \gamma_{\mu} C = - \gamma_{\mu}^{\trans} $.
+Finally, define
+\begin{equation}
+	\begin{aligned}
+		\sigma^{\mu \nu} := \frac{\mi}{2} \left[\gamma^{\mu}, \gamma^{\nu} \right] = \begin{pmatrix}
+			\tensor{(\sigma^{\mu \nu})}{_{\alpha} ^{\beta}} & 0 \\
+			0 & \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}}
+		\end{pmatrix}.
+	\end{aligned}
+\end{equation}
+Combining all the previous results yields the following Dirac bi-spinor expressions:
+\begin{equation}
+	\begin{aligned}
+		&\boxed{\hspace{1em}
+			\begin{aligned}
+				\bar{\Psi}_{1} \Psi_{2} &= \chi_{1}^{\alpha} \xi_{2 \alpha} + \xi_{1 \dot{\alpha}}^{\dagger} \chi_{2}^{\dagger \dot{\alpha}} ,\\
+				\bar{\Psi}_{1} \gamma^{\mu} \Psi_{2} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \xi_{2 \alpha} ,
+			\end{aligned}
+		}\\
+		&\begin{aligned}
+			\bar{\Psi}_{1} \sigma^{\mu \nu} \Psi_{2} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_{\alpha} ^{\beta}} \xi_{2 \beta} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}}_{\dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}} ,\\
+			\Psi_{1}^{\trans} C \Psi_{2} &= \bar{\Psi}_{1}^{C} \Psi_{2} = \xi_{1}^{\alpha} \xi_{2 \alpha} + \chi_{1 \dot{\alpha}}^{\dagger} \chi_{2}^{\dagger \dot{\alpha}} ,\\
+			\Psi_{1}^{\trans} C \gamma^{\mu} \Psi_{2} &= \xi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} + \chi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \xi_{2 \alpha} ,\\
+			\Psi_{1}^{\trans} C \sigma^{\mu \nu} \Psi_{2} &= \xi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_\alpha ^\beta} \xi_{2 \beta} + \chi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}} ,\\
+			\bar{\Psi}_{1} C \bar{\Psi}_{2}^{\trans} &= \xi_{1 \dot{\alpha}}^{\dagger} \xi_{2}^{\dagger \dot{\alpha}} + \chi_{1}^{\alpha} \chi_{2 \alpha}, \\
+			\bar{\Psi}_{1} \gamma^{\mu} C \bar{\Psi}_{2}^{\trans} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \xi_{2}^{\dagger \dot{\alpha}} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \chi_{2 \alpha}, \\
+			\bar{\Psi}_{1} \sigma^{\mu \nu} C \bar{\Psi}_{2}^{\trans} &= \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} \xi_{2}^{\dagger \dot{\beta}} + \chi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_{\alpha}^{\beta}} \chi_{2 \beta}.
+		\end{aligned}
+	\end{aligned} \label{eq:4SpinorRelations}
+\end{equation}
+Considering the relations between the four component Dirac and the two component Weyl spinors of the \sm{} given in \cref{eq:quarks}, the above relations can be illustrated with some examples:
+\begin{itemize}
+	\item $ \bar{u}_{\mathrm{R}} \gamma^{\mu} u_{\mathrm{R}} = u_{\mathbb{C}} \sigma^{\mu} u_{\mathbb{C}}^{\dagger} $ with $ u_{\mathbb{C}}^{\alpha} \equiv \chi^{\alpha} $ and $ \tensor{(u_{\mathbb{C}}^{\dagger})}{^{\dot{\alpha}}} \equiv \tensor{(\chi^{\dagger})}{^{\dot{\alpha}}} $,
+	\item $ \bar{e}_{\mathrm{R}} l_{\mathrm{L}} =: \bar{e} l = e_{\mathbb{C}} L $,
+	\item $ \bar{u}^{\trans} C d_{\mathrm{R}} =: \bar{u}^{C} d = u_{\mathbb{C}}^{\dagger} d_{\mathbb{C}}^{\dagger} $.
+\end{itemize}
+
+\subsection{Field strength tensor} \label{sec:fieldstrengthtensor}
+Now, the chiral basis of gauge bosons $ F_{\mathrm{L}/ \mathrm{R}} $, defined as
+\begin{equation}
+	\begin{aligned}
+		F_{\mathrm{L}/\mathrm{R}}^{\mu \nu} := \frac{1}{2} (F^{\mu \nu} \pm \mi \tilde{F}^{\mu \nu}) , \quad
+		(F_{\mathrm{L}})^{\dagger} = F_{\mathrm{R}}
+		\text{,}
+	\end{aligned}
+\end{equation}
+is considered.
+It is related to the hermitian field strength tensor $ F $ and dual field strength tensor $ \tensor{\tilde{F}}{^{\mu \nu}} := \frac{1}{2} \tensor{\eps}{^{\mu \nu \rho \sigma}} \tensor{F}{_{\rho \sigma}} $ by:
+\begin{equation}
+	\begin{aligned}
+		F^{\mu \nu} = F_{\mathrm{L}}^{\mu \nu} + F_{\mathrm{R}}^{\mu \nu}
+		\quad \text{and} \quad
+		\tilde{F}^{\mu \nu} = \mi (F_{\mathrm{R}}^{\mu \nu} - F_{\mathrm{L}}^{\mu \nu})
+		\text{.}
+	\end{aligned}
+\end{equation}
+The duality between $ F $ and $ \tilde{F} $ is altered to the (anti-)self-duality $ F_{\mathrm{L}/\mathrm{R}}^{\mu \nu} = \pm \frac{\mi}{2} \tensor{\eps}{^{\mu \nu \rho \sigma}} F^{\mathrm{L}/\mathrm{R}}_{\rho \sigma} $.
+Since the (anti-)self-duality condition is Lorentz invariant, both $ F_{\mathrm{L}} $ and $ F_{\mathrm{R}} $ form irreducible representations of the Lorentz group.\par
+%
+The six independent and real components of $ \tensor{F}{_{\mu \nu}} $ are incorporated in the three complex components of $ F_{\mathrm{L}} $ and $ F_{\mathrm{R}} $. In terms of the Lorentz group algebra, taken to be \susu{}, $ F_{\mathrm{L}} $ and $ F_{\mathrm{R}} $ transform in the three-dimensional\footnote{Remember that the dimension of a representation of \susu{} is specified by the non-negative half-integer numbers $ (j_{l}, j_{r}) $, which specify the representation: $ d(j_{l}, j_{r}) \equiv (2 j_{l} + 1) \cdot (2 j_{r} + 1) $.} representations $ (1, 0) $ and $ (0, 1) $.
+\par
+%
+The left- and right-handed part of the field strength tensor is contracted with the (anti-)self dual and invariant tensors in \cref{eq:dualtity}:
+\begin{equation}
+	\begin{alignedat}{6}
+		& F_{\mathrm{L}}^{\mu \nu} \tensor{(\sigma_{\mu \nu})}{_{\alpha}^{\beta}}
+		&&= F^{\mu \nu} \tensor{(\sigma_{\mu \nu})}{_{\alpha}^{\beta}}
+		&&= \quad &&\mi &&\tilde{F}^{\mu \nu} \tensor{(\sigma_{\mu \nu})}{_{\alpha}^{\beta}}, \quad
+		&&F_{\mathrm{L}}^{\mu \nu} \tensor{(\bar{\sigma}_{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} = 0
+		\text{,} \\
+%		
+		& F_{\mathrm{R}}^{\mu \nu} \tensor{(\bar{\sigma}_{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}}
+		&&= F^{\mu \nu} \tensor{(\bar{\sigma}_{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}}
+		&&= -&&\mi &&\tilde{F}^{\mu \nu} \tensor{(\bar{\sigma}_{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}}, \quad
+		&&F_{\mathrm{R}}^{\mu \nu} \tensor{(\sigma_{\mu \nu})}{_{\alpha}^{\beta}} = 0
+		\text{.}
+	\end{alignedat}
+\end{equation}
+The left- and right-handed parts of the field strength tensor can, thus, be extracted from the hermitian $ F_{\mu \nu} $  with
+\begin{equation}
+	\boxed{
+		\begin{aligned}
+			F_{\mathrm{L} \beta \alpha} = F_{\mathrm{L} \alpha \beta} &:= \frac{\mi}{2} F_{\mu \nu} \sigma_{\alpha \beta}^{\mu \nu} \in (1,0)
+			\quad \text{and} \quad
+			F_{\mathrm{R} \dot{\beta} \dot{\alpha}} = F_{\mathrm{R} \dot{\alpha} \dot{\beta}} := -\frac{\mi}{2} F_{\mu \nu} \bar{\sigma}_{\dot{\alpha} \dot{\beta}}^{\mu \nu} \in (0,1)
+			\text{.} \\
+		\end{aligned}
+		\label{eq:fieldStrengthTensorsApp}
+	}
+\end{equation}
+Note that hermitian conjugation changes the chirality, i.e. $ (F_{\mathrm{L} \alpha \beta})^{\dagger} = F_{\mathrm{R} \dot{\alpha} \dot{\beta}} $ and that the additional factors are chosen to follow the conventions in \refcite{Li2021}.
+The inverse relation, deduced with \cref{eq:TrSigSig}, is given by
+\begin{equation}
+	\boxed{
+		\begin{aligned}
+			F_{\mu \nu} &= - \frac{\mi}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} - F_{\mathrm{L} \alpha \beta} \sigma_{\mu \nu}^{\alpha \beta}\Big) ,\\
+			\tilde{F}_{\mu \nu} &= -\frac{1}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} + F_{\mathrm{L} \alpha \beta} \sigma_{\mu \nu}^{\alpha \beta}\Big)
+			\text{.}
+		\end{aligned}
+	}
+\end{equation}
+\subsection{(Covariant) Derivative} \label{sec:covariantDerivative}
+The covariant derivative is also written in \SLtwoC{}-notation
+\begin{equation}
+	D_{\alpha \dot{\alpha}} := D_{\mu} \sigma^{\mu}_{\alpha \dot{\alpha}} \in (\frac{1}{2}, \frac{1}{2})
+\end{equation}
+and since $ D_{\dot{\alpha} \alpha} := D_{\mu} \bar{\sigma}^{\mu}_{\dot{\alpha} \alpha} \stackrel{\eqref{eq:sigmabarsigma}}{=} D_{\mu} \sigma^{\mu}_{\alpha \dot{\alpha}} = D_{\alpha \dot{\alpha}} $ it is symmetric in its \SLtwoC{}-indices.
+The derivative $ D_{\mu} $ is, therefore, equivalent to the \SLtwoC{}-expressions
+\begin{equation}
+	\begin{aligned}
+		\boxed{
+			D_{\mu} = \frac{1}{2} D_{\alpha \dot{\alpha}} \tensor{(\bar{\sigma}_{\mu})}{^{\dot{\alpha} \alpha}}
+			= \frac{1}{2} D_{\dot{\alpha} \alpha} \tensor{(\sigma_{\mu})}{^{\alpha \dot{\alpha}}}
+			= - \frac{1}{2} D^{\dot{\alpha}}_{\alpha} \tensor*{(\sigma_{\mu})}{^{\alpha}_{\dot{\alpha}}}
+			\text{,}
+		}
+	\end{aligned}
+\end{equation}
+yielding for example:
+\begin{equation}
+	\begin{aligned}
+		D_{\mu} D^{\mu}
+		= \frac{1}{2} D^{\dot{\alpha} \alpha} D_{\alpha \dot{\alpha}}
+		= - \frac{1}{2} \tensor{\eps}{^{\alpha_{1} \alpha_{2}}} \tensor{\eps}{_{\dot{\alpha}_{1} \dot{\alpha}_{2}}} \tensor*{\cov}{^{\dot{\alpha}_{1}}_{\alpha_{1}}} \tensor*{\cov}{^{\dot{\alpha}_{2}}_{\alpha_{2}}}
+		\text{.}
+	\end{aligned}
+\end{equation}
+Note that the derivative is transforming in the four-vector representation $ (\tfrac{1}{2}, \tfrac{1}{2}) $ of the Lorentz group.

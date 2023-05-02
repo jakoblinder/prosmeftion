@@ -1,0 +1,81 @@
+% !TeX program = pdflatex
+% !TeX TXS-program:bibliography = txs:///biber
+% !TeX spellcheck = en_GB
+% !TeX encoding = utf8
+\documentclass[a4paper, 11pt, twoside]{article}
+\usepackage[UKenglish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{color}
+\usepackage[a4paper,left=2.5cm,right=2.5cm, top=2.5cm, bottom=2.5cm]{geometry}
+
+\usepackage{amsmath,mathtools,mathrsfs,leftidx,empheq,amssymb,slashed,tensor,nicefrac}
+\numberwithin{equation}{section} % Numbering of equations
+\usepackage[boxsize = 1.1em]{ytableau} % boxsize = normal= 1.5em
+
+
+%Grafiken
+\usepackage{graphicx}
+
+\usepackage{mytitle}
+
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,allcolors=black}  % auch fuer URLs
+
+\usepackage[nameinlink,capitalize]{cleveref}
+\usepackage[outer,inline,final]{showlabels}
+
+\usepackage[style=numeric]{biblatex}
+\addbibresource{./references.bib}
+
+\usepackage{commands}
+
+\usepackage[record,abbreviations,postdot,nonumberlist]{glossaries-extra} % nomain -> Hauptglossar wird nicht ausgegeben, sondern nur Abkuerzungsverzeichnis.
+\setabbreviationstyle[common]{short} % set abbreviation style before \GlsXtrLoadResources
+\glssetcategoryattribute{general}{glossdesc}{firstuc}  % First letter in description is capital.
+\glssetcategoryattribute{common}{glossdesc}{firstuc}  % First letter in description is capital.
+\setlength{\glsdescwidth}{\textwidth} % Change width of description section in glossary.
+\renewcommand{\abbreviationsname}{List of abbreviations}
+
+\GlsXtrLoadResources[src={abbrvs.bib}]
+
+\title{Notation and Conventions}
+\author{Robert V. Harlander, Jakob W. Linder, Max Rhezak \& Magnus C. Schaaf}
+\project{\texttt{AutoEFT} and so}
+\date{}
+
+\makeatletter
+\hypersetup{pdftex,
+	pdfauthor={\@author},
+	pdftitle={\@title},
+	pdfsubject={Automated EFT},
+	pdfkeywords={EFT, Smeft, Effective field theory},
+	pdfproducer={Latex},
+	pdfcreator={pdflatex}}
+\makeatother
+
+\usepackage{fancyhdr, lastpage, extramarks}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\slshape \lastrightmark}
+\fancyhead[LO,RE]{\slshape \today}
+\fancyfoot[LE,RO]{\thepage\ of\ \pageref{LastPage}}
+
+
+\begin{document}
+	\maketitle
+	\tableofcontents
+	\par
+	\vspace{2em}
+%	
+	This document contains relations and structures of the \SLtwoC{} and \SU{N} group which clarify the notation used in the \autoeft{} project and which are helpful for converting operators in different notations manually.
+%	
+	\section{Lorentz structures} \label{sec:LSymmetry}
+		\input{lorentz.tex}
+		\clearpage
+	%
+	\section{SU(N) group structures} \label{sec:GSymmetry}
+		\input{sun.tex}
+	%
+%	\printunsrtabbreviations[style = super]
+	\printbibliography
+\end{document}

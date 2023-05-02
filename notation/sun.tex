@@ -1,0 +1,237 @@
+% !TeX root = main.tex
+The special unitary group is defined as the group of all unitary matrices $ U \in \mathbb{C}^{N \times N}$ with unit determinant.
+First, consider the matrix representation\footnote{A classification of all irreducible representation characterised by the tensor method can be found in \refcite{JakobLinder10.2022}.} of \SU{N}, i.e.\ $ U \in \SU{N} $ being a linear transformation of a vector. Then, the vector $ \psi_{a} = (\psi_{1}, \cdots, \psi_{N}) \in \mathbb{C}^{N} $ of the fundamental representation transforms as
+\begin{equation}
+	\begin{aligned}
+		\psi_{a} \rightarrow \psi^{\prime}_{a} = \tensor{U}{_{a}^{b}} \psi_{b}
+		\text{.}
+	\end{aligned}
+\end{equation}
+Note, that the index position of the matrix $ \tensor{U}{_{a}^{b}} := (U)_{ab} $ is \cite[s.][Chap. 8.5 and App. B \& C]{Costa.2012} chosen such that if the first index is a superscript and the second a subscript, i.e.\
+$ (\tensor{U}{_{a}^{b}})^{*} = \tensor{(U^{*})}{^{a}_{b}} =: \tensor{U}{^{a}_{b}} $ the complex conjugate matrix is taken. A subscript index, thus correspond to the fundamental representation whereas an superscript index corresponds to the antifundamental representation.
+Therefore, a vector $ \phi^{a} = (\phi^{1}, \cdots, \phi^{N})^{\trans}~\in~\mathbb{C}^{N} $ transforming \wrt the anti-fundamental representation transforms as
+\begin{equation}
+	\begin{aligned}
+		\phi^{a} \rightarrow \phi^{\prime a}
+		= \tensor{U}{^{a}_{b}} \phi^{b}
+		= \phi^{b} \tensor{(U^{\dagger})}{_{b}^{a}}
+		\text{.}
+	\end{aligned}
+\end{equation}
+This means, for example, that the hermitian conjugate matrix is just $ \tensor{(U^{\dagger})}{_{a}^{b}} = \tensor{U}{^{b}_{a}} $ and the unitarity condition becomes
+\begin{equation}
+	\begin{aligned}
+		\tensor*{\delta}{_{a}^{d}}
+		\equiv \tensor{U}{_{a}^{b}} \tensor{(U^{\dagger})}{_{b}^{d}}
+		= \tensor{U}{_{a}^{b}} \tensor{U}{^{d}_{b}}
+		= \tensor{U}{_{a}^{b}} \tensor{U}{^{d}_{c}} \tensor*{\delta}{_{b}^{c}}
+		\text{,}
+	\end{aligned}
+\end{equation}
+showing also the invariance of the Kronecker delta \wrt the \SU{N} transformation.\par
+%
+The explicit transformation matrix in the matrix representation can be chosen as follows:
+\begin{equation}
+	\begin{aligned}
+		U = \exp{\mi \eps^{A} T^{A}}
+		\text{,}
+	\end{aligned}
+\end{equation}
+where $ \eps^{A} \in \mathbb{R} $ and $ T^{A} $ hermitian. The exponent, $ \mi \eps^{A} T^{A} $, is part of a representation of the Lie algebra of the group. The representation of the Lie algebra is a set of squared hermitian matrices $ T^{A} $, called generators satisfying the commutator relation
+\begin{equation}
+	\begin{aligned}
+		\com{T^{A}}{T^{B}}
+		=
+		\mi f^{A B C} T^{C}
+		\text{.}
+	\end{aligned}
+\end{equation}
+They are normalised as
+\begin{equation}
+	\begin{aligned}
+		\Tr{T^{A} T^{B}} \equiv \tensor{(T^{A})}{_{i}^{j}} \tensor{(T^{B})}{_{j}^{i}} = T_{F} \delta^{A B}
+		\quad
+		\text{with}
+		\quad
+		T_{F} = \frac{1}{2}
+		\text{.}
+	\end{aligned}
+\end{equation}
+The generators for \SU{2} and \SU{3} are $ \tensor{(T^{I})}{_{i} ^{k}} := \frac{\tensor{(\tau^{I})}{_{i} ^{k}}}{2} $ and $ \tensor{(T^{A})}{_{a} ^{b}} := \frac{\tensor{(\lambda^{A})}{_{a} ^{b}}}{2} $ and are characterised by the Pauli and the Gell-Mann matrices. For clarity, all fundamental indices are written as subscripts and all antifundamental indices as superscripts. The indices of the adjoint representation can be identified by capital letters.\par
+The so-called structure constants, $ f^{A B C} $, which are antisymmetric in all indices are
+\begin{equation}
+	\begin{aligned}
+		f^{A B C} = - \frac{\mi}{T_{F}} \Tr{\left[T^{A}, T^{B}\right] T^{C}}
+		\text{.}
+	\end{aligned} \label{eq:structureconstSUN}
+\end{equation}
+%~\cite[s.][S.~482--488]{Schwartz2014}
+%\sum_{A} \left(T^{A} T^{A}\right)_{i j} = C_{F} \delta_{i j}
+%f^{A C D} f^{B C D} = C_{A} \delta^{A B}
+Furthermore, the Fierz identity for generators in the fundamental representation
+\begin{equation}
+	\begin{aligned}
+		\sum_{A} \tensor{(T^{A})}{_{i} ^{j}} \tensor{(T^{A})}{_{k} ^{m}}
+		= T_{F} \big(
+		\tensor*{\delta}{_{i} ^{m}} \tensor*{\delta}{_{k} ^{j}}
+		- \frac{1}{N} \tensor*{\delta}{_{i} ^{j}} \tensor*{\delta}{_{k} ^{m}}
+		\big)
+		\text{,}
+	\end{aligned}
+\end{equation}
+is satisfied. Note, that the generator of the fundamental representation $ \tensor{(T^{A})}{_{i} ^{j}} $ transforms with one fundamental and one antifundamental index.\par
+%
+\subsection{\eps{} - tensors}
+The epsilon tensor of \SU{N} with fundamental indices is defined by
+\begin{equation}
+	\begin{aligned}
+		\tensor{\eps}{_{i_{1} \ldots i_{N}}} \equiv
+		\det{
+			\left(
+			\begin{array}{ccc}
+				\tensor*{\delta}{_{i_{1} 1}} & \cdots & \tensor*{\delta}{_{i_{1} N}} \\
+				\vdots & & \vdots \\
+				\tensor*{\delta}{_{i_{N} 1}} & \cdots & \tensor*{\delta}{_{i_{N} N}}
+			\end{array}
+			\right)
+		}
+		\text{.}
+	\end{aligned}
+\end{equation}
+The definition for the epsilon tensor with anti-fundamental indices is similar. Furthermore, two epsilon tensors can be expressed by Kronecker deltas:
+\begin{equation}
+	\begin{aligned}
+		\tensor{\eps}{_{i_{1} \ldots i_{N}}} \tensor{\eps}{^{j_{1} \ldots j_{N}}}
+		=
+		\det{
+			\left(
+			\begin{array}{ccc}
+				\tensor*{\delta}{_{i_{1} j_{1}}} & \cdots & \tensor*{\delta}{_{i_{1} j_{N}}} \\
+				\vdots & & \vdots \\
+				\tensor*{\delta}{_{i_{N} j_{1}}} & \cdots & \tensor*{\delta}{_{i_{N} j_{N}}}
+			\end{array}
+			\right)
+		}
+		\text{,}
+	\end{aligned}
+\end{equation}
+yielding for \SU{2}
+\begin{equation}
+	\begin{aligned}
+		\tensor{\eps}{_{i j}} \tensor{\eps}{^{k m}}
+		= \tensor*{\delta}{_{i}^{k}} \tensor*{\delta}{_{j}^{m}}
+		- \tensor*{\delta}{_{i}^{m}} \tensor*{\delta}{_{j}^{k}}
+		\text{,} \quad
+		\tensor{\eps}{_{i j}} \tensor{\eps}{^{i k}}
+		= \tensor*{\delta}{_{j}^{k}}
+		\text{,} \quad
+		\tensor{\eps}{_{i j}} \tensor{\eps}{^{i j}}
+		= 2
+	\end{aligned} \label{eq:epsilonSU2}
+\end{equation}
+and \SU{3}:
+\begin{equation}
+	\begin{aligned}
+		\tensor{\eps}{_{i j k}} \tensor{\eps}{^{i m n}}
+		= \tensor*{\delta}{_{j}^{m}} \tensor*{\delta}{_{k}^{n}}
+		- \tensor*{\delta}{_{j}^{n}} \tensor*{\delta}{_{k}^{m}}
+		\text{,} \quad
+		\tensor{\eps}{_{i j k}} \tensor{\eps}{^{i j m}}
+		= 2 \tensor*{\delta}{_{k}^{m}}
+		\text{,} \quad
+		\tensor{\eps}{_{i j k}} \tensor{\eps}{^{i j k}}
+		= 6
+		\text{.}
+	\end{aligned} \label{eq:epsilonSU3}
+\end{equation}
+Note, especially that the signs for \SU{2} in \cref{eq:epsilonSU2} differ from those in the \SLtwoC{} notation in \cref{eq:2epsilonsSL2C}. This is the case, because $ \tensor{\eps}{_{\alpha \beta}} $ is defined as the inverse of $ \tensor{\eps}{^{\alpha \beta}} $ in \cref{eq:SL2Cepsilon}, whereas $ \tensor{\eps}{_{i j}} $ and $ \tensor{\eps}{^{i j}} $ for \SU{2} are numerically identical.
+%
+Since all irreducible representations of \SU{N} and thus all invariant operators can easily be found by considering only fundamental indices, all fields\footnote{The transformation properties of each field are listed in \cref{tab:fields}.} should be expressed in the fundamental representation.
+The fundamental indices can then be identified by a \gls{yt} indicating the corresponding irreducible representation of the field. \par
+%
+\subsection{Index conversion}
+Antifundamental indices are converted with the $ \epsilon $-tensor of the corresponding group:
+\begin{equation}
+	\boxed{
+		\begin{aligned}
+			\eps_{i j} \tensor{(\psi^{\dagger})}{^{j}}
+			=& \tensor{(\psi^{\dagger})}{_{i}}
+			&\sim \ytableaushort{i} \text{, for }
+			\psi^{\dagger} \in \{H^{\dagger}, L^{\dagger}, Q^{\dagger}\}\\
+			%		
+			\eps_{a b c} \tensor{(\psi^{\dagger})}{^c}
+			=& \psi^{\dagger}_{a b}
+			&\sim \ytableaushort{a,b}
+			 \text{, for }
+			\psi^{\dagger} \in \{Q^{\dagger}, u_{\mathbb{C}}, d_{\mathbb{C}}\} \text{.}
+		\end{aligned} \label{eq:afundSU2andSU3}
+	}
+\end{equation}
+%
+A field $ F^{A} $ of the adjoint representation of \SU{N} is contracted with the corresponding generator $ \tensor{(T^{A})}{_{b} ^{a}} $, and the antifundamental index is again converted with an $ \epsilon $-tensor \cite{Li2021c}:
+% Sec 3.1
+\begin{equation}
+	\ytableausetup{boxsize=2em}
+	\begin{aligned}
+		\eps_{a_{1} \ldots a_{N}} \tensor{(T^{A})}{_{b} ^{a_{N}}} F^{A} =: F_{a_{1} \ldots a_{N-1} b}
+		\sim
+		\begin{ytableau}
+			a_{1} & b \\
+			\none[\vdots] \\
+			\scriptstyle a_{N-1}
+		\end{ytableau}
+	\end{aligned}
+	\ytableausetup{boxsize=normal, smalltableaux}
+\end{equation}
+{\color{red}
+In order to follow the conventions of \refcite{Li2021}, an additional factor $ 2 $ is multiplied for the \SU{2} and \SU{3} field strength tensors:
+\begin{equation}
+	\boxed{
+		\begin{aligned}
+			2 \eps_{j k} \tensor{(T^{I})}{_{i} ^{k}} W^{I}
+			&= W_{(i j)}
+			&\sim \ytableaushort{ij} \text{,}\\
+			2 \eps_{a c d} \tensor{(T^{A})}{_{b} ^{d}} G^{A}
+			&= G_{a b c}
+			&\sim \ytableaushort{ab,c}
+			\text{.}
+		\end{aligned} \label{eq:adjointSU2andSU3}
+	}
+\end{equation}
+}
+Note that the indices of both field strength tensors obey so-called internal symmetries, which can be read from the \glspl{yt}. The $ W $, for example, is symmetric in its fundamental \SU{2} indices.
+%
+
+\paragraph{Summary}
+The \gls{sm} fields containing different than fundamental gauge indices are rewritten with only fundamental ones like shown in the following:
+\begin{equation}
+	\boxed{
+		\begin{alignedat}{5}
+			\eps_{i j} \tensor{(H^{\dagger})}{^{j}} &= \tensor{(H^{\dagger})}{_{i}}
+			&&\sim \ytableaushort{i}
+			&&\Leftrightarrow
+			&&\tensor{(H^{\dagger})}{^{i}} &&= \tensor{(H^{\dagger})}{_{j}} \eps^{j i}
+			\text{,} \\
+			%			
+			2 \eps_{j k} \tensor{(T^{I})}{_{i} ^{k}} W^{I} &= W_{(i j)}
+			&&\sim \ytableaushort{ij}
+			&&\Leftrightarrow
+			&& W^{I} && = \tensor{(T^{I})}{_{k} ^{i}} W_{(i j)} \eps^{j k}
+			\text{,} \\
+			%
+			\eps_{a b c} \tensor{(Q^{\dagger})}{^c} &= Q_{a b}^{\dagger}
+			&&\sim \ytableaushort{a,b}
+			&&\Leftrightarrow
+			&& \tensor{(Q^{\dagger})}{^a} &&= \frac{1}{2} \eps^{a b c} Q^{\dagger}_{b c}
+			\text{,} \\
+			%
+			2 \eps_{a c d} \tensor{(T^{A})}{_{b} ^{d}} G^{A} &= G_{a b c}
+			&&\sim \ytableaushort{ab,c}
+			&&\Leftrightarrow
+			&& G^{A} &&= \frac{\tensor{(T^{A})}{_{d} ^{b}}}{2} \eps^{a c d} G_{a b c}
+			\text{,}
+		\end{alignedat}
+	}
+\end{equation}
+where $ W_{(i k)} := (W_{i k} + W_{k i})/ 2 $ is the symmetric part of $ W $.
+\todo{Show \cref{eq:adjointSU2andSU3} for an adjoint tensor of every \SU{N}.}

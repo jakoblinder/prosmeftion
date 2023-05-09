@@ -13,13 +13,22 @@ logger = logger_autoeft.getChild(__name__)
 
 PROJECTION_PATH = Path(__file__).parent.parent
 
-# Include the autoeft package in system path for easier import
+# # Include the autoeft package in system path for easier import
 AUTOEFT_PATH = PROJECTION_PATH.parent
-# sys.path.append(AUTOEFT_PATH/ "autoeft")
-sys.path.append(str(AUTOEFT_PATH))
+# # sys.path.append(AUTOEFT_PATH/ "autoeft")
+# sys.path.append(str(AUTOEFT_PATH))
+#
+# from autoeft.model import Model
+# from autoeft.io import load_basis
 
-from autoeft.model import Model
-from autoeft.io import load_basis
+import autoeft.io.basis as io_basis
+# import autoeft.io as io
+basis_path = AUTOEFT_PATH / Path("efts", "ssm-eft", "6", "basis.eft")
+print(basis_path)
+basis_file = io_basis.BasisFile(basis_path)
+
+basis = basis_file.get_basis()
+model = basis.model
 
 CONFIG_PATH = PROJECTION_PATH / "config"
 CONFIG_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.

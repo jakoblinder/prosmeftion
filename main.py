@@ -29,7 +29,9 @@ with open(CONFIG_PATH / "logger.yml", "r") as file:
 parser = ArgumentParser(
     description="Project BSUOLEA output onto AUTOEFT-basis.",
 )
-parser.add_argument("matched", type=Path, help="path to file with matched lagrangian")
+parser.add_argument("lagrangian", type=Path, help="path to file with matched lagrangian")
+parser.add_argument("basis", type=Path, help="path to file a tar containin the corresponding autoeft basis")
+
 parser.add_argument("-s", "--skip", type=int, default=0, help="number of lines to skip in the matched file")
 parser.add_argument(
     "-t", "--tex", action="store_true", help="save supplementary tex files"
@@ -45,8 +47,9 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-input_file = args.matched.resolve()  # "exampleOutputBS.m"
-#  input_file.stem
+input_file = args.lagrangian.resolve()  # "exampleOutputBS.m"
+basis_file = args.basis.resolve()
+
 logconfig['handlers']['console']['level'] = logging.getLevelName(args.logLevel)
 logging.config.dictConfig(logconfig)
 
@@ -59,7 +62,7 @@ def number_terms(single_terms):
             nterms += len(terms_n)
     return nterms
 
-def main(input_file, max_dim = 6, debug=None):
+def main(input_file, basis_file, max_dim = 6, debug=None):
     # get basis up to max_dim mass dimension
     basis = get_basis(max_dim)
 
@@ -194,7 +197,7 @@ def main(input_file, max_dim = 6, debug=None):
 
 start_time = timeit.default_timer()
 
-terms = main(input_file, args.dimension)
+terms = main(input_file, basis_file, args.dimension)
 # fieldstructure = tuple(map(int,list("0100000110000000")))
 # terms = main(args.dimension, debug=fieldstructure)
 

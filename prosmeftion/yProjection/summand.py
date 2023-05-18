@@ -349,22 +349,22 @@ class Summand(Summand_Model):
     #######################
 
     def form_convertDirac(self, max_dim:int=6):
-        # Convert Dirac spinors into Weyl spinors
-        # #call convertDirac(leftspinor, rightspinor)
-        # Do replacements in general way, but replace xi, [xi+], chi, [chi+] by the stuff written in the diracspinor op_config entry,
-        #  like [0, "[e_C+]"] -> xi = 0 and [chi+] = [e_C+] for the electron.
-        # convertDirac then has to be called for every combination of spinors (not two charge conjugated ones).
-        # in convertDirac is written
-        # if (match(`leftspinor'bar(spin1?spin, ?a)*`rightspinor'(spin1?spin,?b)));
-        #   `leftspinor'bar(spin1?spin, ?a)*`rightspinor'(spin1?spin,?b) = ...;
-        # ...
-        # id xi = 0 and [chi+] = [e_C+]
-        #
-        # `leftspinor'barC(?a)*`rightspinor'(?b) = ...;
-        #
-        # `leftspinor'bar(?a)*`rightspinor'C(?b) = ...;
-        #
-        # `leftspinor', `rightspinor' in to do loops covering each [l, e, b, u, Q] corresponding to the names in op_config.
+        """
+        Convert Dirac spinors into Weyl spinors
+        #call convertDirac(leftspinor, rightspinor)
+        Do replacements in general way, but replace xi, [xi+], chi, [chi+] by the stuff written in the diracspinor op_config entry,
+         like [0, "[e_C+]"] -> xi = 0 and [chi+] = [e_C+] for the electron.
+        convertDirac then has to be called for every combination of spinors (not two charge conjugated ones).
+        in convertDirac is written.
+
+        Parameters
+        ----------
+        max_dim
+
+        Returns
+        -------
+
+        """
         n_repetitions = max_dim // 3
         # Spinors
         all_spinors = {name: field for name, field in op_config["fermionfields"].items() if
@@ -384,186 +384,205 @@ class Summand(Summand_Model):
         gen_index_sl = self.possible_indices.generate_index("Lsl")  # next(gen_index_sl) will generate new Lsl and new Usl index
         gen_index_sldot = self.possible_indices.generate_index("Lsldot")
 
-        def for_unique_spinorpair(leftspinor, rightspinor, indices, repetition):
+        def for_unique_spinorpair(lsbar, rs, indices, repetition):
             lsl1, usl2, lsl2, usl2, lsldot1, usldot1, lsldot2, usldot2 = indices
             id_statements = []
 
-            ######################
-            ### psibar*...*psi ###
-            ######################
-            lsbar = leftspinor + "bar"
-            rs = rightspinor
-            chi1, xi1_dagger = all_spinors[lsbar]
-            xi2, chi2_dagger = all_spinors[rs]
-            lsbar = get_commuting_op(lsbar)
-            rs = get_commuting_op(rs)
-            # psibar*psi
-            id = ""
-            id += f"{lsbar}(op1?op,spin1?spin,?a)*{rs}(op2?op,spin1?spin,?b) = "
-            if chi1 == 0 or xi2 == 0:
-                id += "0"
-            else:
-                id += f"{chi1}(op1,{usl1},?a)*{xi2}(op2,{lsl1},?b)"
-            id += " + "
-            if xi1_dagger == 0 or chi2_dagger == 0:
-                id += "0"
-            else:
-                id += f"{xi1_dagger}(op1,{lsldot1},?a)*{chi2_dagger}(op2,{usldot1},?b)"
-            id_statements.append(id)
+            if lsbar[-3:] == "bar" and rs[-1:] != "C":
+                ######################
+                ### psibar*...*psi ###
+                ######################
+                chi1, xi1_dagger = all_spinors[lsbar]
+                xi2, chi2_dagger = all_spinors[rs]
+                lsbar = get_commuting_op(lsbar)
+                rs = get_commuting_op(rs)
+                # psibar*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{rs}(op2?op,spin1?spin,?b) = "
+                if chi1 == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1}(op1,{usl1},?a)*{xi2}(op2,{lsl1},?b)"
+                id += " + "
+                if xi1_dagger == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{chi2_dagger}(op2,{usldot1},?b)"
+                id_statements.append(id)
 
-            # psibar*gamma*psi
-            id = ""
-            id += f"{lsbar}(op1?op,spin1?spin,?a)*{gamma}(lor1?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
-            if chi1 == 0 or chi2_dagger == 0:
-                id += "0"
-            else:
-                id += f"{chi1}(op1,{usl1},?a)*{sigma}(lor1,{lsl1},{lsldot1})*{chi2_dagger}(op2,{usldot1},?b)"
-            id += " + "
-            if xi1_dagger == 0 or xi2 == 0:
-                id += "0"
-            else:
-                id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar}(lor1,{usldot1},{usl1})*{xi2}(op2,{lsl1},?b)"
-            id_statements.append(id)
+                # psibar*gamma*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{gamma}(lor1?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if chi1 == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1}(op1,{usl1},?a)*{sigma}(lor1,{lsl1},{lsldot1})*{chi2_dagger}(op2,{usldot1},?b)"
+                id += " + "
+                if xi1_dagger == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar}(lor1,{usldot1},{usl1})*{xi2}(op2,{lsl1},?b)"
+                id_statements.append(id)
 
-            # psibar*simga2lor*psi
-            id = ""
-            id += f"{lsbar}(op1?op,spin1?spin,?a)*{sigma2lor}(lor1?lor,lor2?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
-            if chi1 == 0 or xi2 == 0:
-                id += "0"
-            else:
-                id += f"{chi1}(op1,{usl1},?a)*{sigma2}(lor1,lor2,{lsl1},{usl2})*{xi2}(op2,{lsl2},?b)"
-            id += " + "
-            if xi1_dagger == 0 or chi2_dagger == 0:
-                id += "0"
-            else:
-                id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar2}(lor1,lor2,{usldot1},{lsldot2})*{chi2_dagger}(op2,{usldot2},?b)"
-            id_statements.append(id)
+                # psibar*simga2lor*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{sigma2lor}(lor1?lor,lor2?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if chi1 == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1}(op1,{usl1},?a)*{sigma2}(lor1,lor2,{lsl1},{usl2})*{xi2}(op2,{lsl2},?b)"
+                id += " + "
+                if xi1_dagger == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar2}(lor1,lor2,{usldot1},{lsldot2})*{chi2_dagger}(op2,{usldot2},?b)"
+                id_statements.append(id)
 
-            ######################
-            ### psibarC*...*psi ###
-            ######################
-            lsbar = leftspinor + "barC"
-            rs = rightspinor
-            xi1, chi1_dagger = all_spinors[lsbar]
-            xi2, chi2_dagger = all_spinors[rs]
-            lsbar = get_commuting_op(lsbar)
-            rs = get_commuting_op(rs)
+            elif lsbar[-4:] == "barC" and rs[-1:] != "C":
+                ######################
+                ### psibarC*...*psi ###
+                ######################
+                xi1, chi1_dagger = all_spinors[lsbar]
+                xi2, chi2_dagger = all_spinors[rs]
+                lsbar = get_commuting_op(lsbar)
+                rs = get_commuting_op(rs)
 
-            # psibar*psi
-            id = ""
-            id += f"{lsbar}(op1?op,spin1?spin,?a)*{rs}(op2?op,spin1?spin,?b) = "
-            if xi1 == 0 or xi2 == 0:
-                id += "0"
-            else:
-                id += f"{xi1}(op1,{usl1},?a)*{xi2}(op2,{lsl1},?b)"
-            id += " + "
-            if chi1_dagger == 0 or chi2_dagger == 0:
-                id += "0"
-            else:
-                id += f"{chi1_dagger}(op1,{lsldot1},?a)*{chi2_dagger}(op2,{usldot1},?b)"
-            id_statements.append(id)
+                # psibar*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{rs}(op2?op,spin1?spin,?b) = "
+                if xi1 == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1}(op1,{usl1},?a)*{xi2}(op2,{lsl1},?b)"
+                id += " + "
+                if chi1_dagger == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1_dagger}(op1,{lsldot1},?a)*{chi2_dagger}(op2,{usldot1},?b)"
+                id_statements.append(id)
 
-            # psibar*gamma*psi
-            id = ""
-            id += f"{lsbar}(op1?op,spin1?spin,?a)*{gamma}(lor1?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
-            if xi1 == 0 or chi2_dagger == 0:
-                id += "0"
-            else:
-                id += f"{xi1}(op1,{usl1},?a)*{sigma}(lor1,{lsl1},{lsldot1})*{chi2_dagger}(op2,{usldot1},?b)"
-            id += " + "
-            if chi1_dagger == 0 or xi2 == 0:
-                id += "0"
-            else:
-                id += f"{chi1_dagger}(op1,{lsldot1},?a)*{sigmabar}(lor1,{usldot1},{usl1})*{xi2}(op2,{lsl1},?b)"
-            id_statements.append(id)
+                # psibar*gamma*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{gamma}(lor1?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if xi1 == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1}(op1,{usl1},?a)*{sigma}(lor1,{lsl1},{lsldot1})*{chi2_dagger}(op2,{usldot1},?b)"
+                id += " + "
+                if chi1_dagger == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1_dagger}(op1,{lsldot1},?a)*{sigmabar}(lor1,{usldot1},{usl1})*{xi2}(op2,{lsl1},?b)"
+                id_statements.append(id)
 
-            # psibar*simga2lor*psi
-            id = ""
-            id += f"{lsbar}(op1?op,spin1?spin,?a)*{sigma2lor}(lor1?lor,lor2?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
-            if xi1 == 0 or xi2 == 0:
-                id += "0"
-            else:
-                id += f"{xi1}(op1,{usl1},?a)*{sigma2}(lor1,lor2,{lsl1},{usl2})*{xi2}(op2,{lsl2},?b)"
-            id += " + "
-            if chi1_dagger == 0 or chi2_dagger == 0:
-                id += "0"
-            else:
-                id += f"{chi1_dagger}(op1,{lsldot1},?a)*{sigmabar2}(lor1,lor2,{usldot1},{lsldot2})*{chi2_dagger}(op2,{usldot2},?b)"
-            id_statements.append(id)
+                # psibar*simga2lor*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{sigma2lor}(lor1?lor,lor2?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if xi1 == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1}(op1,{usl1},?a)*{sigma2}(lor1,lor2,{lsl1},{usl2})*{xi2}(op2,{lsl2},?b)"
+                id += " + "
+                if chi1_dagger == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1_dagger}(op1,{lsldot1},?a)*{sigmabar2}(lor1,lor2,{usldot1},{lsldot2})*{chi2_dagger}(op2,{usldot2},?b)"
+                id_statements.append(id)
 
-            ######################
-            ### psibar*...*psiC ###
-            ######################
-            lsbar = leftspinor
-            rs = rightspinor + "C"
-            chi1, xi1_dagger = all_spinors[lsbar]
-            chi2, xi2_dagger = all_spinors[rs]
-            lsbar = get_commuting_op(lsbar)
-            rs = get_commuting_op(rs)
+            elif lsbar[-3:] == "bar" and rs[-1:] == "C":
+                ######################
+                ### psibar*...*psiC ###
+                ######################
+                lsbar = leftspinor
+                rs = rightspinor + "C"
+                chi1, xi1_dagger = all_spinors[lsbar]
+                chi2, xi2_dagger = all_spinors[rs]
+                lsbar = get_commuting_op(lsbar)
+                rs = get_commuting_op(rs)
 
-            # psibar*psi
-            id = ""
-            id += f"{lsbar}(op1?op,spin1?spin,?a)*{rs}(op2?op,spin1?spin,?b) = "
-            if chi1 == 0 or chi2 == 0:
-                id += "0"
-            else:
-                id += f"{chi1}(op1,{usl1},?a)*{chi2}(op2,{lsl1},?b)"
-            id += " + "
-            if xi1_dagger == 0 or xi2_dagger == 0:
-                id += "0"
-            else:
-                id += f"{xi1_dagger}(op1,{lsldot1},?a)*{xi2_dagger}(op2,{usldot1},?b)"
-            id_statements.append(id)
+                # psibar*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{rs}(op2?op,spin1?spin,?b) = "
+                if chi1 == 0 or chi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1}(op1,{usl1},?a)*{chi2}(op2,{lsl1},?b)"
+                id += " + "
+                if xi1_dagger == 0 or xi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{xi2_dagger}(op2,{usldot1},?b)"
+                id_statements.append(id)
 
-            # psibar*gamma*psi
-            id = ""
-            id += f"{lsbar}(op1?op,spin1?spin,?a)*{gamma}(lor1?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
-            if chi1 == 0 or xi2_dagger == 0:
-                id += "0"
-            else:
-                id += f"{chi1}(op1,{usl1},?a)*{sigma}(lor1,{lsl1},{lsldot1})*{xi2_dagger}(op2,{usldot1},?b)"
-            id += " + "
-            if xi1_dagger == 0 or chi2 == 0:
-                id += "0"
-            else:
-                id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar}(lor1,{usldot1},{usl1})*{chi2}(op2,{lsl1},?b)"
-            id_statements.append(id)
+                # psibar*gamma*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{gamma}(lor1?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if chi1 == 0 or xi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1}(op1,{usl1},?a)*{sigma}(lor1,{lsl1},{lsldot1})*{xi2_dagger}(op2,{usldot1},?b)"
+                id += " + "
+                if xi1_dagger == 0 or chi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar}(lor1,{usldot1},{usl1})*{chi2}(op2,{lsl1},?b)"
+                id_statements.append(id)
 
-            # psibar*simga2lor*psi
-            id = ""
-            id += f"{lsbar}(op1?op,spin1?spin,?a)*{sigma2lor}(lor1?lor,lor2?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
-            if chi1 == 0 or chi2 == 0:
-                id += "0"
-            else:
-                id += f"{chi1}(op1,{usl1},?a)*{sigma2}(lor1,lor2,{lsl1},{usl2})*{chi2}(op2,{lsl2},?b)"
-            id += " + "
-            if xi1_dagger == 0 or xi2_dagger == 0:
-                id += "0"
-            else:
-                id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar2}(lor1,lor2,{usldot1},{lsldot2})*{xi2_dagger}(op2,{usldot2},?b)"
-            id_statements.append(id)
+                # psibar*simga2lor*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{sigma2lor}(lor1?lor,lor2?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if chi1 == 0 or chi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1}(op1,{usl1},?a)*{sigma2}(lor1,lor2,{lsl1},{usl2})*{chi2}(op2,{lsl2},?b)"
+                id += " + "
+                if xi1_dagger == 0 or xi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar2}(lor1,lor2,{usldot1},{lsldot2})*{xi2_dagger}(op2,{usldot2},?b)"
+                id_statements.append(id)
 
             form = ""
             for id in id_statements:
                 form += f"id once ifmatch->{repetition} {id};\n"
 
-            form += "\n"
-
             return form
 
+        barfields = []
+        fields = []
+        for field in self.fields:
+            if field.non_conj_name in op_config["fermionfields"].keys():
+                if "bar" in field.name:
+                    barfields.append(field.name)
+                else:
+                    fields.append(field.name)
+
+
+        n_bilinears = (len(fields) + len(barfields)) // 2
+
+        # Group the occurring fermions into pair in which they could have occurred in the summand.
+        possible_bilinears = []
+        for barfield in barfields:
+            for field in fields:
+                if barfield[-4:] == "barC" and field[-1:] == "C":
+                    continue
+                possible_bilinears.append((barfield, field))
+
+        possible_bilinears = list(set(possible_bilinears))
+
         form = []
-        for i in range(1, n_repetitions + 1):
+        for i in range(1, n_bilinears + 1):
             lsl1, usl1 = next(gen_index_sl)
             lsl2, usl2 = next(gen_index_sl)
             lsldot1, usldot1 = next(gen_index_sldot)
             lsldot2, usldot2 = next(gen_index_sldot)
             indices = [lsl1, usl2, lsl2, usl2, lsldot1, usldot1, lsldot2, usldot2]
-            for leftspinor in spinors:
-                for rightspinor in spinors:
+            for leftspinor, rightspinor in possible_bilinears:
                     form.append(for_unique_spinorpair(leftspinor, rightspinor, indices, i))
             form.append(f"\nlabel {i};\n\n")
 
-        return "".join(form)
+        return "".join(form), n_bilinears
+
 
     def form_convertDerivative(self, n_der:int=4):
         sigma = op_config["tensors"]["sigma"]["mathematica"]["sigma"]

@@ -664,7 +664,7 @@ def convertviaform(term, n_der, max_dim):
     assert len(term) == 1
     summand = term[0]
     # FIXME: Correct index structure.
-    sl2c_dirac_to_weyl = summand.form_convertDirac(max_dim)
+    sl2c_dirac_to_weyl, label = summand.form_convertDirac(max_dim)
     sl2c_derivative_in_SL2C = summand.form_convertDerivative(n_der)
     # TODO: Convert fieldstrength tensors.
 

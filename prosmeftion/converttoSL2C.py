@@ -16,11 +16,13 @@ from pathlib import Path
 from typing import List
 
 from .sl2c.class_term import Term
-from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values
-from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
-from .yProjection.read_write import get_terms, mathematica_to_form
+from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values, n_der
+from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
+from .yProjection.read_write import get_terms, mathematica_to_form, writefile
 from .yProjection.coefficient import Factor
 from .sun_projection import equalize_field_indices
+from .general import declaration_SL2C_sets
+from .pyform.pyformfunction import pyForm
 
 # logger_autoeft = logging.getLogger("autoeft")
 # logger = logging.getLogger("autoeft.projection")
@@ -54,77 +56,6 @@ logger = logger_autoeft.getChild(__name__)
 # Gammamatrices, e.g.: gamma[{lor1}, {spin6497, spin6498}]
 # Dictionary for names in form.
 
-def expression_raw(filename, header):
-    """
-    Return operator expression as one string without whitespaces.
-
-    Parameters
-    ----------
-    filename : str
-        Filepath.
-    header : int
-        Number of line before expression starts.
-
-    Returns
-    -------
-    line : str
-        Operators expression as one string without whitespaces.
-
-    """
-    with open(filename, "r") as file:
-        for i in range(header):
-            file.readline()
-        line = file.read()
-        # Replace all whitespaces and newlines: \s = [\t\n\r\f\v]
-        line = re.sub(r"(\s)*", "", line)
-        # remove curly braces around expression
-        line = line[1:-1]
-    return line
-
-def writefile(filename, list_terms, write=True):
-    """
-    Print elements of a list "list_terms" in file "filename" in format:
-
-        0: list_terms[0]
-        ===============================
-        1: list_terms[1]
-        ===============================
-        2: list_terms[1]
-        ===============================
-        .
-        .
-        .
-
-    Parameters
-    ----------
-    filename : str
-        Name of the file the content should be written on..
-    list_terms : [str, str, str, ...]
-        list with string entries that should be printed in file.
-    write : Boolean
-        Decides whether content is written in file or not. If write = False, only the number of terms is returned.
-
-    Returns
-    -------
-    count : int
-        Returns number of nonempty entries. In principle not necessary in this case, because in findOpandCoeff
-        an error occurs when nothing is found. So the program is always determinate before writefile is called
-        if there is an empty element.
-
-    """
-    # delete file content
-    content = ""
-    count = 0
-    for i, term in enumerate(list_terms):
-        if term != "":
-            count += 1
-        if write:
-            content += f"{i:d}: {term:s}\n"
-            content += "===============================\n"
-    if write:
-        with open(filename, "w") as file:
-            file.write(content)
-    return count
 
 def findOpandCoeff(expression):
     """
@@ -717,7 +648,7 @@ def get_termobject(args):
     coeff, coperator, id = args[0], args[1], args[2]
     return Term(coeff, coperator, id)
 
-def convertviaform(term):
+def convertviaform(term, n_der, max_dim):
     """
     Convert Term via FORM and return converted object.
     Parameters
@@ -728,6 +659,19 @@ def convertviaform(term):
     -------
 
     """
+    logger.info("Convert operators into SL2C notation.")
+    # Write SL2C and set FORM-file:
+    assert len(term) == 1
+    summand = term[0]
+    # FIXME: Correct index structure.
+    sl2c_dirac_to_weyl = summand.form_convertDirac(max_dim)
+    sl2c_derivative_in_SL2C = summand.form_convertDerivative(n_der)
+    # TODO: Convert fieldstrength tensors.
+
+    form_SL2C = declaration_SL2C_sets(term[0].possible_indices, n_der)
+    send_to_form = [form_SL2C, f"{summand:c}", sl2c_dirac_to_weyl, sl2c_derivative_in_SL2C]
+    expression = pyForm(FORM_GENERAL_PATH / "converttoSL2C.frm", send_to_form, input_dir=FORM_GENERAL_PATH, prompt= "READY")  # , debug=True, preprocessor_only=True
+    expression = re.sub(r"(\s)*", "", expression)
     # Create FORM files:
     filename = term.name  # f"term{i:d}"
     # TODO: Update!
@@ -748,15 +692,15 @@ def convertviaform(term):
     ###
     return formoutput_formatted, new_term  # Term_form(formoutput, term.coeff, term.name)
 
-def converttoSL2C(inputfile, header = 0, pprint=True):
+def converttoSL2C(terms, max_dim):
     """
     Output Terms of BSUOLEA are read in and formatted in SL2C Notation via FORM.
     Parameters
     ----------
     inputfile: str
         Filename of the inputfile in the input directory.
-    header
-        Number of lines before the term starts.
+    max_dim
+        Maximum mass dimension which occurs in the Lagrangian.
     pprint: bool
         Print formatted terms if True.
 
@@ -764,24 +708,7 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
     -------
     Array of formatted term_form objects.
     """
-    # Extract coefficient and Operator from the output:
-    inputfile = Path(inputfile)
-    if inputfile.is_absolute():
-        # if header:
-        expression = expression_raw(inputfile, header)
-    else:
-        expression = expression_raw(INPUT_PATH / inputfile, header)
 
-    form_expr = mathematica_to_form(expression)
-    # Read in terms in the desired object structure:
-    terms = get_terms(form_expr)
-
-    logger.info("Read in all terms")
-    # with mp.Pool() as pool:  # mp.Pool(20) gives 20 parallel processes
-    # terms = list(map(get_termobject, args))  # pool.map
-
-    # del coefficient, coperator, expression
-    writefile(PROJECTION_PATH / "terms.txt", terms)
 
     # Write formfiles:
     logger.info("Run FORM")
@@ -789,7 +716,8 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
     # with mp.Pool() as pool:
     #     terms_after_form = list(map(list, zip(*pool.map(convertviaform, terms))))
     # TODO:
-    terms_after_form = list(map(list, zip(*map(convertviaform, terms))))
+    nDer = n_der(max_dim)
+    terms_after_form = [list(convertviaform(term, nDer, max_dim)) for term in terms]  # list(map(list, zip(*map(convertviaform, terms))))
     ops = terms_after_form[0]
     form_terms = terms_after_form[1]
 

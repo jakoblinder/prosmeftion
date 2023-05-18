@@ -41,6 +41,14 @@ class Indices_Model(Index, MutableMapping):
         else:
             self.indices = indices
 
+    @property
+    def indices(self):
+        return self._indices
+
+    @indices.setter
+    def indices(self, fp_indices):
+        self._indices = tuple(fp_indices)
+
     @abstractmethod
     def __repr__(self):
         return f"{', '.join(map(repr, self.indices))}"
@@ -175,7 +183,7 @@ class Indices_Model(Index, MutableMapping):
             logger.debug(f"The index {val:s} will be inserted.")
         indices = list(self.indices)
         indices.insert(key, val)
-        self.indices = tuple(indices)
+        self.indices = indices
 
     def append(self, val):
         if not isinstance(val, Index):
@@ -214,7 +222,7 @@ class Indices_Model(Index, MutableMapping):
                     yield i
 
     @staticmethod
-    def infinite_numIndices(single_index, max=50):
+    def infinite_numIndices(single_index, max=500):
         """
         Gives generator which returns from a given single index, e.g. \alpha indices \alpha_{1} to \alpha_{max}.
         Parameters
@@ -315,7 +323,7 @@ class Indices_Operator(Indices_Model):
 
     @indices.setter
     def indices(self, fp_indices):
-        self._indices = fp_indices
+        self._indices = tuple(fp_indices)
 
     def __repr__(self):
         return super().__repr__()
@@ -337,6 +345,13 @@ class Possible_Indices(Indices_Model):
     def __format__(self, key):
         """Specify the format for "format" function in print statement: Here the same as the print statement itself."""
         return super().__format__(key)
+
+    def __iadd__(self, other):
+        """Combine two sets of indices (x += y operation)."""
+        for i in other:
+            if not i.is_in(self):
+                self.append(i)
+        return self  # Return the instance itself (important for the index generators)!
 
     @property
     def indices(self):
@@ -426,10 +441,9 @@ class Possible_Indices(Indices_Model):
             -------
 
             """
-            # TODO: Is the following line correct and necessary?
-            indices = sorted(indices, key=lambda x: str(x.id))
+            indices = sorted(indices, key=lambda index: str(index.id))
             for index in indices:
-                # check that the dual usl index is in the usl list and if not add him
+                # check that the dual usl index is in the usl list and if not add it
                 if not index.dual_index.is_in(dual_indices):
                     dual_indices.append(index.dual_index)
                     # sort them again
@@ -502,24 +516,42 @@ class Possible_Indices(Indices_Model):
         continue_object = object()
         def gen_new_index(typ: str, i: int, derIndex: Union[bool, int, object]):
             index = Index(f"{typ}{i}", derIndex)
-            if exclude_indices:
-                index_list = self[typ] + exclude_indices[typ]
-            else:
-                index_list = self[typ]
-            if index.is_in(index_list.indices):
-                return continue_object
-                # continue
-            elif i is sentinel:
-                logger.error("Not possible to generate a new index, since generator is out of range.")
-                sys.exit("STOP")
-            else:
-                self.append(index)
-                if index.dual_index != index:
-                    self.append(index.dual_index)
-                    # yield index, index.dual_index
-                    return index, index.dual_index
+
+            if index.dual_index != index:
+                # Dual index is different from ordinary index
+                dual_index = index.dual_index
+                if exclude_indices:
+                    index_list = self[index.typ] + exclude_indices[index.typ]
+                    dualindex_list = self[dual_index.typ] + exclude_indices[dual_index.typ]
                 else:
-                    # yield index
+                    index_list = self[typ]
+                    dualindex_list = self[dual_index.typ]
+
+                if index.is_in(index_list.indices) or dual_index.is_in(dualindex_list.indices):
+                    # continue
+                    return continue_object
+                elif i is sentinel:
+                    logger.error("Not possible to generate a new index, since generator is out of range.")
+                    sys.exit("STOP")
+                else:
+                    self.append(index)
+                    self.append(dual_index)
+                    return index, dual_index
+
+            else:
+                if exclude_indices:
+                    index_list = self[index.typ] + exclude_indices[index.typ]
+                else:
+                    index_list = self[typ]
+
+                if index.is_in(index_list.indices):
+                    # continue
+                    return continue_object
+                elif i is sentinel:
+                    logger.error("Not possible to generate a new index, since generator is out of range.")
+                    sys.exit("STOP")
+                else:
+                    self.append(index)
                     return index
 
         for i in count(fp_min, fp_max):

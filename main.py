@@ -8,16 +8,16 @@ from pathlib import Path
 from yaml import safe_load
 
 from prosmeftion import CONFIG_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, n_der, get_basis, run_form
-from prosmeftion.general import form_declarations
+from prosmeftion.general import form_declarations, declaration_SL2C_sets
 
 from prosmeftion.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
+from prosmeftion.yProjection.read_write import remove_header_and_spaces, mathematica_to_form, get_terms
 from prosmeftion.converttoSL2C import converttoSL2C
 from prosmeftion.tex import tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms, tex_sorted_terms_before_sun
 from prosmeftion.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
 from prosmeftion.yProjection.tableau import test
 from prosmeftion.yProjection.indices import Possible_Indices
 from prosmeftion.yProjection.rfr import rfr, rfr_sun
-from prosmeftion.general import declaration_SL2C_sets
 
 # configure logger
 timestamp = datetime.now()
@@ -36,6 +36,13 @@ parser.add_argument(
     "-t", "--tex", action="store_true", help="save supplementary tex files"
 )
 parser.add_argument("-d", "--dimension", type=int, default=6, help="maximum mass dimension for the projection")
+parser.add_argument(
+    "-f",
+    "--format",
+    choices=["form", "mathematica"],
+    default="form",
+    help="Specify in which format the input is given.",
+)
 parser.add_argument(
     "-l",
     "--log",
@@ -73,11 +80,16 @@ def main(input_file, max_dim = 6, debug=None):
         file.write(form_declarations(nDer))
 
     # TODO: Move stuff here from Convert to SL2C
-    # Convert from mathematica to FORM
-    # Read terms in to Summand objects.
-    # Only then to Conversion in y-Basis notation.
+    expression = remove_header_and_spaces(input_file, header=args.skip)
 
-    terms = converttoSL2C(input_file, header=args.skip, pprint=False)
+    if args.format == "mathematica":
+        expression = mathematica_to_form(expression)
+
+    # Extract coefficient and Operator from the output and pack them into the desired object structure:
+    terms = get_terms(expression)
+
+    # Conversion in y-Basis notation:
+    terms = converttoSL2C(terms, max_dim)
 
     if args.tex:
         tex_unsorted_terms(inputfilename, terms)

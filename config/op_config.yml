@@ -74,6 +74,16 @@ tensors:
         -
           - Lsldot
           - Lsldot
+    "[lorentzeps]":
+      description: "4 index epsilontensor of the Lorentz group."
+      tex: \varepsilon
+      mathematica:
+        loreps: "[lorentzeps]"
+      index_structure:
+        - lor
+        - lor
+        - lor
+        - lor
     "[su2dK]":
       description: "Kronecker-delta of SU2."
       tex: \delta
@@ -238,6 +248,16 @@ tensors:
         - lor
         - spin
         - spin
+    sigma2lor:
+      description: "SL2C sigmamatrix with two lorentz indices in the dirac spinor notation."
+      tex: \sigma
+      mathematica:
+        sigma2lor: sigma2lor
+      index_structure:
+        - lor
+        - lor
+        - spin
+        - spin
     TSU2:
       description: "Symmetrized SU2-Basistensor."
       tex: T_{SU2}
@@ -313,6 +333,7 @@ bosonfields:
       conj: True
       tex: H
       ac: False
+      helicity: 0      
       mathematica:
         H: H
         conj[H]: "[H+]"
@@ -368,8 +389,11 @@ bosonfields:
     GL:
       description: "Left handed fieldstrengthtensor of SU3."
       conj: True
+      ac: False
+      helicity: -1
       tex: G_{\mathrm{L}}
       tex_hc: G_{\mathrm{R}}
+      non_singlet: G
       mathematica:
         GL: GL
         conj[GL]: "GR"
@@ -392,8 +416,11 @@ bosonfields:
     WL:
       description: "Left handed fieldstrengthtensor of SU2."
       conj: True
+      ac: False
+      helicity: -1
       tex: W_{\mathrm{L}}
       tex_hc: W_{\mathrm{R}}
+      non_singlet: W
       mathematica:
         WL: WL
         conj[WL]: "WR"
@@ -414,8 +441,11 @@ bosonfields:
     BL:
       description: "Left handed fieldstrengthtensor of U1."
       conj: True
+      ac: False
+      helicity: -1
       tex: B_{\mathrm{L}}
       tex_hc: B_{\mathrm{R}}
+      non_singlet: B
       mathematica:
         BL: BL
         conj[BL]: "BR"
@@ -450,12 +480,22 @@ fermionfields:
       conj: True
       tex: l
       ac: True
+      weyl: L  # key of the corresponding Weyl spinor
       mathematica:
         l: l
         bar[l]: lbar
+        C[l]: lC
+        C[bar[l]]: lbarC
       autoeft:
         l: L
-        lbar: "[L+]"
+        lbar: "L+"
+        lC: "L+"
+        lbarC: L
+      diracspinor:
+        l: [L, 0]
+        lbar: [0, "[L+]"]
+        lC: [0, "[L+]"]
+        lbarC: [L, 0]
       index_structure:
         - spin
         - gauge
@@ -464,7 +504,10 @@ fermionfields:
       description: "Lepton dublett of SU2."
       spinor: Weyl
       conj: True
+      ac: True
+      helicity: -1/2
       tex: L
+      dirac: l  # key of the corresponding Dirac spinor
       mathematica:
         L: L
         conj[L]: "[L+]"
@@ -486,12 +529,22 @@ fermionfields:
       conj: True
       tex: e
       ac: True
+      weyl: "[e_C]"
       mathematica:
         e: e
         bar[e]: ebar
+        C[e]: eC
+        C[bar[e]]: ebarC
       autoeft:
-        e: eC+
+        e: "eC+"
         ebar: eC
+        eC: eC
+        ebarC: "eC+"
+      diracspinor:
+        e: [0, "[e_C+]"]
+        ebar: ["[e_C]", 0]
+        eC: ["[e_C]", 0]
+        ebarC: [0, "[e_C+]"]
       index_structure:
         - spin
         - flav
@@ -499,7 +552,10 @@ fermionfields:
       description: "Right handed leptons."
       spinor: Weyl
       conj: True
+      ac: True
+      helicity: -1/2
       tex: e_{\mathbb{C}}
+      dirac: e
       mathematica:
         eC: "[e_C]"
         conj[eC]: "[e_C+]"
@@ -519,12 +575,22 @@ fermionfields:
       conj: True
       tex: u
       ac: True
+      weyl: "[u_C]"
       mathematica:
         u: u
         bar[u]: ubar
+        C[u]: uC
+        C[bar[u]]: ubarC
       autoeft:
-        u: uC+
+        u: "uC+"
         ubar: uC
+        uC: uC
+        ubarC: "uC+"
+      diracspinor:
+        u: [0, "[u_C+]"]
+        ubar: ["[u_C]", 0]
+        uC: ["[u_C]", 0]
+        ubarC: [0, "[u_C+]"]
       index_structure:
         - spin
         - colf
@@ -533,7 +599,10 @@ fermionfields:
       description: "Right up-type quarks."
       spinor: Weyl
       conj: True
+      ac: True
+      helicity: -1/2
       tex: u_{\mathbb{C}}
+      dirac: u
       mathematica:
         uC: "[u_C]"
         conj[uC]: "[u_C+]"
@@ -556,12 +625,22 @@ fermionfields:
       conj: True
       tex: d
       ac: True
+      weyl: "[d_C]"
       mathematica:
         b: b
         bar[b]: bbar
+        C[b]: bC
+        C[bar[b]]: bbarC
       autoeft:
-        b: dC+
+        b: "dC+"
         bbar: dC
+        bC: dC
+        bbarC: "dC+"
+      diracspinor:
+        b: [0, "[d_C+]"]
+        bbar: ["[d_C]", 0]
+        bC: ["[d_C]", 0]
+        bbarC: [0, "[d_C+]"]
       index_structure:
         - spin
         - colf
@@ -570,7 +649,10 @@ fermionfields:
       description: "Right down-type quarks."
       spinor: Weyl
       conj: True
+      ac: True
+      helicity: -1/2
       tex: d_{\mathbb{C}}
+      dirac: b
       mathematica:
         dC: "[d_C]"
         conj[dC]: "[d_C+]"
@@ -593,12 +675,23 @@ fermionfields:
       conj: True
       tex: q
       ac: True
+      
+      weyl: Q
       mathematica:
         q: q
         bar[q]: qbar
+        C[q]: qC
+        C[bar[q]]: qbarC
       autoeft:
         q: Q
-        qbar: Q+
+        qbar: "Q+"
+        qC: "Q+"
+        qbarC: Q
+      diracspinor:
+        q: [Q, 0]
+        qbar: [0, "[Q+]"]
+        qC: [0, "[Q+]"]
+        qbarC: [Q, 0]
       index_structure:
         - spin
         - gauge
@@ -608,7 +701,10 @@ fermionfields:
       description: "Quark dublett of SU2."
       spinor: Weyl
       conj: True
+      ac: True
+      helicity: -1/2
       tex: Q
+      dirac: q
       mathematica:
         Q: Q
         conj[Q]: "[Q+]"

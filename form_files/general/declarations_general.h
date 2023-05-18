@@ -1,7 +1,7 @@
 *--#[ tensors :
-CFunction yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [su2dK], [su3dK], [sl2CdK], [flavdK], T, sigma, sigmabar, sigma2, sigmabar2, gamma, TSU2, TSU3;
+CFunction yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [lorentzeps], T, sigma, sigmabar, sigma2, sigmabar2, gamma, sigma2lor, TSU2, TSU3;
 * Auxiliary antisymmetric epsilons, used in combination with replace_.
-CFunction [su2epsA](antisymmetric), [su3epsA](antisymmetric), [sl2CepsA](antisymmetric);
+CFunction [su2epsA](antisymmetric), [su3epsA](antisymmetric), [sl2CepsA](antisymmetric), [lorentzepsA](antisymmetric);
 
 * Declare Kronecker Delta symbol for Sl2C Indices, because built in can not handle upper and lower (un-)dottet indices.
 * Since two indices are also symmetric when they are cyclic and vice versa, and pattern matching is not allowed for symmetric function but for cyclic, [sl2CdK] is declared as cyclic.
@@ -9,37 +9,54 @@ CFunction [su2dK](cyclic), [su3dK](cyclic), [sl2CdK](cyclic), [flavdK](cyclic);
 *--#] tensors :
 
 *--#[ NCtensors :
-Function yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [su2dK], [su3dK], [sl2CdK], [flavdK], T, sigma, sigmabar, sigma2, sigmabar2, gamma, TSU2, TSU3;
+Function yu, [yu+], yd, [yd+], ye, [ye+], [su2eps], [su3eps], [sl2Ceps], [lorentzeps], [su2dK], [su3dK], [sl2CdK], [flavdK], T, sigma, sigmabar, sigma2, sigmabar2, gamma, sigma2lor, TSU2, TSU3;
 * Declare Kronecker Delta symbol for Sl2C Indices, because built in can not handle upper and lower (un-)dottet indices.
 * Since two indices are also symmetric when they are cyclic and vice versa, and pattern matching is not allowed for symmetric function but for cyclic, [sl2CdK] is declared as cyclic.
 Function [su2dK](cyclic), [su3dK](cyclic), [sl2CdK](cyclic), [flavdK](cyclic);
 *--#] NCtensors :
 
 *--#[ coefficient :
-Symbols d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]], n;
+Symbols d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]], n, N;
 Symbols [At/Ms], [mu/Ms], [Mu/Ms], [muM/Ms];
 *--#] coefficient :
 
 *--#[ operators :
-Off Statistics;
-Function H, [H+], G, W, B, GL, GR, WL, WR, BL, BR;
-CFunction Hc, [H+c], Gc, Wc, Bc, GLc, GRc, WLc, WRc, BLc, BRc;
+* Define all fields and auxiliary fields:
+Function lbar, e, bbar, bC, u, [H+], qbarC, l, lbarC, qC, eC, ubar, H, qbar, B, ebarC, uC, bbarC, ebar, b, W, G, q, ubarC, lC;
+CFunction Wc, [H+c], qbarc, eCc, uCc, qCc, ubarc, qc, lc, Bc, lCc, ebarCc, Gc, ec, uc, bbarc, bCc, qbarCc, lbarCc, lbarc, ubarCc, bbarCc, bc, Hc, ebarc;
+CFunction Lc, [d_Cc], [u_C+c], [d_C+c], WLc, [L+c], [e_Cc], Qc, [H+c], [Q+c], BLc, GLc, [e_C+c], [u_Cc], Hc, GRc, BRc, WRc;
+Function GL, [u_C+], [e_C+], Q, H, [Q+], [d_C], GR, WL, BL, BR, WR, L, [H+], [L+], [e_C], [d_C+], [u_C];
 
-Function D, l, lbar, L, [L+], e, ebar, [e_C], [e_C+], u, ubar, [u_C], [u_C+], b, bbar, [d_C], [d_C+], q, qbar, Q, [Q+];
-CFunction Dc, lc, lbarc, Lc, [L+c], ec, ebarc, [e_Cc], [e_C+c], uc, ubarc, [u_Cc], [u_C+c], bc, bbarc, [d_Cc], [d_C+c], qc, qbarc, Qc, [Q+c];
+* Derivative:
+Function D;
+Set fieldstrengthsc: GLc, GRc, WLc, WRc, BLc, BRc;
+Set fieldstrengths: GL, GR, WL, WR, BL, BR;
 
-Set Fieldc: WLc, WRc, BLc, BRc;
-Set Field: WL, WR, BL, BR;
+CFunction xi1, [xi1+], chi1, [chi1+], xi2, [xi2+], chi2, [chi2+];
 
-CFunction xi, [xi+], chi, [chi+];
+Set spinors: l, e, u, b, q;
+Set spinorsAdj: lbar, ebar, ubar, bbar, qbar;
+Set spinorsAll: l, e, u, b, q, lbar, ebar, ubar, bbar, qbar;
 
-Set spinors: l, e, [e_C], u, [u_C], b, [d_C], q;
-Set spinorsAdj: lbar, ebar, [e_C+], ubar, [u_C+], bbar, [d_C+], qbar;
-Set spinorsAll: l, e, [e_C], u, [u_C], b, [d_C], q, lbar, ebar, [e_C+], ubar, [u_C+], bbar, [d_C+], qbar;
+Set spinorsc: lc, ec, uc, bc, qc;
+Set spinorsAdjc: lbarc, ebarc, ubarc, bbarc, qbarc;
+Set spinorsAllc: lc, ec, uc, bc, qc, lbarc, ebarc, ubarc, bbarc, qbarc;
 
-Set spinorsc: lc, ec, [e_Cc], uc, [u_Cc], bc, [d_Cc], qc;
-Set spinorsAdjc: lbarc, ebarc, [e_C+c], ubarc, [u_C+c], bbarc, [d_C+c], qbarc;
-Set spinorsAllc: lc, ec, [e_Cc], uc, [u_Cc], bc, [d_Cc], qc, lbarc, ebarc, [e_C+c], ubarc, [u_C+c], bbarc, [d_C+c], qbarc;
+* List of all possibly occurring fields bevor they are converted into Lorentz irreps
+* Note: If a field (like e.g. a fieldstrength tensor B) is converted into two different Lorentz irreps (BL, BR) is has to occur twice in this list
+Set AllFields: H, [H+], G, G, W, W, B, B, l, lbar, lC, lbarC, e, ebar, eC, ebarC, u, ubar, uC, ubarC, b, bbar, bC, bbarC, q, qbar, qC, qbarC;
+
+* List of the same fields as in AllFields (in the same order!) but defined as a commuting Function
+Set AllcFields: Hc, [H+c], Gc, Gc, Wc, Wc, Bc, Bc, lc, lbarc, lCc, lbarCc, ec, ebarc, eCc, ebarCc, uc, ubarc, uCc, ubarCc, bc, bbarc, bCc, bbarCc, qc, qbarc, qCc, qbarCc;
+
+* List of the same fields (first as commutative fields) as in AllFields (in the same order!) but with possible replacements like Dirac to Weyl spinors and so on
+Set AllcconFields: Hc, [H+c], GLc, GRc, WLc, WRc, BLc, BRc, Lc, [L+c], [L+c], Lc, [e_C+c], [e_Cc], [e_Cc], [e_C+c], [u_C+c], [u_Cc], [u_Cc], [u_C+c], [d_C+c], [d_Cc], [d_Cc], [d_C+c], Qc, [Q+c], [Q+c], Qc;
+
+* Now as noncommutative fields
+Set AllconFields: H, [H+], GL, GR, WL, WR, BL, BR, L, [L+], [L+], L, [e_C+], [e_C], [e_C], [e_C+], [u_C+], [u_C], [u_C], [u_C+], [d_C+], [d_C], [d_C], [d_C+], Q, [Q+], [Q+], Q;
+
+* Set for convenient insertion of op1, op2, ... indices
+Set op: op1,...,op100;
 
 * D2 = D_mu * D^mu:
 Function D2;

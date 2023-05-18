@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional, List
 
 
-def pyForm(form_path: Path, write: Optional[str] = [], prompt: Optional[str] = "", input_dir: Optional[Path] = None) -> str:
+def pyForm(form_path: Path, write: Optional[str] = [], prompt: Optional[str] = "", input_dir: Optional[Path] = None, preprocessor_only=False, debug=False, recursion_depth=0) -> str:
     """
     Establishes a pipe connection to FORM for a fast, two-way communication of Python and FORM without the
     generation of input and output files.
@@ -25,12 +25,17 @@ def pyForm(form_path: Path, write: Optional[str] = [], prompt: Optional[str] = "
     In order to avoid deadlocks caused by FORM, all messages FORM should receive are sent in the beginning and FORMs
     response is read only once in the end.
 
+    Write in FORM: "#setexternal `PIPE1_'" to specify the Pipe.
+    Messages are received in form with "#fromexternal"
+    and written to Python with e.g. "#toexternal "%E\n", expression".
+
     :param form_path:
         Path of the FORM program to be run.
     :param write:
         List of Expressions which are piped to FORM.
     :param prompt:
-        Prompt used in FORM to determine the end of an expression.
+        Prompt (e.g.: "READY") used in FORM (-> "#prompt READY")to determine the end of an expression.
+
     :param input_dir:
         FORM is executed with the "-p" option and a path of a directory for input, include, procedure
         and subroutine files.
@@ -38,11 +43,24 @@ def pyForm(form_path: Path, write: Optional[str] = [], prompt: Optional[str] = "
     :return:
         Messages send by FORM into the pipe.
     """
+    if debug:
+        with open(form_path) as file:
+            formprogram = file.read()
+            formprogram = re.sub(r"#setexternal `PIPE1_'", "", formprogram)
+            formprogram = re.sub(r"#prompt READY", "", formprogram)
+            formprogram = re.sub(r"#toexternal", "#write", formprogram)
+            for message in write:
+                formprogram = re.sub(r"#fromexternal",message,formprogram, count=1)
+        return formprogram
+
     r_py, w_form = os.pipe()
     r_form, w_py = os.pipe()
     extra_args = ["-q", "-M"]  # ["-q", "-M"]
     if input_dir:
         extra_args += ["-p", str(input_dir)]
+    if preprocessor_only:
+        # Run only the preprocessor and dump its output.
+        extra_args.append("-y")
     command = (
         ["form", "-pipe", f"{r_py},{w_py}"]
         + extra_args
@@ -61,8 +79,11 @@ def pyForm(form_path: Path, write: Optional[str] = [], prompt: Optional[str] = "
         os.write(w_form, f"{process.pid},{os.getpid()}\n".encode(encoding="ascii"))
         assert int(os.read(r_form, 8).decode()) == process.pid
         try:
-            for message in write:
+            for i, message in enumerate(write):
                 os.write(w_form, f"{message}\n{prompt}\n".encode(encoding="ascii"))
+                if preprocessor_only:
+                    print(f"{i+1}. Message:")
+                    print(f"{message}\n{prompt}\n".encode(encoding="ascii"))
         except BrokenPipeError:
             return pyForm(form_path, write, prompt, input_dir)
         finally:
@@ -70,7 +91,7 @@ def pyForm(form_path: Path, write: Optional[str] = [], prompt: Optional[str] = "
 
         if process.stdout:
             console_output = process.stdout.read().decode()
-            if re.search(r"terminating", console_output):
+            if re.search(r"terminating", console_output) or preprocessor_only:
                 # FORM has thrown an error
                 raise subprocess.SubprocessError(f"FORM message:\n{console_output}")
 
@@ -83,7 +104,11 @@ def pyForm(form_path: Path, write: Optional[str] = [], prompt: Optional[str] = "
             data = re.sub(r"\\", "", data)  # Remove newline character from FORM.
             return data
         else:
-            return pyForm(form_path, write, prompt, input_dir)
+            if recursion_depth >= 10:
+                print(f"Aborted after {recursion_depth + 1} tries.")
+                raise subprocess.SubprocessError(f"FORM message:\n{console_output}")
+            print("New_Try!")
+            return pyForm(form_path, write, prompt, input_dir, recursion_depth=recursion_depth+1)
 
 if __name__ == "__main__":
     form_path = Path("pyform_1channel.frm").resolve()

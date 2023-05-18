@@ -19,19 +19,48 @@ INPUT_PATH = PROJECTION_PATH / "BS"
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
+def remove_header_and_spaces(filepath, header):
+    """
+    Return operator expression as one string without whitespaces and linebreaks.
+
+    Parameters
+    ----------
+    filepath : str
+        Filepath.
+    header : int
+        Number of line before expression starts.
+
+    Returns
+    -------
+    content : str
+        Operators expression as one string without whitespaces and linebreaks.
+
+    """
+    filepath = filepath.resolve()
+    with open(filepath, "r") as file:
+        for i in range(header):
+            file.readline()
+        content = file.read()
+        # Replace all whitespaces and newlines: \s = [\t\n\r\f\v]
+        content = re.sub(r"(\s)*", "", content)
+        # remove curly braces around expression
+    return content
+
 def mathematica_to_form(ma_expr: str):
     """
 
     Parameters
     ----------
     ma_expr
-        Expression in mathematica format as one string without any linebreaks and spaces.
+        Expression in mathematica format as one string without any linebreaks and spaces but with two curly braces
+        around it: "{bla*bli*blub}"
 
     Returns
     -------
         Expression in FORM compatible format as one string without any linebreaks and spaces.
     """
     logger.info("Convert mathematica input in FORM compatible expression.")
+    ma_expr = ma_expr[1:-1]
     # Replace complex conjugation of Yukawa matrices, by hermitian conjugation, i.e. swap the indices:
     # conj[yd][{flav7784, flav7493}] -> conj[yd][{flav7493,flav7784}]
     yukawa = ["yu", "yd", "ye"]
@@ -71,6 +100,52 @@ def mathematica_to_form(ma_expr: str):
         ma_expr = re.sub(escape_regex(p_holder), form, ma_expr)
 
     return ma_expr
+
+def writefile(filename, list_terms, write=True):
+    """
+    Print elements of a list "list_terms" in file "filename" in format:
+
+        0: list_terms[0]
+        ===============================
+        1: list_terms[1]
+        ===============================
+        2: list_terms[1]
+        ===============================
+        .
+        .
+        .
+
+    Parameters
+    ----------
+    filename : str
+        Name of the file the content should be written on..
+    list_terms : [str, str, str, ...]
+        list with string entries that should be printed in file.
+    write : Boolean
+        Decides whether content is written in file or not. If write = False, only the number of terms is returned.
+
+    Returns
+    -------
+    count : int
+        Returns number of nonempty entries. In principle not necessary in this case, because in findOpandCoeff
+        an error occurs when nothing is found. So the program is always determinate before writefile is called
+        if there is an empty element.
+
+    """
+    # delete file content
+    content = ""
+    count = 0
+    for i, term in enumerate(list_terms):
+        if term != "":
+            count += 1
+        if write:
+            content += f"{i:d}: {term:s}\n"
+            content += "===============================\n"
+    if write:
+        with open(filename, "w") as file:
+            file.write(content)
+    return count
+
 
 # extract tensors fields, coefficients and so on from form file.
 
@@ -116,24 +191,8 @@ def get_ops(expr: str, groupOps: List[List[str]]):
     if type(groupOps) != list:
         groupOps = [groupOps]
 
-
     # Extract the operators via FORM:
     form_path = Path("getOps.frm")
-
-    # @retry()
-    # def form():
-    #     with PyFORM(form_path, 1, prompt="READY", input_dir=FORM_GENERAL_PATH) as form:
-    #         sets = ""
-    #         for i, group in enumerate(groupOps):
-    #             sets += f"Set ops{i:d}: {', '.join(group)};\n"
-    #
-    #         form.write(1, sets)
-    #         form.write(1, expr)
-    #         form.write(1, len(groupOps) - 1)
-    #
-    #         return form.read_all(1)
-    #
-    # res = form()
 
     sets = ""
     for i, group in enumerate(groupOps):
@@ -191,6 +250,7 @@ def get_terms(expression: str, name:str=""):
     -------
 
     """
+    logger.info("Read in all terms")
     expression = pyForm(FORM_GENERAL_PATH / "getTerms.frm", [expression], input_dir=FORM_GENERAL_PATH)
     expression = re.sub(r"(\s)*", "", expression)
 
@@ -230,7 +290,10 @@ def get_terms(expression: str, name:str=""):
             terms.append(Term([term], f"term{i:d}"))
         # terms = list(map(Term, [[term] for term in sorted_terms], [f"term{i:d}" for i in range(len(sorted_terms))]))
 
-    print(len(terms))
+    # del coefficient, coperator, expression
+    if logger.root.handlers[0].level < 20:
+        writefile(PROJECTION_PATH / "terms.txt", terms)
+
     return terms
 
 

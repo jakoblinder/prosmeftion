@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
 from copy import copy
 
-from prosmeftion import CONFIG_PATH, op_config, escape_regex, model, index_config, op_pattern, index_pattern, dummy_index_pattern, op_name_pattern
+from prosmeftion import CONFIG_PATH, op_config, escape_regex, model, index_config, op_pattern, index_pattern, dummy_index_pattern, op_name_pattern, get_commuting_op
 from .index import Index, Dummy_Index, LP_Index
 from .indices import Indices_Operator
 from prosmeftion import index_number_pattern as inp
@@ -28,7 +28,10 @@ class Operator_Model(Index):
     expr: str
     indices: Indices_Operator
     name: str
-    isconj: bool
+    isconj: int # 0: field is the ordinary non-conjugated field, e.g. l;
+                # 1: field is the hermitian conjugated or adjoint field, e.g. lbar;
+                # 2: field is the charge conjugated field, e.g. lC;
+                # 3: field is the charge conjugated adjoint field, e.g. lbarC
     non_conj_name: str
     tex: str
     description: str
@@ -134,17 +137,31 @@ class Operator_Model(Index):
                 form_names = list(operator["mathematica"].values())
                 if len(form_names) == 1 and name == form_names[0]:
                     non_conj_name = name
-                    isconj = False
+                    isconj = 0
                     break
                 elif len(form_names) == 2:
-                    if name == form_names[1]:
-                        non_conj_name = form_names[0]
-                        isconj = True
-                        break
-                    elif name == form_names[0]:
+                    # A field which can be hermitian conjugate, but not charge conjugated -> fieldstrength tensor
+                    if name == form_names[0]:
                         non_conj_name = name
-                        isconj = False
+                        isconj = 0
                         break
+                    elif name == form_names[1]:
+                        non_conj_name = form_names[0]
+                        isconj = 1
+                        break
+                elif len(form_names) == 4:
+                    # A field which can be hermitian conjugate AND charge conjugated -> spinor
+                    # for isconj the following rules apply:
+                    # 0: field is the ordinary non-conjugated field, e.g. l;
+                    # 1: field is the hermitian conjugated or adjoint field, e.g. lbar;
+                    # 2: field is the charge conjugated field, e.g. lC;
+                    # 3: field is the charge conjugated adjoint field, e.g. lbarC
+                    for i in range(4):
+                        if name == form_names[i]:
+                            non_conj_name = form_names[0]
+                            isconj = i
+                            break
+
             indices = op[match.end()+1:-1]
             indices = indices.split(",")
             for index in indices:
@@ -164,6 +181,7 @@ class Operator_Model(Index):
         else:
             logger.error("No index found.")
             sys.exit("STOP")
+
         return (name, isconj, non_conj_name), tuple(op_indices), nD, tuple(der_indices)
 
     @property
@@ -359,6 +377,7 @@ class Operator_Model(Index):
     @property
     def tex_name(self):
         """Create tex expression of operator."""
+        # TODO: Does not support the tex expression of charge conjugated spinors.
         all_ops = {**op_config["tensors"], **op_config["bosonfields"], **op_config["fermionfields"]}
         if self.isconj:
             try:
@@ -381,10 +400,14 @@ class Operator_Model(Index):
     def autoeft(self):
         """Returns autoeft name of the field/ tensor."""
         all_ops = {**op_config["tensors"], **op_config["bosonfields"], **op_config["fermionfields"]}
-        if self.isconj:
-            form_field = list(all_ops[self.non_conj_name]["mathematica"].values())[1]
-        else:
-            form_field = list(all_ops[self.non_conj_name]["mathematica"].values())[0]
+        for i in range(4):
+            if self.isconj == i:
+                form_field = list(all_ops[self.non_conj_name]["mathematica"].values())[i]
+        # if self.isconj:
+        #     form_field = list(all_ops[self.non_conj_name]["mathematica"].values())[1]
+        # else:
+        #     form_field = list(all_ops[self.non_conj_name]["mathematica"].values())[0]
+
         autoeft_expr = all_ops[self.non_conj_name]["autoeft"][form_field]
         return autoeft_expr
 
@@ -447,7 +470,10 @@ class Field(Operator_Model):
         """Specififes whether Field commutes or anticommutes."""
         ac_expr = op_config["fermionfields"][self.non_conj_name]["ac"]
         return ac_expr
-
+    @property
+    def cname(self) -> str:
+        """Returns the commuting name, necessary for FORM manipulations, of the Field."""
+        return get_commuting_op(self.name)
     @property
     def tex(self):
         """Create tex expression of operator with derivatives."""

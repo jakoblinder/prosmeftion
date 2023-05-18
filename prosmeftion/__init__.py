@@ -34,7 +34,7 @@ FORM_GENERAL_PATH.mkdir(parents=True, exist_ok=True)
 
 def configurations(filename):
     filename = Path(filename)
-    assert filename.suffix == ".yml", "The configurations file has to be in yml style."
+    assert filename.suffix == ".yml", "The configuration file has to be written in yaml style."
     with open(CONFIG_PATH / filename, "r") as file:
         config = safe_load(file)
     return config
@@ -138,7 +138,6 @@ def escape_regex(regex):
 ###################
 # FORM refactored #
 ###################
-#Number of maximal occurring derivatives
 
 def n_der(mdim: int):
     """
@@ -151,7 +150,7 @@ def n_der(mdim: int):
     Parameters
     ----------
     mdim
-
+        Maximum mass dimension of the given Lagrangian.
     Returns
     -------
         Maximum number of derivatives for gauge invariant SM operators with mass dimension mdim.
@@ -183,19 +182,19 @@ def update_opname_and_modelfile(op_dict):
         Updated op_config dictionary.
     """
     # If autoeft name is not set, the form name without square brackets is taken.
-    def autoeft_transl(kind, skip = []):
-        """
-        Specify kind of fields (str) and which fields are to skip (List[str])
-        and give autoeft translation if not specified.
-        """
-        for name, field in op_dict[kind].items():
-            if name in skip:
-                continue
-            if "autoeft" not in field.keys():
-                field["autoeft"] = {}
-                field["autoeft"][name] = field["mathematica"][name]
-                if f"conj[{name}]" in field["mathematica"].keys():
-                    field["autoeft"][f"[{name}+]"] = field["mathematica"][f"conj[{name}]"][1:-1]  # "[]" are removed
+    # def autoeft_transl(kind, skip = []):
+    #     """
+    #     Specify kind of fields (str) and which fields are to skip (List[str])
+    #     and give autoeft translation if not specified.
+    #     """
+    #     for name, field in op_dict[kind].items():
+    #         if name in skip:
+    #             continue
+    #         if "autoeft" not in field.keys():
+    #             field["autoeft"] = {}
+    #             field["autoeft"][name] = field["mathematica"][name]
+    #             if f"conj[{name}]" in field["mathematica"].keys():
+    #                 field["autoeft"][f"[{name}+]"] = field["mathematica"][f"conj[{name}]"][1:-1]  # "[]" are removed
 
     # namings like [su2eps] instead of su2eps doesn't allow the automatic filling of the autoeft dictionary.
     # autoeft_transl("tensors", ["T", "gamma"])
@@ -203,29 +202,35 @@ def update_opname_and_modelfile(op_dict):
     # autoeft_transl("fermionfields", ["D"])
 
     # get helicities values and so on
-    modelfields = model.fields
+    # modelfields = model.fields
 
-    for model_field in modelfields.values():
-        # write {} around daggers
-        model_field.tex = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex)
+    # for model_field in modelfields.values():
+    #     # write {} around daggers
+    #     model_field.tex = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex)
+    #     try:
+    #         model_field.tex_hc = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex_hc)
+    #     except AttributeError:
+    #         pass
+    #
+    #     if "+" in model_field.name:
+    #         # skip hermitian conjugated fields
+    #         continue
+    #     for name, field in {**op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
+    #         if model_field.name == name:
+    #             save_set(field, "helicity", model_field.helicity)
+    #             save_set(field, "ac", model_field.ac)
+    #             # save_set(field, "conj", model_field.conj)
+    #             save_set(field, "tex", model_field.tex)
+    #             try:
+    #                 save_set(field, "tex_hc", model_field.tex_hc)
+    #             except KeyError:
+    #                 pass
+    for name, field in {**op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
         try:
-            model_field.tex_hc = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex_hc)
-        except AttributeError:
-            pass
-
-        if "+" in model_field.name:
-            # skip hermitian conjugated fields
-            continue
-        for name, field in {**op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
-            if model_field.name == name:
-                save_set(field, "helicity", model_field.helicity)
-                save_set(field, "ac", model_field.ac)
-                save_set(field, "conj", model_field.conj)
-                save_set(field, "tex", model_field.tex)
-                try:
-                    save_set(field, "tex_hc", model_field.tex_hc)
-                except KeyError:
-                    pass
+                field["helicity"] = Fraction(field["helicity"])
+        except KeyError:
+                pass
+        save_set(field, "tex_hc", field["tex"] + "^{\\\\dagger}")
 
     # write index_structure as list of lists:
     for name, field in {**op_dict["tensors"], **op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
@@ -233,6 +238,7 @@ def update_opname_and_modelfile(op_dict):
             field["index_structure"] = [field["index_structure"]]
 
     return op_dict
+
 op_config = update_opname_and_modelfile(op_config)
 
 
@@ -272,6 +278,8 @@ coeff += [form_field for field in op_config["abbreviation"].values() for form_fi
 bosons = [form_field for field in op_config["bosonfields"].values() for form_field in field["mathematica"].values()]
 bosons_non_conj = [list(field["mathematica"].values())[0] for field in op_config["bosonfields"].values()]
 fermions = [form_field for field in op_config["fermionfields"].values() for form_field in field["mathematica"].values()]
+# the same like fermions, just without the derivative
+fermionfields = [form_field for field in op_config["fermionfields"].values() for form_field in field["mathematica"].values() if "derivative" not in field["description"]]
 fermions_non_conj = [list(field["mathematica"].values())[0] for field in op_config["fermionfields"].values()]
 tensors = [form_field for field in op_config["tensors"].values() for form_field in field["mathematica"].values()]
 
@@ -296,6 +304,14 @@ def get_basis(max_dim: int):
             sys.exit("STOP")
 
     return basis
+
+def get_commuting_op(op):
+    """eC -> eCc, [eC+] -> [eC+c], where eCc and [eC+c] are commuting functions."""
+    if op[0] == "[" and op[-1] == "]":
+        commuting_op = op[:-1] + "c]"
+    else:
+        commuting_op = op + "c"
+    return commuting_op
 
 def get_SUN_name(N):
     """Get Name of SU2_W out of model file."""

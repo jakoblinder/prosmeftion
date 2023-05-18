@@ -4,9 +4,10 @@ from typing import List
 from pathlib import Path
 from typing import List, Dict
 from itertools import permutations
+from fractions import Fraction
 
-from . import op_config, bosons, fermions, tensors, coeff, index_config, n_der
-from . import get_antisymEps, fields_sorted
+from . import op_config, bosons, fermions, fermionfields, tensors, coeff, index_config, n_der
+from . import get_antisymEps, fields_sorted, get_commuting_op
 from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
 
 logger_autoeft = logging.getLogger("autoeft.projection")
@@ -316,6 +317,62 @@ def form_coefficient_handling():
 #endprocedure"""
     with open(FORM_GENERAL_PATH / "positiveTerm.prc", "w") as file:
         file.write(form_positiveTerm)
+
+def form_converttoSL2C():
+    """
+    Function designed to convert the operators in the desired SL2C notation.
+
+    Creates converttoSL2C.frm which has to be called via a pipe proces.
+
+    Returns
+    -------
+
+    """
+    form = "Off statistics;\n"
+    form += "#setexternal `PIPE1_'\n"
+    form += "#prompt READY\n"
+    form += "#include declarations_general.h # coefficient\n"
+    form += "#include declarations_general.h # indices\n"
+    form += "#include declarations_general.h # tensors\n"
+    form += "#include declarations_general.h # operators\n"
+    form += ".sort\n"
+    # Define sets for indices
+    form += f"#fromexternal\n"
+    form += "\n"
+    form += "Local expression = \n"
+    form += f"#fromexternal\n"
+    form += ";\n"
+    form += ".sort\n\n"
+    form += "#call makecommutative\n"
+    form += ".sort\n\n"
+
+    # form += r'#toexternal "%E\n", expression'
+    # form += "\n"
+    # form += r'#toexternal "READY\n"'
+    # form += "\n"
+
+    form += "* SL2C Conversion\n"
+    form += "* Convert Dirac spinors into Weyl spinors\n"
+    form += f"#fromexternal\n"
+    form += ".sort\n\n"
+    form += "* Convert Derivatives into irreps\n"
+    form += f"#fromexternal\n"
+    form += ".sort\n\n"
+
+    form += "#call replaceSigmabyEps\n"
+    form += "#call simplifySL2CEps\n"
+    form += ".sort\n\n"
+
+    form += "#call makenoncommutative\n"
+    form += ".sort\n\n"
+
+    form += "Format nospaces;\n"
+    form += r'#toexternal "%E\n", expression'
+    form += "\n\n"
+    form += ".end"
+
+    with open(FORM_GENERAL_PATH / "converttoSL2C.frm", "w") as file:
+        file.write(form)
 
 @create_procedure(FORM_GENERAL_PATH)
 def form_antisymDerivative(n_der: int):
@@ -923,8 +980,8 @@ def form_replaceSigmabyEps():
     """
     sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]
     sl2CdK = op_config["tensors"]["[sl2CdK]"]["mathematica"]["sl2CdK"]
-    sigma = "sigma"
-    sigmabar = "sigmabar"
+    sigma = op_config["tensors"]["sigma"]["mathematica"]["sigma"]
+    sigmabar = op_config["tensors"]["sigmabar"]["mathematica"]["sigmabar"]
     form = ""
     form += "repeat;\n"
     form += "* Replace sigmabar by sigma.\n"
@@ -994,9 +1051,9 @@ def form_simplifySL2CEps():
     # form += "\t" + f"id {sl2Ceps}(Usl1?Usl,Lsl2?Lsl) = {sl2CdK}(Lsl2,Usl1);\n"
     # form += "\t" + f"id {sl2Ceps}(Lsldot1?Lsldot,Usldot2?Usldot) = {sl2CdK}(Lsldot1,Usldot2);\n"
     # form += "\t" + f"id {sl2Ceps}(Usldot1?Usldot,Lsldot2?Lsldot) = {sl2CdK}(Lsldot2,Usldot1);\n"
-    form += "* Replace only contracted Kronecker-deltas which are contracted with eps and Kronecker-deltas themself, because contractions inside one building block are not wanted:\n"  # Replace contracted Kronecker-deltas (works for every function, not just eps):\n
-    form += "\t" + f"id {sl2Ceps}?" + "{" + f"{sl2Ceps},{sl2CdK},{sigma},{sigmabar}" + "}" + f"(?a,Lsl1?LUsl[k],?b)*{sl2CdK}(?c,Usl1?ULsl[k],?d) = {sl2Ceps}(?a,?c,?d,?b);\n"  # [sl2Ceps]?
-    form += "\t" + f"id {sl2Ceps}?" + "{" + f"{sl2Ceps},{sl2CdK},{sigma},{sigmabar}" + "}" + f"(?a,Lsldot1?LUsldot[k],?b)*{sl2CdK}(?c,Usldot1?ULsldot[k],?d) = {sl2Ceps}(?a,?c,?d,?b);\n"  # [sl2Ceps]?
+    form += "* Simplify only Kronecker-deltas which are contracted with eps and Kronecker-deltas, since contractions inside one building block are not wanted:\n"  # Replace contracted Kronecker-deltas (works for every function, not just eps):\n
+    form += "\t" + f"id {sl2Ceps}?" + "{" + f"{sl2Ceps},{sl2CdK},{sigma}" + "}" + f"(?a,Lsl1?LUsl[k],?b)*{sl2CdK}(?c,Usl1?ULsl[k],?d) = {sl2Ceps}(?a,?c,?d,?b);\n"  # [sl2Ceps]?
+    form += "\t" + f"id {sl2Ceps}?" + "{" + f"{sl2Ceps},{sl2CdK},{sigma}" + "}" + f"(?a,Lsldot1?LUsldot[k],?b)*{sl2CdK}(?c,Usldot1?ULsldot[k],?d) = {sl2Ceps}(?a,?c,?d,?b);\n"  # [sl2Ceps]?
     form += "* Replace self-contracted Kronecker-deltas by the dimension (=2):\n"
     form += "\t" + f"id {sl2CdK}(Usl1?ULsl[k],Lsl1?LUsl[k]) = d_(Lsl1,Lsl1);\n"
     form += "\t" + f"id {sl2CdK}(Usldot1?ULsldot[k],Lsldot1?LUsldot[k]) = d_(Lsldot1,Lsldot1);\n"
@@ -1176,6 +1233,81 @@ def form_simplifyEpsSU3():
     #     file.write(form)
 
 @create_procedure(FORM_GENERAL_PATH)
+def form_makecommutative(n_der: int=4):
+    """
+    FORM function which converts every non commuting Funtion and derivatives of it into a Placeholder and a commuting
+    Function, like:
+        D(lor1,lbar(spin1,gauge1,flav1)) -> D(lor1,lbar(op1))*lbarc(op1,spin1,gauge1,flav1)
+    Parameters
+    ----------
+    n_der
+        Maximum number of derivatives occuring.
+    Returns
+    -------
+
+    """
+    form = ".sort\n"
+    form += "Function tmp, Field;\n"
+    form += "Multiply left tmp;\n\n"
+    form += "#$i = 1;\n"
+    def derivative(nD, withset=True):
+        return ''.join([f"D(lor{i}{'?lor' if withset else ''}," for i in range(1, nD + 1)])
+
+    while_conditions = [f"(match(tmp*{derivative(nD)}Field?AllFields(?a){nD * ')'}))" for nD in range(n_der + 1)]
+    id_left = [f"tmp*{derivative(nD)}Field?AllFields[k?](?a){nD * ')'}" for nD in range(n_der + 1)]
+    id_right = [f"{derivative(nD, False)}Field(op[$i]){nD * ')'}*AllcFields[k](op[$i],?a)*tmp" for nD in range(n_der + 1)]
+    form += f"while ( {' || '.join(while_conditions)} );\n"
+    # (match(tmp*Field?AllFields(?a))) || (match( tmp*D(lor1?lor,Field?AllFields(?a)) ))
+    for nD, while_condition in enumerate(while_conditions):
+        if nD == 0:
+            form += "\tif "
+        else:
+            form += "\telseif "
+        form += f"{while_condition};\n"
+        form += f"\t\tid once {id_left[nD]} = {id_right[nD]};\n"
+        form += "\t\t$i = $i + 1;\n"
+
+    form += "\tendif;\n"
+    form += "endwhile;\n\n"
+    form += "id tmp = 1;"
+
+    return form
+
+@create_procedure(FORM_GENERAL_PATH)
+def form_makenoncommutative(n_der: int=4, sl2c=True):
+    """
+    FORM function which reastablishes the non-commuting Funtions (s. form_makecommutative()):
+        D(lor1,lbar(op1))*[L+c](op1,Lsldot1,gauge1,flav1) -> D(lor1,[L+](Lsldot1,gauge1,flav1))
+    Parameters
+    ----------
+    n_der
+        Maximum number of derivatives occuring.
+    Returns
+    -------
+
+    """
+    form = ".sort\n"
+    form += "Function Field;\n"
+    form += "CFunction CField;\n\n"
+
+    def derivative(nD, sl2c, withset=True):
+        if sl2c:
+            return ''.join([f"D(Lsl{i}{'?Lsl' if withset else ''},Usldot{i}{'?Usldot' if withset else ''}," for i in range(1, nD + 1)])
+        else:
+            return ''.join([f"D(lor{i}{'?lor' if withset else ''}," for i in range(1, nD + 1)])
+
+    form += "repeat;\n"
+    for nD in range(n_der + 1):
+        form += "\tid once CField?AllcconFields[k?](op1?op[m?],?a)"
+        form += "*"
+        form += f"{derivative(nD,sl2c)}Field?AllFields[k?](op1?op[m?]){nD*')'}"
+        form += " = "
+        form += f"{derivative(nD,sl2c,False)}AllconFields[k](?a){nD*')'};\n"
+    form += "endrepeat;"
+
+    return form
+
+@create_procedure(FORM_GENERAL_PATH)
 def form_derivativeasIndex(n_der: int=4):
     """
     Write derivative which act on any field as indices of that field.
@@ -1309,10 +1441,9 @@ def form_declarations(n_der: int):
     """
     form = ""
     form += "*--#[ tensors :\n"
-    form += "CFunction " + ", ".join(tensors) + ";\n"
-    # form += "* Indices and functions for derivatives in SL2C notation.\n"
-    # form += "CFunction sigma, sigmabar;\n"
-    # form += "CFunction sigma2, sigmabar2;\n"
+    tensors_without_Kronecker = [tensor for tensor in tensors if "dK" not in tensor]
+    form += "CFunction " + ", ".join(tensors_without_Kronecker) + ";\n"
+
     form += "* Auxiliary antisymmetric epsilons, used in combination with replace_.\n"
     eps = [list(tensor["mathematica"].values())[0] for tensor_name, tensor in op_config["tensors"].items() if
            "eps" in tensor_name]
@@ -1339,7 +1470,7 @@ def form_declarations(n_der: int):
     form += "\n"
     form += "*--#[ coefficient :\n"
     # Coefficient
-    form += f"Symbols {', '.join(coeff + ['n'])};\n" # Symbols d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]], n;
+    form += f"Symbols {', '.join(coeff + ['n', 'N'])};\n" # Symbols d, eps, lambdah, At, g1, g2, g3, mu, lambdaphi, kappa, Ms, Mu, muM, [2L[Ms,muM]], n;
 
     # ms = op_config["coefficients"]["Ms"]["mathematica"]["Ms"]  # FORM expression of EFT mass Ms
     # dimlessConst = []
@@ -1359,30 +1490,73 @@ def form_declarations(n_der: int):
     form += "*--#] coefficient :\n"
     form += "\n"
     form += "*--#[ operators :\n"
-    form += "Off Statistics;\n"
     # write commuting and anti-commuting operators of each term in separate list for initialization. Thus
-    # Duplicated operators are removed.
-    def get_commuting_op(op):
-        """eC -> eCc, [eC+] -> [eC+c], where eCc and [eC+c] are commuting functions."""
-        if op[0] == "[" and op[-1] == "]":
-            commuting_op = op[:-1] + "c]"
-        else:
-            commuting_op = op + "c"
-        return commuting_op
-    form += "Function " + ", ".join(bosons) + ";\n"
+    # duplicated operators are removed.
+
+    def commutative_fields(ops):
+        non_singlets = {}
+        singlets = {}
+        for name, field in {**ops["bosonfields"], **ops["fermionfields"]}.items():
+            if "helicity" not in field.keys():
+                if "derivative" not in field["description"]:
+                    non_singlets[name] = field
+            else:
+                if field["helicity"] == 0:
+                    non_singlets[name] = field
+                    singlets[name] = field
+                else:
+                    singlets[name] = field
+
+        allFields = []
+        allconFields = []
+        for singlet_field in singlets.values():
+            if singlet_field["helicity"] == 0:
+                allFields += singlet_field["mathematica"].values()
+                allconFields += singlet_field["mathematica"].values()
+
+            elif singlet_field["helicity"] == Fraction(-1,2):
+                non_singlet_field = non_singlets[singlet_field["dirac"]]
+                autoeft_form = {autoeft: form for form, autoeft in singlet_field["autoeft"].items()}
+                for dirac, weyl in non_singlet_field["autoeft"].items():
+                    allFields.append(dirac)
+                    allconFields.append(autoeft_form[weyl])
+
+            elif singlet_field["helicity"] == -1:
+                non_singlet_field = list(non_singlets[singlet_field["non_singlet"]]["mathematica"].values())[0]
+                for sfield in singlet_field["mathematica"].values():
+                    allFields.append(non_singlet_field)
+                    allconFields.append(sfield)
+
+        allcFields = list(map(get_commuting_op,allFields))
+
+        allcconFields = list(map(get_commuting_op, allconFields))
+
+        return allFields, allcFields, allcconFields, allconFields
+
+    allFields, allcFields, allcconFields, allconFields = commutative_fields(op_config)
+    form += "* Define all fields and auxiliary fields:\n"
+    form += f"Function {', '.join(set(allFields))};\n"
+    form += f"CFunction {', '.join(set(allcFields))};\n"
+    form += f"CFunction {', '.join(set(allcconFields))};\n"
+    form += f"Function {', '.join(set(allconFields))};\n\n"
+    form += "* Derivative:\n"
+    form += f"Function {op_config['fermionfields']['D']['mathematica']['cov']};\n"
+
+    # form += "Function " + ", ".join(bosons) + ";\n"
     # Auxiliary commuting bosons
-    form += "CFunction " + ", ".join(map(get_commuting_op, bosons)) + ";\n"
-    form += "\n"
-    form += "Function " + ", ".join(fermions) + ";\n"
+    # form += "CFunction " + ", ".join(map(get_commuting_op, bosons)) + ";\n"
+    # form += "\n"
+    # form += "Function " + ", ".join(fermions) + ";\n"
+
     # Auxiliary commuting fermions
-    form += "CFunction " + ", ".join(map(get_commuting_op, fermions)) + ";\n"
-    form += "\n"
+    # form += "CFunction " + ", ".join(map(get_commuting_op, fermionfields)) + ";\n"
+    # form += "\n"
 
     SL2C_fieldstrengths = [form_field for field in op_config["bosonfields"].values() for form_field in field["mathematica"].values() if "helicity" in field.keys() if field["helicity"] == -1]
-    form += f"Set Fieldc: {', '.join(map(get_commuting_op, SL2C_fieldstrengths))};\n"
-    form += f"Set Field: {', '.join(SL2C_fieldstrengths)};\n"
+    form += f"Set fieldstrengthsc: {', '.join(map(get_commuting_op, SL2C_fieldstrengths))};\n"
+    form += f"Set fieldstrengths: {', '.join(SL2C_fieldstrengths)};\n"
     form += "\n"
-    form += "CFunction xi, [xi+], chi, [chi+];\n"
+    form += "CFunction xi1, [xi1+], chi1, [chi1+], xi2, [xi2+], chi2, [chi2+];\n"
     form += "\n"
     spinors = [list(field["mathematica"].values())[0] for field_name, field in op_config["fermionfields"].items() if "helicity" not in field.keys() if field_name != "D"]
     adjspinors = [list(field["mathematica"].values())[1] for field_name, field in op_config["fermionfields"].items() if "helicity" not in field.keys() if field_name != "D"]
@@ -1394,6 +1568,23 @@ def form_declarations(n_der: int):
     form += f"Set spinorsAdjc: {', '.join(map(get_commuting_op, adjspinors))};\n"
     form += f"Set spinorsAllc: {', '.join(map(get_commuting_op, spinors + adjspinors))};\n"
     form += "\n"
+    form += "* List of all possibly occurring fields bevor they are converted into Lorentz irreps\n"
+    form += "* Note: If a field (like e.g. a fieldstrength tensor B) is converted into two different Lorentz irreps (BL, BR) is has to occur twice in this list\n"
+
+    form += f"Set AllFields: {', '.join(allFields)};\n\n"
+    form += "* List of the same fields as in AllFields (in the same order!) but defined as a commuting Function\n"
+    form += f"Set AllcFields: {', '.join(allcFields)};\n\n"
+    form += "* List of the same fields (first as commutative fields) as in AllFields (in the same order!) but with possible replacements like Dirac to Weyl spinors and so on\n"
+    # FIXME: For testing purposed lets take the same as in AllFields
+    # allcconFields = allcFields
+    # allconFields = allFields
+    form += f"Set AllcconFields: {', '.join(allcconFields)};\n\n"
+    form += "* Now as noncommutative fields\n"
+    form += f"Set AllconFields: {', '.join(allconFields)};\n"
+    form += "\n"
+    form += "* Set for convenient insertion of op1, op2, ... indices\n"
+    form += "Set op: op1,...,op100;\n"
+    form += "\n"
     form += "* D2 = D_mu * D^mu:\n"
     form += "Function D2;\n"
     form += "* Intern abbreviation for equation of motion:\n"
@@ -1403,7 +1594,6 @@ def form_declarations(n_der: int):
     form += "\n"
     form += "*--#] operators :\n"
     form += "\n"
-    ind = index_config
     form += "*--#[ indices :\n"
     for index_name, index in index_config.items():
         form += f"AutoDeclare Indices {index_name:8s} = {index['dimension']}; * {index['description']}\n"
@@ -1432,8 +1622,12 @@ def form_declarations(n_der: int):
     form_getTerms()
     form_getOps()
     form_coefficient_handling()
+    form_converttoSL2C()
 
-    # form_replaceSigmabyEps()
+    form_makecommutative(n_der)
+    form_makenoncommutative(n_der)
+
+    form_replaceSigmabyEps()
     form_simplifySL2CEps()
     # form_replaceSUNGenerators(N=2)
     # form_replaceSUNGenerators(N=3)
@@ -1446,12 +1640,13 @@ def form_declarations(n_der: int):
     form_derivativeasIndex(n_der)
     form_indexasDerivative(n_der)
 
+    # TODO: Create sorted field new from own model file.
     form_sortfields(fields_sorted)
 
 
     return form
 
-def declaration_SL2C_sets(indices) -> str:
+def declaration_SL2C_sets(indices, n_der) -> str:
     """
     Declare SL2C-indices of a Summand and write Sets for contraction of SL2C-indices.
     Write also Sets of other index types.
@@ -1466,7 +1661,7 @@ def declaration_SL2C_sets(indices) -> str:
     lsl, usl, lsldot, usldot = indices.get_sl2C_sets()
 
     max_ind = n_der + 4
-    # Generate only indices if there aren't any, since the could be declared twice otherwise.
+    # Generate only indices if there aren't any, since they could be declared twice otherwise.
     def id_indices(typ: str, reference: List, max_index: int):
         return [f"{typ:s}{i:d}" for i in range(max_index) if f"{typ:s}{i:d}" not in [repr(index) for index in reference]]
     # if not (lsl and usl):

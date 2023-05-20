@@ -74,11 +74,11 @@ tensors:
         -
           - Lsldot
           - Lsldot
-    "[lorentzeps]":
-      description: "4 index epsilontensor of the Lorentz group."
+    "[loreps]":
+      description: "Epsilontensor with for indices of the Lorentz group."
       tex: \varepsilon
       mathematica:
-        loreps: "[lorentzeps]"
+        loreps: "[loreps]"
       index_structure:
         - lor
         - lor
@@ -800,7 +800,7 @@ coefficients:
       massdim: 1
       tex_dimless: \hat{\mu}_{h}
     I:
-      description: "Imaginary unit i or just a 1?"
+      description: "Imaginary unit."
       tex: \mathrm{i}
       # i_
       mathematica:

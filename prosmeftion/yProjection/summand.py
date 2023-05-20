@@ -578,7 +578,6 @@ class Summand(Summand_Model):
 
         return "".join(form), n_bilinears
 
-
     def form_convertDerivative(self, n_der:int=4):
         sigma = op_config["tensors"]["sigma"]["mathematica"]["sigma"]
         D = op_config["fermionfields"]["D"]["mathematica"]["cov"]
@@ -618,6 +617,55 @@ class Summand(Summand_Model):
             form += f"id once {id};\n"
 
         return form
+
+    def form_convertFieldstrengthTensor(self, used_label):
+        fieldstrength_tensors = {name: field for name, field in op_config["bosonfields"].items() if "helicity" not in field.keys()}
+        fieldstrength_tensors_names = [list(fsT["mathematica"].values())[0] for fsT in fieldstrength_tensors.values()]
+        handed_fsTs = {list(fsT["mathematica"].values())[0]: op_config["bosonfields"][list(fsT["autoeft"].keys())[0]]["mathematica"] for fsT in fieldstrength_tensors.values()}
+        fLs = {name: list(mathematica.values())[0] for name, mathematica in handed_fsTs.items()}
+        fRs = {name: list(mathematica.values())[1] for name, mathematica in handed_fsTs.items()}
+
+        # tensors
+        loreps = op_config["tensors"]["[loreps]"]["mathematica"]["loreps"]
+        sigma2 = op_config["tensors"]["sigma2"]["mathematica"]["sigma2"]
+        sigmabar2 = op_config["tensors"]["sigmabar2"]["mathematica"]["sigmabar2"]
+        # imaginary unit
+        im = op_config["coefficients"]["I"]["mathematica"]["I"]
+
+        fsTs = []
+        for field in self.fields:
+            if field.name in fieldstrength_tensors_names:
+                fsTs.append(field.name)
+
+        # Indices
+        if fsTs:
+            gen_index_sl = self.possible_indices.generate_index("Lsl")  # next(gen_index_sl) will generate new Lsl and new Usl index
+            gen_index_sldot = self.possible_indices.generate_index("Lsldot")
+
+        form = ""
+        for fsT, label in zip(fsTs, range(used_label + 1, len(fsTs) + used_label + 1)):
+            fL = get_commuting_op(fLs[fsT])
+            fR = get_commuting_op(fRs[fsT])
+            fsT = get_commuting_op(fsT)
+
+            lsl1, usl1 = next(gen_index_sl)
+            lsl2, usl2 = next(gen_index_sl)
+            lsldot1, usldot1 = next(gen_index_sldot)
+            lsldot2, usldot2 = next(gen_index_sldot)
+
+            # ordinary fieldstrength tensor
+            id = f"{fsT}(op1?op,?a,lor1?lor,lor2?lor,?b)"
+            id += " = "
+            id += f"(- {im}/4)*({fR}(op1,?a,?b,{usldot1},{usldot2})*{sigmabar2}(lor1,lor2,{lsldot1},{lsldot2}) - {fL}(op1,?a,?b,{lsl1},{lsl2})*{sigma2}(lor1,lor2,{usl1},{usl2}))"
+            form += f"id once {id};\n"
+
+            # For dual fieldstrength tensors, i.e. eps(lor1,lor2,lor3,lor4)*F(lor3,lor4), substitute F(lor1,lor2) and
+            # simplify the sigma2 matrices with '#call lorepsandSigma2'.
+            form += f"\nlabel {label};\n\n"
+
+        new_used_label = used_label + len(fsTs)
+
+        return form, new_used_label
 
     #########################
     ### EOM Substitutions ###

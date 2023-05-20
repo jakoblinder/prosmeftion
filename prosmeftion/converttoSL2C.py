@@ -663,13 +663,14 @@ def convertviaform(term, n_der, max_dim):
     # Write SL2C and set FORM-file:
     assert len(term) == 1
     summand = term[0]
-    # FIXME: Correct index structure.
-    sl2c_dirac_to_weyl, label = summand.form_convertDirac(max_dim)
+
+    sl2c_dirac_to_weyl, label = summand.form_convertDirac()
     sl2c_derivative_in_SL2C = summand.form_convertDerivative(n_der)
-    # TODO: Convert fieldstrength tensors.
+    # TODO: Convert fieldstrength tensors:
+    sl2c_fieldstrength_tensor, label = summand.form_convertFieldstrengthTensor(label)
 
     form_SL2C = declaration_SL2C_sets(term[0].possible_indices, n_der)
-    send_to_form = [form_SL2C, f"{summand:c}", sl2c_dirac_to_weyl, sl2c_derivative_in_SL2C]
+    send_to_form = [form_SL2C, f"{summand:c}", sl2c_dirac_to_weyl, sl2c_derivative_in_SL2C, sl2c_fieldstrength_tensor]
     expression = pyForm(FORM_GENERAL_PATH / "converttoSL2C.frm", send_to_form, input_dir=FORM_GENERAL_PATH, prompt= "READY")  # , debug=True, preprocessor_only=True
     expression = re.sub(r"(\s)*", "", expression)
     # Create FORM files:

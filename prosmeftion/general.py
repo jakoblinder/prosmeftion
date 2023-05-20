@@ -358,7 +358,16 @@ def form_converttoSL2C():
     form += "* Convert Derivatives into irreps\n"
     form += f"#fromexternal\n"
     form += ".sort\n\n"
+    form += "* Convert fieldstrength tensors into irreps\n"
+    form += f"#fromexternal\n"
+    form += ".sort\n\n"
 
+    # TODO: Replace sigma2s:
+    # form += "* Replace sigma2 and sigmabar2 by sigma and sigmabar.\n"
+    # form += f"#fromexternal\n"
+    # form += ".sort\n\n"
+
+    form += "#call lorepsandSigma2\n"
     form += "#call replaceSigmabyEps\n"
     form += "#call simplifySL2CEps\n"
     form += ".sort\n\n"
@@ -971,6 +980,62 @@ def form_simplifySigma2():
     # TODO: See method in class_term.py an rearrange for the now possible new generation of indices. -> Cannot be done in general folder.
 
 @create_procedure(FORM_GENERAL_PATH)
+def form_lorepsandSigma2():
+    # tensors
+    loreps = op_config["tensors"]["[loreps]"]["mathematica"]["loreps"]
+    sigma2 = op_config["tensors"]["sigma2"]["mathematica"]["sigma2"]
+    sigmabar2 = op_config["tensors"]["sigmabar2"]["mathematica"]["sigmabar2"]
+    # imaginary unit
+    im = op_config["coefficients"]["I"]["mathematica"]["I"]
+
+    permutations = [([1, 2, 3, 4], 1),
+                    ([1, 2, 4, 3], -1),
+                    ([1, 3, 2, 4], -1),
+                    ([1, 3, 4, 2], 1),
+                    ([1, 4, 2, 3], 1),
+                    ([1, 4, 3, 2], -1),
+                    ([2, 1, 3, 4], -1),
+                    ([2, 1, 4, 3], 1),
+                    ([2, 3, 1, 4], 1),
+                    ([2, 3, 4, 1], -1),
+                    ([2, 4, 1, 3], -1),
+                    ([2, 4, 3, 1], 1),
+                    ([3, 1, 2, 4], 1),
+                    ([3, 1, 4, 2], -1),
+                    ([3, 2, 1, 4], -1),
+                    ([3, 2, 4, 1], 1),
+                    ([3, 4, 1, 2], 1),
+                    ([3, 4, 2, 1], -1),
+                    ([4, 1, 2, 3], -1),
+                    ([4, 1, 3, 2], 1),
+                    ([4, 2, 1, 3], 1),
+                    ([4, 2, 3, 1], -1),
+                    ([4, 3, 1, 2], -1),
+                    ([4, 3, 2, 1], 1)]
+
+
+    form = "repeat;\n"
+    id_statements = []
+    for per, sign in permutations:
+        id = f"{loreps}(lor{per[0]}?lor,lor{per[1]}?lor,lor{per[2]}?lor,lor{per[3]}?lor)"
+        id += f"*{sigma2}(lor3?lor,lor4?lor,Usl1?Usl,Usl2?Usl)"
+        id += " = "
+        id += f"({sign:d})*(-2*{im})*{sigma2}(lor1,lor2,Usl1,Usl2)"
+        id_statements.append(id)
+        id = f"{loreps}(lor{per[0]}?lor,lor{per[1]}?lor,lor{per[2]}?lor,lor{per[3]}?lor)"
+        id += f"*{sigmabar2}(lor3?lor,lor4?lor,Lsldot1?Lsldot,Lsldot2?Lsldot)"
+        id += " = "
+        id += f"({sign:d})*(2*{im})*{sigmabar2}(lor1,lor2,Lsldot1,Lsldot2)"
+        id_statements.append(id)
+
+    for id in id_statements:
+        form += f"\tid once {id};\n"
+    form += "endrepeat;"
+
+    return form
+
+
+@create_procedure(FORM_GENERAL_PATH)
 def form_replaceSigmabyEps():
     """
     Replace contracted sigmas by SL2C epsilon tensors.
@@ -1274,7 +1339,7 @@ def form_makecommutative(n_der: int=4):
     return form
 
 @create_procedure(FORM_GENERAL_PATH)
-def form_makenoncommutative(n_der: int=4, sl2c=True):
+def form_makenoncommutative(sets:int, n_der:int=4, sl2c=True):
     """
     FORM function which reastablishes the non-commuting Funtions (s. form_makecommutative()):
         D(lor1,lbar(op1))*[L+c](op1,Lsldot1,gauge1,flav1) -> D(lor1,[L+](Lsldot1,gauge1,flav1))
@@ -1297,12 +1362,14 @@ def form_makenoncommutative(n_der: int=4, sl2c=True):
             return ''.join([f"D(lor{i}{'?lor' if withset else ''}," for i in range(1, nD + 1)])
 
     form += "repeat;\n"
-    for nD in range(n_der + 1):
-        form += "\tid once CField?AllcconFields[k?](op1?op[m?],?a)"
-        form += "*"
-        form += f"{derivative(nD,sl2c)}Field?AllFields[k?](op1?op[m?]){nD*')'}"
-        form += " = "
-        form += f"{derivative(nD,sl2c,False)}AllconFields[k](?a){nD*')'};\n"
+    for i in range(sets):
+        for nD in range(n_der + 1):
+            form += "\tid once "
+            form += f"{derivative(nD, sl2c)}Field?AllFields{i}[k](op1?op[m]){nD * ')'}"
+            form += "*"
+            form += f"CField?AllcconFields{i}[k](op1?op[m],?a)"
+            form += " = "
+            form += f"{derivative(nD,sl2c,False)}AllconFields{i}[k](?a){nD*')'};\n"
     form += "endrepeat;"
 
     return form
@@ -1534,6 +1601,31 @@ def form_declarations(n_der: int):
         return allFields, allcFields, allcconFields, allconFields
 
     allFields, allcFields, allcconFields, allconFields = commutative_fields(op_config)
+    # Since FORM is confused when something appears twice in a Set, multiple Sets are needed and the id-statements
+    # referring to those just need to be copied.
+    allFieldsSet, allcFieldsSet, allcconFieldsSet, allconFieldsSet = [[]], [[]], [[]], [[]]
+    for aF, acF, acconF, aconF in zip(allFields, allcFields, allcconFields, allconFields):
+        if (aF not in allFieldsSet[0]) and (acF not in allcFieldsSet[0]) and (acconF not in allcconFieldsSet[0]) and (aconF not in allconFieldsSet[0]):
+            allFieldsSet[0].append(aF)
+            allcFieldsSet[0].append(acF)
+            allcconFieldsSet[0].append(acconF)
+            allconFieldsSet[0].append(aconF)
+        else:
+            n = 0
+            while (aF in allFieldsSet[n]) or (acF in allcFieldsSet[n]) or (acconF in allcconFieldsSet[n]) or (aconF in allconFieldsSet[n]):
+                n += 1
+                if len(allFieldsSet) < n+1 or len(allcFieldsSet) < n+1 or len(allcconFieldsSet) < n+1 or len(allconFieldsSet) < n+1:
+                    allFieldsSet.append([])
+                    allcFieldsSet.append([])
+                    allcconFieldsSet.append([])
+                    allconFieldsSet.append([])
+            assert ((aF not in allFieldsSet[n]) and (acF not in allcFieldsSet[n]) and (acconF not in allcconFieldsSet[n]) and (aconF not in allconFieldsSet[n]))
+            allFieldsSet[n].append(aF)
+            allcFieldsSet[n].append(acF)
+            allcconFieldsSet[n].append(acconF)
+            allconFieldsSet[n].append(aconF)
+
+
     form += "* Define all fields and auxiliary fields:\n"
     form += f"Function {', '.join(set(allFields))};\n"
     form += f"CFunction {', '.join(set(allcFields))};\n"
@@ -1570,17 +1662,24 @@ def form_declarations(n_der: int):
     form += "\n"
     form += "* List of all possibly occurring fields bevor they are converted into Lorentz irreps\n"
     form += "* Note: If a field (like e.g. a fieldstrength tensor B) is converted into two different Lorentz irreps (BL, BR) is has to occur twice in this list\n"
-
-    form += f"Set AllFields: {', '.join(allFields)};\n\n"
+    form += f"Set AllFields: {', '.join(allFields)};\n"
+    for i, allFs in enumerate(allFieldsSet):
+        form += f"Set AllFields{i}: {', '.join(allFs)};\n"
+    form += "\n"
     form += "* List of the same fields as in AllFields (in the same order!) but defined as a commuting Function\n"
-    form += f"Set AllcFields: {', '.join(allcFields)};\n\n"
+    form += f"Set AllcFields: {', '.join(allcFields)};\n"
+    for i, allcFs in enumerate(allcFieldsSet):
+        form += f"Set AllcFields{i}: {', '.join(allcFs)};\n"
+    form += "\n"
     form += "* List of the same fields (first as commutative fields) as in AllFields (in the same order!) but with possible replacements like Dirac to Weyl spinors and so on\n"
-    # FIXME: For testing purposed lets take the same as in AllFields
-    # allcconFields = allcFields
-    # allconFields = allFields
-    form += f"Set AllcconFields: {', '.join(allcconFields)};\n\n"
+    form += f"Set AllcconFields: {', '.join(allcconFields)};\n"
+    for i, allcconFs in enumerate(allcconFieldsSet):
+        form += f"Set AllcconFields{i}: {', '.join(allcconFs)};\n"
+    form += "\n"
     form += "* Now as noncommutative fields\n"
     form += f"Set AllconFields: {', '.join(allconFields)};\n"
+    for i, allconFs in enumerate(allconFieldsSet):
+        form += f"Set AllconFields{i}: {', '.join(allconFs)};\n"
     form += "\n"
     form += "* Set for convenient insertion of op1, op2, ... indices\n"
     form += "Set op: op1,...,op100;\n"
@@ -1625,8 +1724,9 @@ def form_declarations(n_der: int):
     form_converttoSL2C()
 
     form_makecommutative(n_der)
-    form_makenoncommutative(n_der)
+    form_makenoncommutative(len(allFieldsSet), n_der)
 
+    form_lorepsandSigma2()
     form_replaceSigmabyEps()
     form_simplifySL2CEps()
     # form_replaceSUNGenerators(N=2)

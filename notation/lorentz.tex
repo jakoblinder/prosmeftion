@@ -63,24 +63,68 @@ The \sm{} Lagrangian consists only of three types of fields and their derivative
 		}
 	\end{equation}
 	They are chosen such that $ L $, $ e_{\mathbb{C}} $, $ Q $, $ u_{\mathbb{C}} $ and $ d_{\mathbb{C}} $ are all left-handed fields (s. \cref{tab:fields}).
+	Furthermore, the charge conjugated fields are:
+	\begin{equation}
+		\boxed{
+			\begin{alignedat}{5}
+				&l_{\mathrm{L}}^{C} = \begin{pmatrix}
+					0 \\
+					L^{\dagger, \dot{\alpha}}
+				\end{pmatrix}, \quad
+				&&e_{\mathrm{R}}^{C} = \begin{pmatrix}
+					e_{\mathbb{C}, \alpha} \\
+					0
+				\end{pmatrix}, \quad
+				&&q_{\mathrm{L}}^{C} = \begin{pmatrix}
+					0 \\
+					Q^{\dagger, \dot{\alpha}}
+				\end{pmatrix}, \quad
+				&&u_{\mathrm{R}}^{C} = \begin{pmatrix}
+					u_{\mathbb{C}, \alpha} \\
+					0
+				\end{pmatrix}, \quad
+				&&d_{\mathrm{R}}^{C} = \begin{pmatrix}
+					d_{\mathbb{C}, \alpha} \\
+					0
+				\end{pmatrix}, \\[1.5ex]
+				%					Second row
+				&\bar{l}_{\mathrm{L}}^{C} = \begin{pmatrix}
+					L^{\alpha}, 0
+				\end{pmatrix}, \quad
+				&&\bar{e}_{\mathrm{R}}^{C} = \begin{pmatrix}
+					0, e_{\mathbb{C}, \dot{\alpha}}^{\dagger}
+				\end{pmatrix}, \quad
+				&&\bar{q}_{\mathrm{L}}^{C} = \begin{pmatrix}
+					Q^{\alpha}, 0
+				\end{pmatrix}, \quad
+				&&\bar{u}_{\mathrm{R}}^{C} = \begin{pmatrix}
+					0, u^{\dagger}_{\mathbb{C}, \dot{\alpha}}
+				\end{pmatrix}, \quad
+				&&\bar{d}_{\mathrm{R}}^{C} = \begin{pmatrix}
+					0, d_{\mathbb{C}, \dot{\alpha}}^{\dagger}
+				\end{pmatrix}.
+			\end{alignedat} \label{eq:quarks}
+		}
+	\end{equation}
 	\item The field strength tensors  $ B $, $ \tensor*{W}{^{I}} $ and $ \tensor*{G}{^{A}} $ of the gauge groups $ \U{1}_{\mathrm{Y}} $, $ \SU{2}_{\mathrm{W}} $ and $ \SU{3}_{\mathrm{C}} $ are defined as irreducible representations $ (1,0) $ and $ (0,1) $ of the Lorentz group
 	\begin{equation}
 		\boxed{
 			\begin{alignedat}{5}
 				F_{\mathrm{L} \alpha \beta} :&= \frac{\mi}{2} F_{\mu \nu} \sigma_{\alpha \beta}^{\mu \nu} \in (1,0)
 				&&\text{\ and\ }&&
-				F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} :&&= -\frac{\mi}{2} F^{\mu \nu} \tensor*{\bar{\sigma}}{_{\mu \nu} ^{\dot{\alpha} \dot{\beta}}} \in (0,1)
-				\text{,} \\ 
+				F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} :&&= -\frac{\mi}{2} F^{\mu \nu} \tensor*{\bar{\sigma}}{_{\mu \nu} ^{\dot{\alpha} \dot{\beta}}} \in (0,1) \\
 				&= \frac{1}{2} F_{\mu \nu} \tensor*{\eps}{_{\dot{\alpha} \dot{\beta}}} \tensor*{(\sigma^{\mu})}{^{\dot{\alpha}}_{\alpha}} \tensor*{(\sigma^{\nu})}{^{\dot{\beta}}_{\beta}}
-				&&\quad&& &&= -\frac{1}{2} F_{\mu \nu} \tensor*{\eps}{^{\alpha \beta}} \tensor*{(\sigma^{\mu})}{^{\dot{\alpha}}_{\alpha}} \tensor*{(\sigma^{\nu})}{^{\dot{\beta}}_{\beta}}
+				&&\quad&& &&= -\frac{1}{2} F_{\mu \nu} \tensor*{\eps}{^{\alpha \beta}} \tensor*{(\sigma^{\mu})}{^{\dot{\alpha}}_{\alpha}} \tensor*{(\sigma^{\nu})}{^{\dot{\beta}}_{\beta}} \text{,}
 			\end{alignedat}
 			\label{eq:fieldStrengthTensorsSL2C}
 		}
 	\end{equation}
-	and are symmetric in their spinor indices. The ordinary field strength tensor can be recovered with:
+	and are symmetric in their spinor indices. The ordinary and the dual field strength tensor can be recovered with:
 	\begin{equation}
 		\begin{aligned}
-			F_{\mu \nu} = - \frac{\mi}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} - F_{\mathrm{L} \alpha \beta} \tensor{(\sigma_{\mu \nu})}{^{\alpha \beta}}\Big).
+			F_{\mu \nu} =& - \frac{\mi}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} - F_{\mathrm{L} \alpha \beta} \tensor{(\sigma_{\mu \nu})}{^{\alpha \beta}}\Big) \text{,} \\
+			\tilde{F}_{\mu \nu} =& \frac{1}{2} \eps_{\mu \nu \rho \sigma} F^{\rho \sigma}
+			                    = - \frac{1}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} + F_{\mathrm{L} \alpha \beta} \tensor{(\sigma_{\mu \nu})}{^{\alpha \beta}}\Big) \text{.}
 		\end{aligned}
 		\label{eq:fieldStrengthTensorsOrdinary}
 	\end{equation}
@@ -121,7 +165,7 @@ The \sm{} Lagrangian consists only of three types of fields and their derivative
 \end{table}
 \clearpage
 \subsection{Lorentz and \SLtwoC{} invariant tensors} \label{sec:sigmaRelations}
-There exists a few tensors which are invariant \wrt the transformations given in \cref{eq:SL2C1,eq:SL2C2}. Those are, for example, $ \sigma^{\mu} $ and $ \bar{\sigma}^{\mu} $ are defined with\footnote{The Pauli matrices are defined as: $ \sigma_{1} = \begin{pmatrix}
+There exists a few tensors which are invariant \wrt the transformations given in \cref{eq:SL2C1,eq:SL2C2}. Those are, for example, $ \sigma^{\mu} $ and $ \bar{\sigma}^{\mu} $,  defined with\footnote{The Pauli matrices are defined as: $ \sigma_{1} = \begin{pmatrix}
 		0 & 1 \\
 		1 & 0 
 	\end{pmatrix},
@@ -142,7 +186,7 @@ There exists a few tensors which are invariant \wrt the transformations given in
 			\tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} := (\tensor{\one}{^{\dot{\alpha} \alpha}}, -\tensor{(\sigma^{i})}{^{\dot{\alpha} \alpha}})^{\mu} \text{.}}
 	\end{aligned}
 \end{equation}
-They are hermitian and traceless. Further, they obey the properties:
+They are hermitian\footnote{$ \tensor{(\sigma^{\mu})}{_{\alpha \dot{\beta}}} = \tensor{(\sigma^{\dagger \mu})}{_{\alpha \dot{\beta}}} = \tensor{(\sigma^{* \mu})}{_{\dot{\beta} \alpha}} = \tensor{(\sigma^{\mu})}{_{\beta \dot{\alpha}}} $.} and obey the properties
 \begin{gather}
 	\bar{\sigma}^{\mu} \sigma^{\nu} + \bar{\sigma}^{\nu} \sigma^{\mu} = 2 \metric^{\mu \nu} \one, \quad
 	\sigma^{\mu} \bar{\sigma}^{\nu} + \sigma^{\nu} \bar{\sigma}^{\mu} = 2 \metric^{\mu \nu} \one, \\
@@ -414,12 +458,12 @@ The charge conjugated field is defined as
 			\chi_{\alpha} (x)\\
 			(\xi^{\dagger})^{\dot{\alpha}} (x)
 		\end{pmatrix}
-		= C (\bar{\psi})^{\trans} (x) 
+		= C \cdot \bar{\psi}^{\trans} (x) 
 		\quad \Rightarrow
 		\bar{\psi}^{C} (x) = \begin{pmatrix}
-			\xi^{\alpha} (x) & (\chi^{\dagger})_{\dot{\alpha}} (x)
+			\xi^{\alpha} (x), (\chi^{\dagger})_{\dot{\alpha}} (x)
 		\end{pmatrix}
-		= - \psi^{\trans}(x) C^{-1}
+		= - \psi^{\trans}(x) \cdot C^{-1} = \psi^{\trans}(x) \cdot C
 		\text{,}
 	\end{aligned}
 \end{equation}
@@ -430,13 +474,24 @@ with the charge conjugation matrix
 			\eps_{\alpha \beta} & 0\\
 			0 & \eps^{\dot{\alpha} \dot{\beta}}
 		\end{pmatrix}
-		= \begin{pmatrix}
-			-\eps^{\alpha \beta} & 0\\
-			0 & -\eps_{\dot{\alpha} \dot{\beta}}
-		\end{pmatrix} ,
+		= - \begin{pmatrix}
+			\eps^{\alpha \beta} & 0\\
+			0 & \eps_{\dot{\alpha} \dot{\beta}}
+		\end{pmatrix}
+		=: - C^{-1},
 	\end{aligned} \label{eq:ChargeConjugation}
 \end{equation}
-$ C = C^{*} = - C^{\dagger} = - C^{\trans} = - C^{-1} $ and $ C^{-1} \gamma_{\mu} C = - \gamma_{\mu}^{\trans} $.
+$ C = C^{*} = - C^{\dagger} = - C^{\trans} = - C^{-1} $ and
+\begin{equation}
+	\begin{aligned}
+		C^{-1} \gamma_{\mu} C = - \gamma_{\mu}^{\trans}
+		= - \begin{pmatrix}
+			0 & \tensor{(\sigma_{\mu})}{^{\alpha \dot{\beta}}} \\
+			\tensor{(\bar{\sigma}_{\mu})}{_{\dot{\alpha} \beta}} & 0
+		\end{pmatrix}
+		\text{.}
+	\end{aligned}
+\end{equation}
 Finally, define
 \begin{equation}
 	\begin{aligned}
@@ -448,24 +503,22 @@ Finally, define
 \end{equation}
 Combining all the previous results yields the following Dirac bi-spinor expressions:
 \begin{equation}
+	\boxed{\hspace{1em}
 	\begin{aligned}
-		&\boxed{\hspace{1em}
-			\begin{aligned}
-				\bar{\Psi}_{1} \Psi_{2} &= \chi_{1}^{\alpha} \xi_{2 \alpha} + \xi_{1 \dot{\alpha}}^{\dagger} \chi_{2}^{\dagger \dot{\alpha}} ,\\
-				\bar{\Psi}_{1} \gamma^{\mu} \Psi_{2} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \xi_{2 \alpha} ,
-			\end{aligned}
-		}\\
-		&\begin{aligned}
-			\bar{\Psi}_{1} \sigma^{\mu \nu} \Psi_{2} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_{\alpha} ^{\beta}} \xi_{2 \beta} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}}_{\dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}} ,\\
-			\Psi_{1}^{\trans} C \Psi_{2} &= \bar{\Psi}_{1}^{C} \Psi_{2} = \xi_{1}^{\alpha} \xi_{2 \alpha} + \chi_{1 \dot{\alpha}}^{\dagger} \chi_{2}^{\dagger \dot{\alpha}} ,\\
-			\Psi_{1}^{\trans} C \gamma^{\mu} \Psi_{2} &= \xi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} + \chi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \xi_{2 \alpha} ,\\
-			\Psi_{1}^{\trans} C \sigma^{\mu \nu} \Psi_{2} &= \xi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_\alpha ^\beta} \xi_{2 \beta} + \chi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}} ,\\
-			\bar{\Psi}_{1} C \bar{\Psi}_{2}^{\trans} &= \xi_{1 \dot{\alpha}}^{\dagger} \xi_{2}^{\dagger \dot{\alpha}} + \chi_{1}^{\alpha} \chi_{2 \alpha}, \\
-			\bar{\Psi}_{1} \gamma^{\mu} C \bar{\Psi}_{2}^{\trans} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \xi_{2}^{\dagger \dot{\alpha}} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \chi_{2 \alpha}, \\
-			\bar{\Psi}_{1} \sigma^{\mu \nu} C \bar{\Psi}_{2}^{\trans} &= \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} \xi_{2}^{\dagger \dot{\beta}} + \chi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_{\alpha}^{\beta}} \chi_{2 \beta}.
-		\end{aligned}
-	\end{aligned} \label{eq:4SpinorRelations}
+		\bar{\Psi}_{1} \Psi_{2} &= \chi_{1}^{\alpha} \xi_{2 \alpha} + \xi_{1 \dot{\alpha}}^{\dagger} \chi_{2}^{\dagger \dot{\alpha}} \text{,} \\
+		\bar{\Psi}_{1} \gamma^{\mu} \Psi_{2} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \xi_{2 \alpha} \text{,} \\
+		\bar{\Psi}_{1} \sigma^{\mu \nu} \Psi_{2} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_{\alpha} ^{\beta}} \xi_{2 \beta} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}}_{\dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}} ,\\
+		\bar{\Psi}_{1}^{C} \Psi_{2} &= \Psi_{1}^{\trans} C \Psi_{2} = \xi_{1}^{\alpha} \xi_{2 \alpha} + \chi_{1 \dot{\alpha}}^{\dagger} \chi_{2}^{\dagger \dot{\alpha}} ,\\
+		\bar{\Psi}_{1}^{C} \gamma^{\mu} \Psi_{2} &= \xi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} + \chi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \xi_{2 \alpha} ,\\
+		\bar{\Psi}_{1}^{C} \sigma^{\mu \nu} \Psi_{2} &= \xi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_\alpha ^\beta} \xi_{2 \beta} + \chi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}} ,\\
+		\bar{\Psi}_{1} \Psi_{2}^{C} &= \chi_{1}^{\alpha} \chi_{2 \alpha} + \xi_{1 \dot{\alpha}}^{\dagger} \xi_{2}^{\dagger \dot{\alpha}} \text{,} \\
+		\bar{\Psi}_{1} \gamma^{\mu} \Psi_{2}^{C} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \xi_{2}^{\dagger \dot{\alpha}} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \chi_{2 \alpha} \text{,} \\
+		\bar{\Psi}_{1} \sigma^{\mu \nu} \Psi_{2}^{C} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_{\alpha}^{\beta}} \chi_{2 \beta} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} \xi_{2}^{\dagger \dot{\beta}} \text{.}
+	\end{aligned}
+	}
+	\label{eq:4SpinorRelations}
 \end{equation}
+Note that due to relations like $ \bar{\Psi}_{1}^{C} \gamma^{\mu}  \Psi^{C}_{2} = (\bar{\Psi}_{1} \gamma^{\mu} \Psi_{2})^{\trans} = \bar{\Psi}_{1} \gamma^{\mu} \Psi_{2} $ the above relations are complete.
 Considering the relations between the four component Dirac and the two component Weyl spinors of the \sm{} given in \cref{eq:quarks}, the above relations can be illustrated with some examples:
 \begin{itemize}
 	\item $ \bar{u}_{\mathrm{R}} \gamma^{\mu} u_{\mathrm{R}} = u_{\mathbb{C}} \sigma^{\mu} u_{\mathbb{C}}^{\dagger} $ with $ u_{\mathbb{C}}^{\alpha} \equiv \chi^{\alpha} $ and $ \tensor{(u_{\mathbb{C}}^{\dagger})}{^{\dot{\alpha}}} \equiv \tensor{(\chi^{\dagger})}{^{\dot{\alpha}}} $,

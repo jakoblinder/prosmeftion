@@ -504,17 +504,35 @@ Finally, define
 Combining all the previous results yields the following Dirac bi-spinor expressions:
 \begin{equation}
 	\boxed{\hspace{1em}
-	\begin{aligned}
-		\bar{\Psi}_{1} \Psi_{2} &= \chi_{1}^{\alpha} \xi_{2 \alpha} + \xi_{1 \dot{\alpha}}^{\dagger} \chi_{2}^{\dagger \dot{\alpha}} \text{,} \\
-		\bar{\Psi}_{1} \gamma^{\mu} \Psi_{2} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \xi_{2 \alpha} \text{,} \\
-		\bar{\Psi}_{1} \sigma^{\mu \nu} \Psi_{2} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_{\alpha} ^{\beta}} \xi_{2 \beta} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}}_{\dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}} ,\\
-		\bar{\Psi}_{1}^{C} \Psi_{2} &= \Psi_{1}^{\trans} C \Psi_{2} = \xi_{1}^{\alpha} \xi_{2 \alpha} + \chi_{1 \dot{\alpha}}^{\dagger} \chi_{2}^{\dagger \dot{\alpha}} ,\\
-		\bar{\Psi}_{1}^{C} \gamma^{\mu} \Psi_{2} &= \xi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} + \chi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \xi_{2 \alpha} ,\\
-		\bar{\Psi}_{1}^{C} \sigma^{\mu \nu} \Psi_{2} &= \xi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_\alpha ^\beta} \xi_{2 \beta} + \chi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}} ,\\
-		\bar{\Psi}_{1} \Psi_{2}^{C} &= \chi_{1}^{\alpha} \chi_{2 \alpha} + \xi_{1 \dot{\alpha}}^{\dagger} \xi_{2}^{\dagger \dot{\alpha}} \text{,} \\
-		\bar{\Psi}_{1} \gamma^{\mu} \Psi_{2}^{C} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \xi_{2}^{\dagger \dot{\alpha}} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \chi_{2 \alpha} \text{,} \\
-		\bar{\Psi}_{1} \sigma^{\mu \nu} \Psi_{2}^{C} &= \chi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_{\alpha}^{\beta}} \chi_{2 \beta} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} \xi_{2}^{\dagger \dot{\beta}} \text{.}
-	\end{aligned}
+	\begin{alignedat}{5}
+		\bar{\Psi}_{1} \Psi_{2} &=\ && \chi_{1}^{\alpha} \xi_{2 \alpha} + \xi_{1 \dot{\alpha}}^{\dagger} \chi_{2}^{\dagger \dot{\alpha}}
+		&&=\ && \eps^{\alpha \beta} \chi_{1 \beta} \xi_{2 \alpha} + \eps_{\dot{\alpha} \dot{\beta}} \xi_{1}^{\dagger \dot{\beta}} \chi_{2}^{\dagger \dot{\alpha}} \text{,} \\
+%		
+		\bar{\Psi}_{1} \gamma^{\mu} \Psi_{2} &=\ && \chi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \xi_{2 \alpha}
+		&&=\ && - \chi_{1 \alpha} \tensor{(\sigma^{\mu})}{^{\alpha}_{\dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} - \xi_{1}^{\dagger \dot{\alpha}} \tensor{(\bar{\sigma}^{\mu})}{_{\dot{\alpha}}^{\alpha}} \xi_{2 \alpha} \text{,} \\
+%		
+		\bar{\Psi}_{1} \sigma^{\mu \nu} \Psi_{2} &=\ && \chi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_{\alpha} ^{\beta}} \xi_{2 \beta} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}}_{\dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}}
+		&&=\ && - \chi_{1 \alpha} \tensor{(\sigma^{\mu \nu})}{^{\alpha \beta}} \xi_{2 \beta} - \xi_{1}^{\dagger \dot{\alpha}} \tensor{(\bar{\sigma}^{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}} \text{,} \\
+%		
+%
+		\bar{\Psi}_{1}^{C} \Psi_{2} &=\ && \Psi_{1}^{\trans} C \Psi_{2} = \xi_{1}^{\alpha} \xi_{2 \alpha} + \chi_{1 \dot{\alpha}}^{\dagger} \chi_{2}^{\dagger \dot{\alpha}}
+		&&=\ && \eps^{\alpha \beta} \xi_{1 \beta} \xi_{2 \alpha} + \eps_{\dot{\alpha} \dot{\beta}} \chi_{1}^{\dagger \dot{\beta}} \chi_{2}^{\dagger \dot{\alpha}} \text{,} \\
+%		
+		\bar{\Psi}_{1}^{C} \gamma^{\mu} \Psi_{2} &=\ && \xi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} + \chi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \xi_{2 \alpha}
+		&&=\ && - \xi_{1 \alpha} \tensor{(\sigma^{\mu})}{^{\alpha}_{\dot{\alpha}}} \chi_{2}^{\dagger \dot{\alpha}} -  \chi_{1}^{\dagger \dot{\alpha}} \tensor{(\bar{\sigma}^{\mu})}{_{\dot{\alpha}} ^{\alpha}} \xi_{2 \alpha} \text{,}\\
+%		
+		\bar{\Psi}_{1}^{C} \sigma^{\mu \nu} \Psi_{2} &=\ && \xi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_\alpha ^\beta} \xi_{2 \beta} + \chi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}}
+		&&=\ && - \xi_{1 \alpha} \tensor{(\sigma^{\mu \nu})}{^{\alpha \beta}} \xi_{2 \beta} - \chi_{1}^{\dagger \dot{\alpha}} \tensor{(\bar{\sigma}^{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} \chi_{2}^{\dagger \dot{\beta}} \text{,}\\
+%		
+%
+		\bar{\Psi}_{1} \Psi_{2}^{C} &=\ && \chi_{1}^{\alpha} \chi_{2 \alpha} + \xi_{1 \dot{\alpha}}^{\dagger} \xi_{2}^{\dagger \dot{\alpha}}
+		&&=\ && \eps^{\alpha \beta} \chi_{1 \beta} \chi_{2 \alpha} + \eps_{\dot{\alpha} \dot{\beta}} \xi_{1}^{\dagger \dot{\beta}} \xi_{2}^{\dagger \dot{\alpha}} \text{,} \\
+%		
+		\bar{\Psi}_{1} \gamma^{\mu} \Psi_{2}^{C} &=\ && \chi_{1}^{\alpha} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}} \xi_{2}^{\dagger \dot{\alpha}} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu})}{^{\dot{\alpha} \alpha}} \chi_{2 \alpha} &&=\ && - \chi_{1 \alpha} \tensor{(\sigma^{\mu})}{^{\alpha} _{\dot{\alpha}}} \xi_{2}^{\dagger \dot{\alpha}} - \xi_{1}^{\dagger \dot{\alpha}} \tensor{(\bar{\sigma}^{\mu})}{_{\dot{\alpha}} ^{\alpha}} \chi_{2 \alpha} \text{,} \\
+%		
+		\bar{\Psi}_{1} \sigma^{\mu \nu} \Psi_{2}^{C} &=\ && \chi_{1}^{\alpha} \tensor{(\sigma^{\mu \nu})}{_{\alpha}^{\beta}} \chi_{2 \beta} + \xi_{1 \dot{\alpha}}^{\dagger} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}} _{\dot{\beta}}} \xi_{2}^{\dagger \dot{\beta}}
+		&&=\ && - \chi_{1 \alpha} \tensor{(\sigma^{\mu \nu})}{^{\alpha \beta}} \chi_{2 \beta} - \xi_{1}^{\dagger \dot{\alpha}} \tensor{(\bar{\sigma}^{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} \xi_{2}^{\dagger \dot{\beta}} \text{.}
+	\end{alignedat}
 	}
 	\label{eq:4SpinorRelations}
 \end{equation}

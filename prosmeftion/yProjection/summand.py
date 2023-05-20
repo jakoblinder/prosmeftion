@@ -348,7 +348,7 @@ class Summand(Summand_Model):
     ### SL2C Conversion ###
     #######################
 
-    def form_convertDirac(self, max_dim:int=6):
+    def form_convertDirac(self):
         """
         Convert Dirac spinors into Weyl spinors
         #call convertDirac(leftspinor, rightspinor)
@@ -357,23 +357,18 @@ class Summand(Summand_Model):
         convertDirac then has to be called for every combination of spinors (not two charge conjugated ones).
         in convertDirac is written.
 
-        Parameters
-        ----------
-        max_dim
-
         Returns
         -------
 
         """
-        n_repetitions = max_dim // 3
         # Spinors
         all_spinors = {name: field for name, field in op_config["fermionfields"].items() if
                        "diracspinor" in field.keys()}
-        spinors = list(all_spinors.keys())
         all_spinors = {name: weyl for field in all_spinors.values() for name, weyl in field["diracspinor"].items()}
         all_spinors = {name: [get_commuting_op(entry) if entry else 0 for entry in weyl] for name, weyl in all_spinors.items()}
         # CFunction xi1, [xi1+], chi1, [chi1+], xi2, [xi2+], chi2, [chi2+]
         # Functions
+        sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]
         gamma = op_config["tensors"]["gamma"]["mathematica"]["gamma"]
         sigma2lor = op_config["tensors"]["sigma2lor"]["mathematica"]["sigma2lor"]
         sigma = op_config["tensors"]["sigma"]["mathematica"]["sigma"]
@@ -402,12 +397,12 @@ class Summand(Summand_Model):
                 if chi1 == 0 or xi2 == 0:
                     id += "0"
                 else:
-                    id += f"{chi1}(op1,{usl1},?a)*{xi2}(op2,{lsl1},?b)"
+                    id += f"{sl2Ceps}({usl1},{usl2})*{chi1}(op1,{lsl2},?a)*{xi2}(op2,{lsl1},?b)"
                 id += " + "
                 if xi1_dagger == 0 or chi2_dagger == 0:
                     id += "0"
                 else:
-                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{chi2_dagger}(op2,{usldot1},?b)"
+                    id += f"{sl2Ceps}({lsldot1},{lsldot2})*{xi1_dagger}(op1,{usldot2},?a)*{chi2_dagger}(op2,{usldot1},?b)"
                 id_statements.append(id)
 
                 # psibar*gamma*psi
@@ -416,12 +411,12 @@ class Summand(Summand_Model):
                 if chi1 == 0 or chi2_dagger == 0:
                     id += "0"
                 else:
-                    id += f"{chi1}(op1,{usl1},?a)*{sigma}(lor1,{lsl1},{lsldot1})*{chi2_dagger}(op2,{usldot1},?b)"
-                id += " + "
+                    id += f"- {chi1}(op1,{lsl1},?a)*{sigma}(lor1,{usl1},{lsldot1})*{chi2_dagger}(op2,{usldot1},?b)"
+                id += " - "
                 if xi1_dagger == 0 or xi2 == 0:
                     id += "0"
                 else:
-                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar}(lor1,{usldot1},{usl1})*{xi2}(op2,{lsl1},?b)"
+                    id += f"{xi1_dagger}(op1,{usldot1},?a)*{sigmabar}(lor1,{lsldot1},{usl1})*{xi2}(op2,{lsl1},?b)"
                 id_statements.append(id)
 
                 # psibar*simga2lor*psi
@@ -430,12 +425,12 @@ class Summand(Summand_Model):
                 if chi1 == 0 or xi2 == 0:
                     id += "0"
                 else:
-                    id += f"{chi1}(op1,{usl1},?a)*{sigma2}(lor1,lor2,{lsl1},{usl2})*{xi2}(op2,{lsl2},?b)"
-                id += " + "
+                    id += f"- {chi1}(op1,{lsl1},?a)*{sigma2}(lor1,lor2,{usl1},{usl2})*{xi2}(op2,{lsl2},?b)"
+                id += " - "
                 if xi1_dagger == 0 or chi2_dagger == 0:
                     id += "0"
                 else:
-                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar2}(lor1,lor2,{usldot1},{lsldot2})*{chi2_dagger}(op2,{usldot2},?b)"
+                    id += f"{xi1_dagger}(op1,{usldot1},?a)*{sigmabar2}(lor1,lor2,{lsldot1},{lsldot2})*{chi2_dagger}(op2,{usldot2},?b)"
                 id_statements.append(id)
 
             elif lsbar[-4:] == "barC" and rs[-1:] != "C":
@@ -453,12 +448,12 @@ class Summand(Summand_Model):
                 if xi1 == 0 or xi2 == 0:
                     id += "0"
                 else:
-                    id += f"{xi1}(op1,{usl1},?a)*{xi2}(op2,{lsl1},?b)"
+                    id += f"{sl2Ceps}({usl1},{usl2})*{xi1}(op1,{lsl2},?a)*{xi2}(op2,{lsl1},?b)"
                 id += " + "
                 if chi1_dagger == 0 or chi2_dagger == 0:
                     id += "0"
                 else:
-                    id += f"{chi1_dagger}(op1,{lsldot1},?a)*{chi2_dagger}(op2,{usldot1},?b)"
+                    id += f"{sl2Ceps}({lsldot1},{lsldot2})*{chi1_dagger}(op1,{usldot2},?a)*{chi2_dagger}(op2,{usldot1},?b)"
                 id_statements.append(id)
 
                 # psibar*gamma*psi
@@ -467,12 +462,12 @@ class Summand(Summand_Model):
                 if xi1 == 0 or chi2_dagger == 0:
                     id += "0"
                 else:
-                    id += f"{xi1}(op1,{usl1},?a)*{sigma}(lor1,{lsl1},{lsldot1})*{chi2_dagger}(op2,{usldot1},?b)"
-                id += " + "
+                    id += f"- {xi1}(op1,{lsl1},?a)*{sigma}(lor1,{usl1},{lsldot1})*{chi2_dagger}(op2,{usldot1},?b)"
+                id += " - "
                 if chi1_dagger == 0 or xi2 == 0:
                     id += "0"
                 else:
-                    id += f"{chi1_dagger}(op1,{lsldot1},?a)*{sigmabar}(lor1,{usldot1},{usl1})*{xi2}(op2,{lsl1},?b)"
+                    id += f"{chi1_dagger}(op1,{usldot1},?a)*{sigmabar}(lor1,{lsldot1},{usl1})*{xi2}(op2,{lsl1},?b)"
                 id_statements.append(id)
 
                 # psibar*simga2lor*psi
@@ -481,12 +476,12 @@ class Summand(Summand_Model):
                 if xi1 == 0 or xi2 == 0:
                     id += "0"
                 else:
-                    id += f"{xi1}(op1,{usl1},?a)*{sigma2}(lor1,lor2,{lsl1},{usl2})*{xi2}(op2,{lsl2},?b)"
-                id += " + "
+                    id += f"- {xi1}(op1,{lsl1},?a)*{sigma2}(lor1,lor2,{usl1},{usl2})*{xi2}(op2,{lsl2},?b)"
+                id += " - "
                 if chi1_dagger == 0 or chi2_dagger == 0:
                     id += "0"
                 else:
-                    id += f"{chi1_dagger}(op1,{lsldot1},?a)*{sigmabar2}(lor1,lor2,{usldot1},{lsldot2})*{chi2_dagger}(op2,{usldot2},?b)"
+                    id += f"{chi1_dagger}(op1,{usldot1},?a)*{sigmabar2}(lor1,lor2,{lsldot1},{lsldot2})*{chi2_dagger}(op2,{usldot2},?b)"
                 id_statements.append(id)
 
             elif lsbar[-3:] == "bar" and rs[-1:] == "C":
@@ -506,12 +501,12 @@ class Summand(Summand_Model):
                 if chi1 == 0 or chi2 == 0:
                     id += "0"
                 else:
-                    id += f"{chi1}(op1,{usl1},?a)*{chi2}(op2,{lsl1},?b)"
+                    id += f"{sl2Ceps}({usl1},{usl2})*{chi1}(op1,{lsl2},?a)*{chi2}(op2,{lsl1},?b)"
                 id += " + "
                 if xi1_dagger == 0 or xi2_dagger == 0:
                     id += "0"
                 else:
-                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{xi2_dagger}(op2,{usldot1},?b)"
+                    id += f"{sl2Ceps}({lsldot1},{lsldot2})*{xi1_dagger}(op1,{usldot2},?a)*{xi2_dagger}(op2,{usldot1},?b)"
                 id_statements.append(id)
 
                 # psibar*gamma*psi
@@ -520,12 +515,12 @@ class Summand(Summand_Model):
                 if chi1 == 0 or xi2_dagger == 0:
                     id += "0"
                 else:
-                    id += f"{chi1}(op1,{usl1},?a)*{sigma}(lor1,{lsl1},{lsldot1})*{xi2_dagger}(op2,{usldot1},?b)"
-                id += " + "
+                    id += f"- {chi1}(op1,{lsl1},?a)*{sigma}(lor1,{usl1},{lsldot1})*{xi2_dagger}(op2,{usldot1},?b)"
+                id += " - "
                 if xi1_dagger == 0 or chi2 == 0:
                     id += "0"
                 else:
-                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar}(lor1,{usldot1},{usl1})*{chi2}(op2,{lsl1},?b)"
+                    id += f"{xi1_dagger}(op1,{usldot1},?a)*{sigmabar}(lor1,{lsldot1},{usl1})*{chi2}(op2,{lsl1},?b)"
                 id_statements.append(id)
 
                 # psibar*simga2lor*psi
@@ -534,12 +529,12 @@ class Summand(Summand_Model):
                 if chi1 == 0 or chi2 == 0:
                     id += "0"
                 else:
-                    id += f"{chi1}(op1,{usl1},?a)*{sigma2}(lor1,lor2,{lsl1},{usl2})*{chi2}(op2,{lsl2},?b)"
-                id += " + "
+                    id += f"- {chi1}(op1,{lsl1},?a)*{sigma2}(lor1,lor2,{usl1},{usl2})*{chi2}(op2,{lsl2},?b)"
+                id += " - "
                 if xi1_dagger == 0 or xi2_dagger == 0:
                     id += "0"
                 else:
-                    id += f"{xi1_dagger}(op1,{lsldot1},?a)*{sigmabar2}(lor1,lor2,{usldot1},{lsldot2})*{xi2_dagger}(op2,{usldot2},?b)"
+                    id += f"{xi1_dagger}(op1,{usldot1},?a)*{sigmabar2}(lor1,lor2,{lsldot1},{lsldot2})*{xi2_dagger}(op2,{usldot2},?b)"
                 id_statements.append(id)
 
             form = ""

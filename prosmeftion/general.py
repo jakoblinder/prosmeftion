@@ -1043,6 +1043,10 @@ def form_replaceSigmabyEps():
     form += "\t" + f"id {sigmabar}(?a, Lsldot1?Lsldot, Lsl2?Lsl, ?b) = {sigma}(?a, Lsl2, Lsldot1, ?b);\n"
     form += "\t" + f"id {sigmabar}(?a, Usldot1?Usldot, Usl2?Usl, ?b) = {sigma}(?a, Usl2, Usldot1, ?b);\n"
     form += "\t" + f"id {sigmabar}(?a, Usldot1?Usldot, Lsl2?Lsl, ?b) = {sigma}(?a, Lsl2, Usldot1, ?b);\n"
+
+    form += "\t" + f"id {sigma}(?a, Lsldot1?Lsldot, Usl2?Usl, ?b) = {sigma}(?a, Usl2, Lsldot1, ?b);\n"
+    form += "\t" + f"id {sigma}(?a, Usldot1?Usldot, Lsl2?Lsl, ?b) = {sigma}(?a, Lsl2, Usldot1, ?b);\n"
+
     form += "* Replace in lorentz indices contracted sigmas by SL2C epsilontensors.\n"
     form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Lsldot1?Lsldot) * {sigma}(lor1?lor, Usl2?Usl, Lsldot2?Lsldot) = - 2 * {sl2Ceps}(Usl1, Usl2) * {sl2Ceps}(Lsldot1, Lsldot2);\n"
     form += "\t" + f"id {sigma}(lor1?lor, Usl1?Usl, Usldot1?Usldot) * {sigma}(lor1?lor, Usl2?Usl, Usldot2?Usldot) = + 2 * {sl2Ceps}(Usl1, Usl2) * {sl2Ceps}(Usldot1, Usldot2);\n"

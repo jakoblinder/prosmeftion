@@ -122,7 +122,7 @@ The \sm{} Lagrangian consists only of three types of fields and their derivative
 	and are symmetric in their spinor indices. The ordinary and the dual field strength tensor can be recovered with:
 	\begin{equation}
 		\begin{aligned}
-			F_{\mu \nu} =& - \frac{\mi}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} - F_{\mathrm{L} \alpha \beta} \tensor{(\sigma_{\mu \nu})}{^{\alpha \beta}}\Big) \text{,} \\
+			F_{\mu \nu} =& + \frac{\mi}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} - F_{\mathrm{L} \alpha \beta} \tensor{(\sigma_{\mu \nu})}{^{\alpha \beta}}\Big) \text{,} \\[0.5em]
 			\tilde{F}_{\mu \nu} =& \frac{1}{2} \eps_{\mu \nu \rho \sigma} F^{\rho \sigma}
 			                    = - \frac{1}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} + F_{\mathrm{L} \alpha \beta} \tensor{(\sigma_{\mu \nu})}{^{\alpha \beta}}\Big) \text{.}
 		\end{aligned}
@@ -205,23 +205,29 @@ and
 	\end{aligned}
 	\label{eq:sigmabarsigma}
 \end{equation}
-For the combinations of three $ \sigma $-matrices, the following relations can be derived~\cite[p.~16--19]{Dreiner.2010}:
-\begin{equation}
-	\begin{aligned}
-		\tensor{(\sigma^{\mu} \bar{\sigma}^{\nu} \sigma^{\rho})}{_{\alpha \dot{\alpha}}}
-		=& - \tensor{\metric}{^{\mu \nu}} \tensor{(\sigma^{\rho})}{_{\alpha \dot{\alpha}}}
-		+ \tensor{\metric}{^{\mu \rho}} \tensor{(\sigma^{\nu})}{_{\alpha \dot{\alpha}}}
-		- \tensor{\metric}{^{\nu \rho}} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}}
-		- \mi \tensor{\eps}{^{\mu \nu \rho \kappa}} \tensor{(\sigma_{\kappa})}{_{\alpha \dot{\alpha}}} \\
-		\tensor{(\bar{\sigma}^{\mu} \sigma^{\nu} \bar{\sigma}^{\rho})}{_{\dot{\alpha} \alpha}}
-		%		\bar{\sigma}^\mu \sigma^\nu \bar{\sigma}^\rho
-		=& - \tensor{\metric}{^{\mu \nu}}  \tensor{(\bar{\sigma}^{\rho})}{_{\dot{\alpha} \alpha}}
-		+ \tensor{\metric}{^{\mu \rho}} \tensor{(\bar{\sigma}^{\nu})}{_{\dot{\alpha} \alpha}}
-		- \tensor{\metric}{^{\nu \rho}} \tensor{(\bar{\sigma}^{\mu})}{_{\dot{\alpha} \alpha}}
-		+ \mi \tensor{\eps}{^{\mu \nu \rho \kappa}} \tensor{(\bar{\sigma}_{\kappa})}{_{\dot{\alpha} \alpha}}
-		\text{.}
-	\end{aligned} \label{eq:3sigmas}
-\end{equation}
+For the combinations of three and four $ \sigma $-matrices, the following relations can be derived~\cite[p.~10]{Dreiner.2010}:
+\begin{gather}
+		\begin{aligned}
+			\tensor{(\sigma^{\mu} \bar{\sigma}^{\nu} \sigma^{\rho})}{_{\alpha \dot{\alpha}}}
+			=& - \tensor{\metric}{^{\mu \nu}} \tensor{(\sigma^{\rho})}{_{\alpha \dot{\alpha}}}
+			+ \tensor{\metric}{^{\mu \rho}} \tensor{(\sigma^{\nu})}{_{\alpha \dot{\alpha}}}
+			- \tensor{\metric}{^{\nu \rho}} \tensor{(\sigma^{\mu})}{_{\alpha \dot{\alpha}}}
+			- \mi \tensor{\eps}{^{\mu \nu \rho \kappa}} \tensor{(\sigma_{\kappa})}{_{\alpha \dot{\alpha}}} \text{,}\\
+			\tensor{(\bar{\sigma}^{\mu} \sigma^{\nu} \bar{\sigma}^{\rho})}{_{\dot{\alpha} \alpha}}
+			%		\bar{\sigma}^\mu \sigma^\nu \bar{\sigma}^\rho
+			=& - \tensor{\metric}{^{\mu \nu}}  \tensor{(\bar{\sigma}^{\rho})}{_{\dot{\alpha} \alpha}}
+			+ \tensor{\metric}{^{\mu \rho}} \tensor{(\bar{\sigma}^{\nu})}{_{\dot{\alpha} \alpha}}
+			- \tensor{\metric}{^{\nu \rho}} \tensor{(\bar{\sigma}^{\mu})}{_{\dot{\alpha} \alpha}}
+			+ \mi \tensor{\eps}{^{\mu \nu \rho \kappa}} \tensor{(\bar{\sigma}_{\kappa})}{_{\dot{\alpha} \alpha}} \text{,}
+		\end{aligned} \label{eq:3sigmas} \\[0.5em]
+		\begin{aligned}
+			\Tr{\sigma^{\mu} \bar{\sigma}^{\nu} \sigma^{\rho} \bar{\sigma}^{\sigma}}
+			=& 2 \left(\metric^{\mu \nu} \metric^{\rho \sigma} - \metric^{\mu \rho} \metric^{\nu \sigma} + \metric^{\mu \sigma} \metric^{\nu \rho} + \mi \eps^{\mu \nu \rho \sigma} \right) \text{,} \\
+			\Tr{\bar{\sigma}^{\mu} \sigma^{\nu} \bar{\sigma}^{\rho} \sigma^{\sigma}}
+			=& 2 \left(\metric^{\mu \nu} \metric^{\rho \sigma} - \metric^{\mu \rho} \metric^{\nu \sigma} + \metric^{\mu \sigma} \metric^{\nu \rho} - \mi \eps^{\mu \nu \rho \sigma} \right)
+			\text{.}
+		\end{aligned} \label{eq:tr4sigmas}
+\end{gather}
 Dotted and undotted indices can be raised and lowered by the \enquote{metric}-tensor
 \begin{equation}
 	\begin{alignedat}{5}
@@ -241,7 +247,7 @@ Dotted and undotted indices can be raised and lowered by the \enquote{metric}-te
 		\text{,}
 	\end{alignedat} \label{eq:SL2Cepsilon}
 \end{equation}
-which is invariant w.r.t \SLtwoC-transformation and defined by the matrix\footnote{Our convention $ \tensor{\eps}{^{12}}= +1 = -\tensor{\eps}{_{12}} $ is the same as in \refcite{Li2021, Srednicki.2012}. A change of sign would especially alter the signs in the charge conjugation matrix in \cref{eq:ChargeConjugation}.}
+which is invariant w.r.t \SLtwoC-transformation and defined by the matrix\footnote{Our conventions $ \tensor{\eps}{^{12}}= +1 = -\tensor{\eps}{_{12}} $ and $ \tensor{\eps}{^{\dot{1} \dot{2}}}= +1 = -\tensor{\eps}{_{\dot{1} \dot{2}}} $ are the same as in \refcite{Li2021, Srednicki.2012}. A change of sign would especially alter the signs in the charge conjugation matrix in \cref{eq:ChargeConjugation}.}
 \begin{equation}
 	\begin{aligned}
 		\eps := + \mi \sigma^{2} = \begin{pmatrix}
@@ -363,11 +369,7 @@ Two $ \sigma^{\mu \nu} $- or $ \bar{\sigma}^{\mu \nu} $-matrices obey the relati
 			= - 4 (\tensor{\eps}{_{\dot{\alpha}_{1} \dot{\alpha}_{4}}} \tensor{\eps}{_{\dot{\alpha}_{2} \dot{\alpha}_{3}}} + \tensor{\eps}{_{\dot{\alpha}_{1} \dot{\alpha}_{3}}} \tensor{\eps}{_{\dot{\alpha}_{2} \dot{\alpha}_{4}}})
 			\text{,}
 		}
-	\end{aligned} \label{eq:sigmamunuRelation}
-\end{gather}
-for contracted Lorentz indices. For contracted \SLtwoC{}-indices\footnote{
-See \refcite[p.~59]{Li2021} or \refcite[p.~16--19]{Dreiner.2010} for \cref{eq:3sigmas,eq:TrSigSig}.}, the traces are:
-\begin{gather}
+	\end{aligned} \label{eq:sigmamunuRelation}\\
 	\begin{aligned}
 		%		\tensor{\left(\sigma^{\mu \nu}\right)}{_{\alpha} ^{\beta}} \tensor{\left(\sigma_{\mu \nu}\right)}{_{\gamma} ^{\delta}}
 		%		= 4 (\tensor*{\delta}{_{\alpha} ^{\delta}} \tensor{\delta}{_{\gamma} ^{\beta}} + \tensor{\eps}{_{\alpha \gamma}} \tensor{\eps}{^{\beta \delta}})&, \quad
@@ -379,11 +381,13 @@ See \refcite[p.~59]{Li2021} or \refcite[p.~16--19]{Dreiner.2010} for \cref{eq:3s
 			= 0
 			\text{,}
 		}
-	\end{aligned} \label{eq:sigmamunusigmabarmunuRelation}\\
-	%
+	\end{aligned} \label{eq:sigmamunusigmabarmunuRelation}
+\end{gather}
+for contracted Lorentz indices. For contracted \SLtwoC{}-indices, the traces\footnote{See also \refcite[p.~59]{Li2021} and note that in \refcite[p.~10--12]{Dreiner.2010} their seems to be a typo for \cref{eq:TrSigSig}.} follow from \cref{eq:tr4sigmas}:
+\begin{gather}
 	\begin{aligned}
 		\frac{1}{2} \Tr{\sigma^{\mu \nu} \sigma_{\rho \sigma}} \equiv \frac{1}{2} \tensor{(\sigma^{\mu \nu})}{_{\alpha}^{\beta}} \tensor{(\sigma_{\rho \sigma})}{_{\beta}^{\alpha}}
-		&= \delta^{\mu}_{\rho} \delta^{\nu}_{\sigma} - \delta^{\mu}_{\sigma} \delta^{\nu}_{\rho} - \mi \tensor{\eps}{^{\mu \nu}_{\rho \sigma}}, \\
+		&= \delta^{\mu}_{\rho} \delta^{\nu}_{\sigma} - \delta^{\mu}_{\sigma} \delta^{\nu}_{\rho} - \mi \tensor{\eps}{^{\mu \nu}_{\rho \sigma}}, \\[0.5em]
 		\frac{1}{2} \Tr{\bar{\sigma}^{\mu \nu} \bar{\sigma}_{\rho \sigma}} \equiv \frac{1}{2} \tensor{(\bar{\sigma}^{\mu \nu})}{^{\dot{\alpha}}_{\dot{\beta}}} \tensor{(\bar{\sigma}_{\rho \sigma})}{^{\dot{\beta}}_{\dot{\alpha}}}
 		&= \delta^{\mu}_{\rho} \delta^{\nu}_{\sigma} - \delta^{\mu}_{\sigma} \delta^{\nu}_{\rho} + \mi \tensor{\eps}{^{\mu \nu}_{\rho \sigma}} \label{eq:TrSigSig}
 		\text{.}
@@ -391,15 +395,17 @@ See \refcite[p.~59]{Li2021} or \refcite[p.~16--19]{Dreiner.2010} for \cref{eq:3s
 \end{gather}
 \footnote{
 	The four component epsilon tensor $ \eps^{\mu \nu \rho \sigma} $ is chosen to fulfil $ \eps^{0123} = - \eps_{0123} = + 1 $.
-}Furthermore, the matrices are self- and anti-self dual:
+}Furthermore, the matrices are self- and anti-self dual,
 \begin{equation}
 	\begin{aligned}
-		\sigma^{\mu \nu} = \frac{\mi}{2} \tensor{\epsilon}{^{\mu \nu \rho \sigma}} \sigma_{\rho \sigma} , \quad
-		\bar{\sigma}^{\mu \nu} = -\frac{\mi}{2} \tensor{\epsilon}{^{\mu \nu \rho \sigma}} \bar{\sigma}_{\rho \sigma}
-		\text{,}
+		\boxed{
+			\sigma^{\mu \nu} = \frac{\mi}{2} \tensor{\epsilon}{^{\mu \nu \rho \sigma}} \sigma_{\rho \sigma} , \quad
+			\bar{\sigma}^{\mu \nu} = -\frac{\mi}{2} \tensor{\epsilon}{^{\mu \nu \rho \sigma}} \bar{\sigma}_{\rho \sigma}
+			\text{,}
+		}
 	\end{aligned} \label{eq:dualtity}
 \end{equation}
-and $ \sigma^{\mu \nu}/ 2 $ and $ \bar{\sigma}^{\mu \nu}/ 2 $ are generators of the (projective) representations of $ L_{+}^{\uparrow} $:
+and $ \sigma^{\mu \nu}/ 2 $ and $ \bar{\sigma}^{\mu \nu}/ 2 $ are the generators of the (projective) representations of $ L_{+}^{\uparrow} $:
 \begin{equation}
 	\begin{alignedat}{3}
 		&\xi_{\alpha}(\vector{p}) &&\rightarrow \xi^{\prime}_{\alpha}(\vector{p}) &&= \tensor{\Big(\operatorname{e}^{-\frac{\mi}{2} \omega_{\mu \nu} \frac{\sigma^{\mu \nu}}{2}}\Big)}{_\alpha^\beta} \xi_{\beta}(\Lambda^{-1} \vector{p}) ,\\
@@ -602,7 +608,7 @@ The inverse relation, deduced with \cref{eq:TrSigSig}, is given by
 \begin{equation}
 	\boxed{
 		\begin{aligned}
-			F_{\mu \nu} &= - \frac{\mi}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} - F_{\mathrm{L} \alpha \beta} \sigma_{\mu \nu}^{\alpha \beta}\Big) ,\\
+			F_{\mu \nu} &= + \frac{\mi}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} - F_{\mathrm{L} \alpha \beta} \sigma_{\mu \nu}^{\alpha \beta}\Big) ,\\
 			\tilde{F}_{\mu \nu} &= -\frac{1}{4} \Big(F_{\mathrm{R}}^{\dot{\alpha} \dot{\beta}} \tensor{(\bar{\sigma}_{\mu \nu})}{_{\dot{\alpha} \dot{\beta}}} + F_{\mathrm{L} \alpha \beta} \sigma_{\mu \nu}^{\alpha \beta}\Big)
 			\text{.}
 		\end{aligned}

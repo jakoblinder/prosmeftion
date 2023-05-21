@@ -140,9 +140,14 @@ tensors:
       mathematica:
         TT: T
       index_structure:
-        - gaugeadj
-        - gauge
-        - gauge
+        -
+          - gaugeadj
+          - gauge
+          - gauge
+        -
+          - cola
+          - colf
+          - colf
     sigma:
       description: "SL2C sigmamatrix."
       tex: \sigma
@@ -348,7 +353,7 @@ bosonfields:
       index_structure:
         - gauge
     G:
-      description: "Fieldstrengthtensor of SU3."
+      description: "Fieldstrength tensor of SU3."
       tex: G
       ac: False
       mathematica:
@@ -362,7 +367,7 @@ bosonfields:
         - lor
         - lor
     W:
-      description: "Fieldstrengthtensor of SU2."
+      description: "Fieldstrength tensor of SU2."
       tex: W
       ac: False
       mathematica:
@@ -375,7 +380,7 @@ bosonfields:
         - lor
         - lor
     B:
-      description: "Fieldstrengthtensor of U1."
+      description: "Fieldstrength tensor of U1."
       tex: B
       ac: False
       mathematica:
@@ -387,7 +392,7 @@ bosonfields:
         - lor
         - lor
     GL:
-      description: "Left handed fieldstrengthtensor of SU3."
+      description: "Left handed fieldstrength tensor of SU3."
       conj: True
       ac: False
       helicity: -1
@@ -414,7 +419,7 @@ bosonfields:
           - Usldot
           - Usldot
     WL:
-      description: "Left handed fieldstrengthtensor of SU2."
+      description: "Left handed fieldstrength tensor of SU2."
       conj: True
       ac: False
       helicity: -1
@@ -439,7 +444,7 @@ bosonfields:
           - Usldot
           - Usldot
     BL:
-      description: "Left handed fieldstrengthtensor of U1."
+      description: "Left handed fieldstrength tensor of U1."
       conj: True
       ac: False
       helicity: -1

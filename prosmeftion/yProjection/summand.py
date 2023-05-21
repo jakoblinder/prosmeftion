@@ -695,23 +695,23 @@ class Summand(Summand_Model):
         for i in range(n_sigma2):
             lsl3, usl3 = next(gen_index_sl)
             lsldot3, usldot3 = next(gen_index_sldot)
-            id = f"{sigma2}(lor1?lor,lor2?lor,Usl1?Usl,Usl2?Usl)"
+            id = f"{sigma2}(lor1?lor,lor2?lor,UslA1?Usl,UslA2?Usl)"
             id += " = "
-            id += f"({im}/2)*{sl2Ceps}(Usl1,{usl3})*("
-            id += f"{sigma}(lor1,{lsl3},{lsldot3})*{sigmabar}(lor2,{usldot3},Usl2)"
+            id += f"({im}/2)*{sl2Ceps}(UslA1,{usl3})*("
+            id += f"{sigma}(lor1,{lsl3},{lsldot3})*{sigmabar}(lor2,{usldot3},UslA2)"
             id += " - "
-            id += f"{sigma}(lor2,{lsl3},{lsldot3})*{sigmabar}(lor1,{usldot3},Usl2)"
+            id += f"{sigma}(lor2,{lsl3},{lsldot3})*{sigmabar}(lor1,{usldot3},UslA2)"
             id += ")"
             id_statements.append(id)
 
             lsl4, usl4 = next(gen_index_sl)
             lsldot4, usldot4 = next(gen_index_sldot)
-            id = f"{sigmabar2}(lor1?lor,lor2?lor,Lsldot1?Lsldot,Lsldot2?Lsldot)"
+            id = f"{sigmabar2}(lor1?lor,lor2?lor,LsldotA1?Lsldot,LsldotA2?Lsldot)"
             id += " = "
-            id += f"({im}/2)*{sl2Ceps}(Lsldot1,{lsldot4})*("
-            id += f"{sigmabar}(lor1,{usldot4},{usl4})*{sigma}(lor2,{lsl4},Lsldot2)"
+            id += f"({im}/2)*{sl2Ceps}(LsldotA1,{lsldot4})*("
+            id += f"{sigmabar}(lor1,{usldot4},{usl4})*{sigma}(lor2,{lsl4},LsldotA2)"
             id += " - "
-            id += f"{sigmabar}(lor2,{usldot4},{usl4})*{sigma}(lor1,{lsl4},Lsldot2)"
+            id += f"{sigmabar}(lor2,{usldot4},{usl4})*{sigma}(lor1,{lsl4},LsldotA2)"
             id += ")"
             id_statements.append(id)
 
@@ -721,6 +721,143 @@ class Summand(Summand_Model):
             form += f"id once {id};\n"
 
         return form
+
+    ########################
+    ### Gauge Conversion ###
+    ########################
+
+    def form_antifundamentalIndices(self, used_label):
+        # Tensors
+        su2eps = op_config["tensors"]["[su2eps]"]["mathematica"]["su2eps"]
+        su3eps = op_config["tensors"]["[su3eps]"]["mathematica"]["su3eps"]
+        gen = op_config["tensors"]["T"]["mathematica"]["TT"]
+        # Fields
+        # Fixme: Decide somehow automatically which fields transform originally in the antifundamental representation
+        su2anti = [list(op_config["bosonfields"]["H"]["mathematica"].values())[1],
+                   list(op_config["fermionfields"]["L"]["mathematica"].values())[1],
+                   list(op_config["fermionfields"]["Q"]["mathematica"].values())[1]]
+        su3anti = [list(op_config["fermionfields"]["Q"]["mathematica"].values())[1],
+                   list(op_config["fermionfields"]["[u_C]"]["mathematica"].values())[0],
+                   list(op_config["fermionfields"]["[d_C]"]["mathematica"].values())[0]]
+
+        # Translation
+        spinors_dirac_weyl = {name: field for name, field in op_config["fermionfields"].items() if "diracspinor" in field.keys()}
+        spinors_dirac_weyl = {dirac: weyl[0] if weyl[0] else weyl[1]  for field in spinors_dirac_weyl.values() for dirac, weyl in field["diracspinor"].items()}
+        # Indices
+        gen_index_gauge = self.possible_indices.generate_index("gauge")
+        gen_index_colf = self.possible_indices.generate_index("colf")
+
+        form = ".sort\n"
+        form += "CFunction f1;\n"
+
+        id_statements = {}
+        for field in self.fields:
+            if field.name == list(op_config["bosonfields"]["H"]["mathematica"].values())[1]:
+                # Higgs
+                name = field.name
+            else:
+                if field.name not in spinors_dirac_weyl.keys(): continue
+                name = spinors_dirac_weyl[field.name]
+            if name in su2anti:
+                cname = get_commuting_op(name)
+                gauge2 = next(gen_index_gauge)
+
+                used_label += 1
+                label1 = used_label
+                id_statements[label1] = []
+
+                id = f"f1?AllcconFields(op1?op,?a,gauge1A?gauge,?b)*"
+                id += f"{cname}(op2?op,?c,gauge1A?gauge,?d)"
+                id += " = "
+                id += f"f1(op1,?a,gauge1A,?b)*"
+                id += f"{cname}(op2,?c,{gauge2},?d)*{su2eps}({gauge2},gaugeA1)"
+                id_statements[label1].append(id)
+
+                id = f"{gen}(gaugeadjA1?gaugeadj,gaugeA1?gauge,gaugeA2?gauge)*"
+                id += f"{cname}(op2?op,?c,gaugeA1?gauge,?d)"
+                id += " = "
+                id += f"{gen}(gaugeadjA1,gaugeA1,gaugeA2)*"
+                id += f"{cname}(op2,?c,{gauge2},?d)*{su2eps}({gauge2},gaugeA1)"
+                id_statements[label1].append(id)
+
+            if name in su3anti:
+                cname = get_commuting_op(name)
+                colf2 = next(gen_index_colf)
+                colf3 = next(gen_index_colf)
+
+                used_label += 1
+                label2 = used_label
+                id_statements[label2] = []
+
+                id = f"f1?AllcconFields(op1?op,?a,colfA1?colf,?b)*"
+                id += f"{cname}(op2?op,?c,colfA1?colf,?d)"
+                id += " = "
+                id += f"f1(op1,?a,colfA1,?b)*"
+                id += f"(1/2)*{su3eps}(colfA1,{colf2},{colf3})*{cname}(op2,?c,{colf2},{colf3},?d)"
+                id_statements[label2].append(id)
+
+                id = f"{gen}(colaA1?cola,colfA1?colf,colfA2?colf)*"
+                id += f"{cname}(op2?op,?c,colfA1?colf,?d)"
+                id += " = "
+                id += f"{gen}(colaA1,colfA1,colfA2)*"
+                id += f"(1/2)*{su3eps}(colfA1,{colf2},{colf3})*{cname}(op2,?c,{colf2},{colf3},?d)"
+                id_statements[label2].append(id)
+
+        for label in id_statements.keys():
+            for id in id_statements[label]:
+                form += f"id once ifmatch->{label} {id};\n"
+            form += f"\nlabel {label};\n\n"
+
+        return form, used_label
+
+    def form_adjointIndices(self):
+        # Tensors
+        su2eps = op_config["tensors"]["[su2eps]"]["mathematica"]["su2eps"]
+        su3eps = op_config["tensors"]["[su3eps]"]["mathematica"]["su3eps"]
+        gen = op_config["tensors"]["T"]["mathematica"]["TT"]
+        # Fields
+        # Fixme: Decide somehow automatically which fields transform originally in the adjoint representation
+        su2adj = {field: op_config["bosonfields"]["WL"]["non_singlet"] for field in op_config["bosonfields"]["WL"]["mathematica"].values()}
+        su3adj = {field: op_config["bosonfields"]["GL"]["non_singlet"] for field in op_config["bosonfields"]["GL"]["mathematica"].values()}
+
+        # Indices
+        gen_index_gauge = self.possible_indices.generate_index("gauge")
+        gen_index_colf = self.possible_indices.generate_index("colf")
+
+        form = ".sort\n"
+        form += "CFunction f1, f2;\n"
+
+        id_statements = []
+        for field in self.fields:
+            if field.name in su2adj.values():
+                gauge1 = next(gen_index_gauge)
+                gauge2 = next(gen_index_gauge)
+                gauge3 = next(gen_index_gauge)
+                for cname in [get_commuting_op(field) for field in su2adj.keys()]:
+                    id = f"{cname}(op1?op,?a,gaugeadj1?gaugeadj,?b)"
+                    id += " = "
+                    id += f"{gen}(gaugeadj1,{gauge3},{gauge1})*{cname}(op1,?a,{gauge1},{gauge2},?b)"
+                    id += f"*{su2eps}({gauge2},{gauge3})"
+                    id_statements.append(id)
+            elif field.name in su3adj.values():
+                for cname in [get_commuting_op(field) for field in su3adj.keys()]:
+                    colf1 = next(gen_index_colf)
+                    colf2 = next(gen_index_colf)
+                    colf3 = next(gen_index_colf)
+                    colf4 = next(gen_index_colf)
+                    id = f"{cname}(op1?op,?a,cola1?cola,?b)"
+                    id += " = "
+                    id += f"(1/2)*{gen}(cola1,{colf4},{colf2})*{su3eps}({colf1},{colf3},{colf4})"
+                    id += f"*{cname}(op1,?a,{colf1},{colf2},{colf3},?b)"
+                    id_statements.append(id)
+            else:
+                continue
+
+        for id in id_statements:
+            form += f"id once {id};\n"
+
+        return form
+
 
     #########################
     ### EOM Substitutions ###

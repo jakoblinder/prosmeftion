@@ -672,10 +672,13 @@ def convertviaform(term, n_der, max_dim):
     sl2c_fieldstrength_tensor, n_fsTs = summand.form_convertFieldstrengthTensor()
     # Substitute sigma2 matrices:
     sl2c_simplify_sigma2 = summand.form_simplifySigma2(n_bils + n_fsTs)
-    # TODO: Convert the gauge group structure
+    # Convert fundamental gauge group indices into fundamental ones:
+    gauge_antifundamental_indices, label = summand.form_antifundamentalIndices(label)
+    # Convert adjoint gauge group indices:
+    gauge_adjoint_indices = summand.form_adjointIndices()
 
     form_SL2C = declaration_SL2C_sets(term[0].possible_indices, n_der)
-    send_to_form = [form_SL2C, f"{summand:c}", sl2c_dirac_to_weyl, sl2c_derivative_in_SL2C, sl2c_fieldstrength_tensor, sl2c_simplify_sigma2]
+    send_to_form = [form_SL2C, f"{summand:c}", sl2c_dirac_to_weyl, sl2c_derivative_in_SL2C, sl2c_fieldstrength_tensor, sl2c_simplify_sigma2, gauge_antifundamental_indices, gauge_adjoint_indices]
     expression = pyForm(FORM_GENERAL_PATH / "converttoSL2C.frm", send_to_form, input_dir=FORM_GENERAL_PATH, prompt= "READY")  # , debug=True, preprocessor_only=True
     expression = re.sub(r"(\s)*", "", expression)
     # Create FORM files:

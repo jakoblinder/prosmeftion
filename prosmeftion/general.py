@@ -372,6 +372,21 @@ def form_converttoSL2C():
     form += "#call simplifySL2CEps\n"
     form += ".sort\n\n"
 
+    form += "* Substitute antifundamental gauge indices.\n"
+    form += f"#fromexternal\n"
+    form += ".sort\n\n"
+    form += "* Substitute adjoint gauge indices.\n"
+    form += f"#fromexternal\n"
+    form += ".sort\n\n"
+
+    form += "#call replaceSU2Generators\n"
+    form += "#call simplifyEpsSU2\n"
+    form += ".sort\n\n"
+
+    form += "#call replaceSU3Generators\n"
+    form += "#call simplifyEpsSU3\n"
+    form += ".sort\n\n"
+
     form += "#call makenoncommutative\n"
     form += ".sort\n\n"
 
@@ -1722,8 +1737,9 @@ def form_declarations(n_der: int):
     form_lorepsandSigma2()
     form_replaceSigmabyEps()
     form_simplifySL2CEps()
-    # form_replaceSUNGenerators(N=2)
-    # form_replaceSUNGenerators(N=3)
+
+    form_replaceSUNGenerators(N=2)
+    form_replaceSUNGenerators(N=3)
     form_simplifyEpsSU2()
     form_simplifyEpsSU3()
     form_antisymDerivative(n_der)

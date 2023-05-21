@@ -362,12 +362,12 @@ def form_converttoSL2C():
     form += f"#fromexternal\n"
     form += ".sort\n\n"
 
-    # TODO: Replace sigma2s:
-    # form += "* Replace sigma2 and sigmabar2 by sigma and sigmabar.\n"
-    # form += f"#fromexternal\n"
-    # form += ".sort\n\n"
-
+    form += "* Replace sigma2 and sigmabar2 which are contracted with an lorentz epsilon.\n"
     form += "#call lorepsandSigma2\n"
+    form += "* Replace sigma2 and sigmabar2 by sigma and sigmabar.\n"
+    form += f"#fromexternal\n"
+    form += ".sort\n\n"
+
     form += "#call replaceSigmabyEps\n"
     form += "#call simplifySL2CEps\n"
     form += ".sort\n\n"
@@ -967,17 +967,6 @@ def form_simplifySymmetricFieldstrengthtensor():
     form += f"id {br}?Field(?a, Usldot2?ULsldot[i2], Usldot1?ULsldot[i1], ?b) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;"
 
     return form
-
-def form_simplifySigma2():
-    """
-    Assume that only sigma2 (i.e. sigma matrices with two lorentz indices) with two upper undotted and sigmabar2
-    with two lower dotted indices exist, because this is the only relevant case for the fieldstrengthtensor replacement.
-    Returns
-    -------
-
-    """
-    form = ""
-    # TODO: See method in class_term.py an rearrange for the now possible new generation of indices. -> Cannot be done in general folder.
 
 @create_procedure(FORM_GENERAL_PATH)
 def form_lorepsandSigma2():

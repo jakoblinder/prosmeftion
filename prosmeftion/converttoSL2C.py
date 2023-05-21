@@ -664,13 +664,18 @@ def convertviaform(term, n_der, max_dim):
     assert len(term) == 1
     summand = term[0]
 
-    sl2c_dirac_to_weyl, label = summand.form_convertDirac()
+    # Cconvert Dirac into Weyl spinors
+    sl2c_dirac_to_weyl, label, n_bils = summand.form_convertDirac()
+    # Convert derivatives
     sl2c_derivative_in_SL2C = summand.form_convertDerivative(n_der)
-    # TODO: Convert fieldstrength tensors:
-    sl2c_fieldstrength_tensor, label = summand.form_convertFieldstrengthTensor(label)
+    # Convert fieldstrength tensors
+    sl2c_fieldstrength_tensor, n_fsTs = summand.form_convertFieldstrengthTensor()
+    # Substitute sigma2 matrices:
+    sl2c_simplify_sigma2 = summand.form_simplifySigma2(n_bils + n_fsTs)
+    # TODO: Convert the gauge group structure
 
     form_SL2C = declaration_SL2C_sets(term[0].possible_indices, n_der)
-    send_to_form = [form_SL2C, f"{summand:c}", sl2c_dirac_to_weyl, sl2c_derivative_in_SL2C, sl2c_fieldstrength_tensor]
+    send_to_form = [form_SL2C, f"{summand:c}", sl2c_dirac_to_weyl, sl2c_derivative_in_SL2C, sl2c_fieldstrength_tensor, sl2c_simplify_sigma2]
     expression = pyForm(FORM_GENERAL_PATH / "converttoSL2C.frm", send_to_form, input_dir=FORM_GENERAL_PATH, prompt= "READY")  # , debug=True, preprocessor_only=True
     expression = re.sub(r"(\s)*", "", expression)
     # Create FORM files:

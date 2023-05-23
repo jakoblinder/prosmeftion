@@ -345,7 +345,10 @@ def remove_doubles(single_terms):
 
                     run_form(fp_cwd=TERM_PATH, filename=f"{name_form}.frm", fp_p=FORM_GENERAL_PATH)
 
-                    terms = get_terms(TERM_PATH / "combined_term.h", as_one=True, name=name_form)
+                    with open(TERM_PATH / "combined_term.h", "r") as file:
+                        expression = file.read()
+                    terms = get_terms(expression, name=name_form)
+
                     if terms.indices["dummy"]:
                         for k, summand in enumerate(terms):
                             if len(terms) > 1:

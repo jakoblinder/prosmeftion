@@ -766,10 +766,10 @@ class Summand(Summand_Model):
                 label1 = used_label
                 id_statements[label1] = []
 
-                id = f"f1?AllcconFields(op1?op,?a,gauge1A?gauge,?b)*"
-                id += f"{cname}(op2?op,?c,gauge1A?gauge,?d)"
+                id = f"f1?AllcconFields(op1?op,?a,gaugeA1?gauge,?b)*"
+                id += f"{cname}(op2?op,?c,gaugeA1?gauge,?d)"
                 id += " = "
-                id += f"f1(op1,?a,gauge1A,?b)*"
+                id += f"f1(op1,?a,gaugeA1,?b)*"
                 id += f"{cname}(op2,?c,{gauge2},?d)*{su2eps}({gauge2},gaugeA1)"
                 id_statements[label1].append(id)
 

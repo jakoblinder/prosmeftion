@@ -250,7 +250,7 @@ def get_terms(expression: str, name:str=""):
     -------
 
     """
-    logger.info("Read in all terms")
+    logger.debug("Read in all terms")
     expression = pyForm(FORM_GENERAL_PATH / "getTerms.frm", [expression], input_dir=FORM_GENERAL_PATH)
     expression = re.sub(r"(\s)*", "", expression)
 

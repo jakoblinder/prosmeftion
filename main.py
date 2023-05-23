@@ -79,7 +79,6 @@ def main(input_file, max_dim = 6, debug=None):
     with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
         file.write(form_declarations(nDer))
 
-    # TODO: Move stuff here from Convert to SL2C
     expression = remove_header_and_spaces(input_file, header=args.skip)
 
     if args.format == "mathematica":
@@ -87,9 +86,10 @@ def main(input_file, max_dim = 6, debug=None):
 
     # Extract coefficient and Operator from the output and pack them into the desired object structure:
     terms = get_terms(expression)
+    del expression
 
     # Conversion in y-Basis notation:
-    terms = converttoSL2C(terms, max_dim)
+    terms = converttoSL2C(terms, nDer)
 
     if args.tex:
         tex_unsorted_terms(inputfilename, terms)
@@ -118,8 +118,8 @@ def main(input_file, max_dim = 6, debug=None):
 
     nterms_before = number_terms(single_terms)
 
-    single_terms = replace_eoms(single_terms)
-    single_terms = replace_eoms(single_terms)
+    single_terms = replace_eoms(single_terms, nDer)
+    single_terms = replace_eoms(single_terms, nDer)
 
     nterms_after = number_terms(single_terms)
 
@@ -131,8 +131,8 @@ def main(input_file, max_dim = 6, debug=None):
     # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
     single_terms = rearrange_derivatives(single_terms)
 
-    single_terms = replace_eoms(single_terms)  # (D^2H) * (D^2H+) -> ... + ~ H+ * H * H * (D^2H+) + ... => need to replace eom again.
-    single_terms = replace_eoms(single_terms)
+    single_terms = replace_eoms(single_terms, nDer)  # (D^2H) * (D^2H+) -> ... + ~ H+ * H * H * (D^2H+) + ... => need to replace eom again.
+    single_terms = replace_eoms(single_terms, nDer)
 
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
@@ -173,7 +173,7 @@ def main(input_file, max_dim = 6, debug=None):
     while True:
         single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim)
         number_iterations += 1
-        single_terms = replace_eoms(single_terms)
+        single_terms = replace_eoms(single_terms, nDer)
         # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_test.p", "wb"))
         # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_test.p", "rb"))
         # Remove double terms:

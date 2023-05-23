@@ -648,7 +648,7 @@ def get_termobject(args):
     coeff, coperator, id = args[0], args[1], args[2]
     return Term(coeff, coperator, id)
 
-def convertviaform(term, n_der, max_dim):
+def convertviaform(term, nDer):
     """
     Convert Term via FORM and return converted object.
     Parameters
@@ -667,7 +667,7 @@ def convertviaform(term, n_der, max_dim):
     # Cconvert Dirac into Weyl spinors
     sl2c_dirac_to_weyl, label, n_bils = summand.form_convertDirac()
     # Convert derivatives
-    sl2c_derivative_in_SL2C = summand.form_convertDerivative(n_der)
+    sl2c_derivative_in_SL2C = summand.form_convertDerivative(nDer)
     # Convert fieldstrength tensors
     sl2c_fieldstrength_tensor, n_fsTs = summand.form_convertFieldstrengthTensor()
     # Substitute sigma2 matrices:
@@ -677,39 +677,25 @@ def convertviaform(term, n_der, max_dim):
     # Convert adjoint gauge group indices:
     gauge_adjoint_indices = summand.form_adjointIndices()
 
-    form_SL2C = declaration_SL2C_sets(term[0].possible_indices, n_der)
+    form_SL2C = declaration_SL2C_sets(term[0].possible_indices, nDer)
     send_to_form = [form_SL2C, f"{summand:c}", sl2c_dirac_to_weyl, sl2c_derivative_in_SL2C, sl2c_fieldstrength_tensor, sl2c_simplify_sigma2, gauge_antifundamental_indices, gauge_adjoint_indices]
     expression = pyForm(FORM_GENERAL_PATH / "converttoSL2C.frm", send_to_form, input_dir=FORM_GENERAL_PATH, prompt= "READY")  # , debug=True, preprocessor_only=True
     expression = re.sub(r"(\s)*", "", expression)
-    # Create FORM files:
-    filename = term.name  # f"term{i:d}"
-    # TODO: Update!
-    form(term, filename)
-    formoutput = run_form(filename)
-    formoutput_formatted = print_form(filename,
-                                      original=f"{term.cops_original:s}",
-                                      converted=formoutput)
-    ###
-    TERM_PATH = FORM_PATH / filename
-    with open(TERM_PATH / f"{filename}.h", "w") as file:
-        formoutput=re.sub(r"(\s)*", "", formoutput)
-        file.write(formoutput)
 
-    new_term = get_terms(filepath=TERM_PATH / f"{filename}.h", as_one=True, name=term.name)
-    for summand in new_term:
-        summand.coeff *= Factor(term.coeff.expression)
-    ###
-    return formoutput_formatted, new_term  # Term_form(formoutput, term.coeff, term.name)
+    new_term = get_terms(expression, name=summand.name)
 
-def converttoSL2C(terms, max_dim):
+
+    return new_term
+
+def converttoSL2C(terms, nDer):
     """
     Output Terms of BSUOLEA are read in and formatted in SL2C Notation via FORM.
     Parameters
     ----------
     inputfile: str
         Filename of the inputfile in the input directory.
-    max_dim
-        Maximum mass dimension which occurs in the Lagrangian.
+    nDer
+        Maximum number of derivatives which occurs in the Lagrangian.
     pprint: bool
         Print formatted terms if True.
 
@@ -717,29 +703,17 @@ def converttoSL2C(terms, max_dim):
     -------
     Array of formatted term_form objects.
     """
-
-
-    # Write formfiles:
-    logger.info("Run FORM")
-
     # with mp.Pool() as pool:
     #     terms_after_form = list(map(list, zip(*pool.map(convertviaform, terms))))
-    # TODO:
-    nDer = n_der(max_dim)
-    terms_after_form = [list(convertviaform(term, nDer, max_dim)) for term in terms]  # list(map(list, zip(*map(convertviaform, terms))))
-    ops = terms_after_form[0]
-    form_terms = terms_after_form[1]
+    terms_after_form = [convertviaform(term, nDer) for term in terms]  # list(map(list, zip(*map(convertviaform, terms))))
 
-    # write a file containing all formatted operators written as a term to check the format:
-    writefile(PROJECTION_PATH / "operators_formatted.txt", ops)
-    del ops
+    # if logger.root.handlers[0].level < 20:
+    for i, terms in enumerate(terms_after_form):
+        logger.info(f"Term {i:d}:")
+        for term in terms.terms:
+            logger.info(f"{term:s}\n")
 
-    if pprint:
-        for i, terms in enumerate(form_terms):
-            print(f"Term {i:d}:")
-            for term in terms.terms:
-                print(f"{term:s}\n")
-    return form_terms
+    return terms_after_form
 
 # TODO: Implement progress bar: https://stackoverflow.com/questions/3160699/python-progress-bar
 # import sys

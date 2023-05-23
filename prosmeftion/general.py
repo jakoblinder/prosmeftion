@@ -976,10 +976,10 @@ def form_simplifySymmetricFieldstrengthtensor():
 
     form = ""
     form += "* Discard fieldstrengthtensor which are contracted with an SL2C epsilontensor, because the SL2C indices are symmetric:\n"
-    form += f"id {bl}?Field(?a, Lsl1?LUsl[i1], Lsl2?LUsl[i2], ?b) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"  # The set Field contains all Field strength tensors, LH and RH.
-    form += f"id {bl}?Field(?a, Lsl2?LUsl[i2], Lsl1?LUsl[i1], ?b) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
-    form += f"id {br}?Field(?a, Usldot1?ULsldot[i1], Usldot2?ULsldot[i2], ?b) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
-    form += f"id {br}?Field(?a, Usldot2?ULsldot[i2], Usldot1?ULsldot[i1], ?b) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;"
+    form += f"id {bl}?fieldstrengths(?a, Lsl1?LUsl[i1], Lsl2?LUsl[i2], ?b) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"  # The set Field contains all Field strength tensors, LH and RH.
+    form += f"id {bl}?fieldstrengths(?a, Lsl2?LUsl[i2], Lsl1?LUsl[i1], ?b) * {sl2Ceps:s}(Usl1?ULsl[i1], Usl2?ULsl[i2]) = 0;\n"
+    form += f"id {br}?fieldstrengths(?a, Usldot1?ULsldot[i1], Usldot2?ULsldot[i2], ?b) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;\n"
+    form += f"id {br}?fieldstrengths(?a, Usldot2?ULsldot[i2], Usldot1?ULsldot[i1], ?b) * {sl2Ceps:s}(Lsldot1?LUsldot[i1], Lsldot2?LUsldot[i2]) = 0;"
 
     return form
 
@@ -1320,9 +1320,24 @@ def form_makecommutative(n_der: int=4):
 
     """
     form = ".sort\n"
+
+    form += "CFunction coeff;\n"
+    form += f"Bracket {', '.join(tensors + bosons + fermions)};\n"
+    form += ".sort\n"
+    form += "collect coeff;\n"
+    form += ".sort\n\n"
+
+
     form += "Function tmp, Field;\n"
     form += "Multiply left tmp;\n\n"
     form += "#$i = 1;\n"
+    form += ".sort\n"
+
+    # form += r'#toexternal "%$\n", $i'
+    # form += "\n"
+    # form += r'#toexternal "READY\n"'
+    # form += "\n"
+
     def derivative(nD, withset=True):
         return ''.join([f"D(lor{i}{'?lor' if withset else ''}," for i in range(1, nD + 1)])
 
@@ -1341,7 +1356,19 @@ def form_makecommutative(n_der: int=4):
         form += "\t\t$i = $i + 1;\n"
 
     form += "\tendif;\n"
+
+    # form += 'Print "%$ READY",$i;\n'
+    # form += 'Print ">> %t";;\n'
+
     form += "endwhile;\n\n"
+
+    # form += ".sort\n"
+    # form += r'#toexternal "%$\n", $i'
+    # form += "\n"
+    # form += r'#toexternal "READY\n"'
+    # form += "\n"
+    # form += ".sort\n"
+
     form += "id tmp = 1;"
 
     return form
@@ -1360,6 +1387,7 @@ def form_makenoncommutative(sets:int, n_der:int=4, sl2c=True):
 
     """
     form = ".sort\n"
+    form += "Symbol x;\n"
     form += "Function Field;\n"
     form += "CFunction CField;\n\n"
 
@@ -1378,7 +1406,9 @@ def form_makenoncommutative(sets:int, n_der:int=4, sl2c=True):
             form += f"CField?AllcconFields{i}[k](op1?op[m],?a)"
             form += " = "
             form += f"{derivative(nD,sl2c,False)}AllconFields{i}[k](?a){nD*')'};\n"
-    form += "endrepeat;"
+    form += "endrepeat;\n"
+
+    form += "id coeff(x?) = (x);"
 
     return form
 

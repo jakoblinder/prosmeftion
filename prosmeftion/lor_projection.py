@@ -585,7 +585,7 @@ def rearrange_derivatives(single_terms):
 
     return single_terms
 
-def replace_eoms(single_terms):
+def replace_eoms(single_terms, nDer):
     """
     Replace equation of motions first by a placeholder and then for the dimension 6 operators by the equation of motion
     of the SM-Lagrangian.
@@ -646,7 +646,7 @@ def replace_eoms(single_terms):
                 summand.form_fieldstrengthtensorEOM(TERM_PATH)
 
                 # Write SL2C and set FORM-file:
-                form_SL2C = declaration_SL2C_sets(summand.possible_indices)
+                form_SL2C = declaration_SL2C_sets(summand.possible_indices, nDer)
                 with open(TERM_PATH / "declaration_SL2C.h", "w") as file:
                     file.write(form_SL2C)
 

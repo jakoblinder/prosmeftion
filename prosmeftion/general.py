@@ -390,6 +390,15 @@ def form_converttoSL2C():
     form += "#call makenoncommutative\n"
     form += ".sort\n\n"
 
+    form += "* Sort fields by their helicity.\n"
+    form += "* Write derivatives implicit with indices inside of fields.\n"
+    form += "#call derivativeasIndex\n"
+    form += "* Order fields by their helicity and then alpabetically.\n"
+    form += "#call sortfields\n"
+    form += "* Write derivatives again outside of fields.\n"
+    form += "#call indexasDerivative\n"
+    form += ".sort\n\n"
+
     form += "Format nospaces;\n"
     form += r'#toexternal "%E\n", expression'
     form += "\n\n"

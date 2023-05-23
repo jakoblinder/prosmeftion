@@ -163,7 +163,7 @@ def form_sortDerivativesIBP():
     # form += "endrepeat;\n"
     return form
 
-def rearrange_derivatives(single_terms):
+def rearrange_derivatives(single_terms, nDer):
     """
     In order to avoid that derivatives act on multiple fields and the only place where this occurs for the BS-input is
     the type nD: 4 & {"H": 1, "H+": 1}, the derivatives on these types are rearranged such that they look like
@@ -338,7 +338,7 @@ def rearrange_derivatives(single_terms):
     form_sortDerivativesIBP()
 
     # Write SL2C and set FORM-file:
-    form_SL2C = declaration_SL2C_sets(indices)
+    form_SL2C = declaration_SL2C_sets(indices, nDer)
     with open(TERM_PATH / "declaration_SL2C.h", "w") as file:
         file.write(form_SL2C)
 
@@ -388,7 +388,10 @@ def rearrange_derivatives(single_terms):
 
     run_form(fp_cwd=TERM_PATH, filename=f"higgs_sort_derivatives.frm", fp_p=FORM_GENERAL_PATH)
 
-    terms = get_terms(TERM_PATH / "higgs_sorted.h", as_one=False)
+    with open(TERM_PATH / "higgs_sorted.h", "r") as file:
+        expression = file.read()
+
+    terms = get_terms(expression)
 
     terms = [summand for term in terms for summand in term.terms]
     h3Hdagger1 = TermType(terms,terms[0].fieldcounter_stripped)
@@ -420,16 +423,9 @@ def rearrange_derivatives(single_terms):
             Commute derivatives.
             """
             gen_index_gauge = summand.possible_indices.generate_index("gauge")  # get a new, i.e. unused SU2 index with 'next(gen_index_gauge)'
-            # gen_index_sl = summand.possible_indices.generate_index("Lsl")  # next(gen_index_sl) will generate new Lsl and new Usl index
-            # gen_index_sldot = summand.possible_indices.generate_index("Lsldot")
 
             gauge3 = next(gen_index_gauge)
             gauge4 = next(gen_index_gauge)
-
-            # lsl1, usl1 = next(gen_index_sl)
-            # lsl2, usl2 = next(gen_index_sl)
-            # lsldot1, usldot1 = next(gen_index_sldot)
-            # lsldot2, usldot2 = next(gen_index_sldot)
 
             epss = []  # contains epsilons of the LHS and the corresponding sign of the RHS corresponding to permutations of indices.
 
@@ -448,21 +444,21 @@ def rearrange_derivatives(single_terms):
             for eps in epss:
                 form += "id once "
                 form += f"{eps[0]}"
-                form += f"*{cov}(Lsl1?LUsl[i1],Usldot1?ULsldot[j1],{cov}(Lsl3?LUsl[i3],Usldot3?ULsldot[j3],{cov}(Lsl2?LUsl[i2],Usldot2?ULsldot[j2],{higgs}(gauge1?gauge))))"
-                form += f"*{cov}(Lsl4?LUsl[i4],Usldot4?ULsldot[j4],{higgs_dagger}(gauge2?gauge))"
+                form += f"*{cov}(Lsl1?LUsl[i1],Usldot1?ULsldot[j1],{cov}(Lsl3?LUsl[i3],Usldot3?ULsldot[j3],{cov}(Lsl2?LUsl[i2],Usldot2?ULsldot[j2],{higgs}(gaugeA1?gauge))))"
+                form += f"*{cov}(Lsl4?LUsl[i4],Usldot4?ULsldot[j4],{higgs_dagger}(gaugeA2?gauge))"
                 form += f" = ({eps[1]}) * ("
                 form += f"-{sl2Ceps}(Usl1,Usl2)*{sl2Ceps}(Usl3,Usl4)*{sl2Ceps}(Lsldot1,Lsldot2)*{sl2Ceps}(Lsldot3,Lsldot4)"
-                form += f"*{cov}(Lsl1,Usldot1,{cov}(Lsl2,Usldot2,{higgs}(gauge1)))*{cov}(Lsl3,Usldot3,{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2)))"
+                form += f"*{cov}(Lsl1,Usldot1,{cov}(Lsl2,Usldot2,{higgs}(gaugeA1)))*{cov}(Lsl3,Usldot3,{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2)))"
 
                 form += f" +({mi}*{g1}/2)*{sl2Ceps}(Usl1,Usl2)*{sl2Ceps}(Usl3,Usl4)*{sl2Ceps}(Lsldot4,Lsldot2)"
-                form += f"*{bl}(Lsl1,Lsl3)*{cov}(Lsl2,Usldot2,{higgs}(gauge1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))"
+                form += f"*{bl}(Lsl1,Lsl3)*{cov}(Lsl2,Usldot2,{higgs}(gaugeA1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))"
                 form += f" +({mi}*{g2}/2)*{sl2Ceps}(Usl1,Usl2)*{sl2Ceps}(Usl3,Usl4)*{sl2Ceps}(Lsldot4,Lsldot2)"
-                form += f"*{wl}(gauge1,{gauge3},Lsl1,Lsl3)*{su2eps}({gauge3},{gauge4})*{cov}(Lsl2,Usldot2,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))"
+                form += f"*{wl}(gaugeA1,{gauge3},Lsl1,Lsl3)*{su2eps}({gauge3},{gauge4})*{cov}(Lsl2,Usldot2,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))"
 
                 form += f" -({mi}*{g1}/2)*{sl2Ceps}(Usl4,Usl2)*{sl2Ceps}(Lsldot1,Lsldot2)*{sl2Ceps}(Lsldot3,Lsldot4)"
-                form += f"*{cov}(Lsl2,Usldot2,{higgs}(gauge1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))*{br}(Usldot1,Usldot3)"
+                form += f"*{cov}(Lsl2,Usldot2,{higgs}(gaugeA1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))*{br}(Usldot1,Usldot3)"
                 form += f" -({mi}*{g2}/2)*{sl2Ceps}(Usl4,Usl2)*{sl2Ceps}(Lsldot1,Lsldot2)*{sl2Ceps}(Lsldot3,Lsldot4)"
-                form += f"*{cov}(Lsl2,Usldot2,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))*{wr}(gauge1,{gauge3},Usldot1,Usldot3)*{su2eps}({gauge3},{gauge4})"
+                form += f"*{cov}(Lsl2,Usldot2,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))*{wr}(gaugeA1,{gauge3},Usldot1,Usldot3)*{su2eps}({gauge3},{gauge4})"
 
                 form += ");\n"
 
@@ -470,41 +466,41 @@ def rearrange_derivatives(single_terms):
             for eps in epss:
                 form += "id once "
                 form += f"{eps[0]}"
-                form += f"*{cov}(Lsl1?LUsl[i1],Usldot1?ULsldot[j1],{cov}(Lsl2?LUsl[i2],Usldot2?ULsldot[j2],{cov}(Lsl3?LUsl[i3],Usldot3?ULsldot[j3],{higgs}(gauge1?gauge))))"
-                form += f"*{cov}(Lsl4?LUsl[i4],Usldot4?ULsldot[j4],{higgs_dagger}(gauge2?gauge))"
+                form += f"*{cov}(Lsl1?LUsl[i1],Usldot1?ULsldot[j1],{cov}(Lsl2?LUsl[i2],Usldot2?ULsldot[j2],{cov}(Lsl3?LUsl[i3],Usldot3?ULsldot[j3],{higgs}(gaugeA1?gauge))))"
+                form += f"*{cov}(Lsl4?LUsl[i4],Usldot4?ULsldot[j4],{higgs_dagger}(gaugeA2?gauge))"
                 form += f" = ({eps[1]}) * ("
                 form += f"-{sl2Ceps}(Usl1,Usl2)*{sl2Ceps}(Usl3,Usl4)*{sl2Ceps}(Lsldot1,Lsldot2)*{sl2Ceps}(Lsldot3,Lsldot4)"
-                form += f"*{cov}(Lsl1,Usldot1,{cov}(Lsl2,Usldot2,{higgs}(gauge1)))*{cov}(Lsl3,Usldot3,{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2)))"
+                form += f"*{cov}(Lsl1,Usldot1,{cov}(Lsl2,Usldot2,{higgs}(gaugeA1)))*{cov}(Lsl3,Usldot3,{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2)))"
 
                 form += f" +({mi}*{g1}/2)*{sl2Ceps}(Usl1,Usl2)*{sl2Ceps}(Usl3,Usl4)*{sl2Ceps}(Lsldot4,Lsldot2)"
-                form += f"*{bl}(Lsl1,Lsl3)*{cov}(Lsl2,Usldot2,{higgs}(gauge1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))"
+                form += f"*{bl}(Lsl1,Lsl3)*{cov}(Lsl2,Usldot2,{higgs}(gaugeA1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))"
                 form += f" +({mi}*{g2}/2)*{sl2Ceps}(Usl1,Usl2)*{sl2Ceps}(Usl3,Usl4)*{sl2Ceps}(Lsldot4,Lsldot2)"
-                form += f"*{wl}(gauge1,{gauge3},Lsl1,Lsl3)*{su2eps}({gauge3},{gauge4})*{cov}(Lsl2,Usldot2,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))"
+                form += f"*{wl}(gaugeA1,{gauge3},Lsl1,Lsl3)*{su2eps}({gauge3},{gauge4})*{cov}(Lsl2,Usldot2,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))"
 
                 form += f" -({mi}*{g1}/2)*{sl2Ceps}(Usl4,Usl2)*{sl2Ceps}(Lsldot1,Lsldot2)*{sl2Ceps}(Lsldot3,Lsldot4)"
-                form += f"*{cov}(Lsl2,Usldot2,{higgs}(gauge1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))*{br}(Usldot1,Usldot3)"
+                form += f"*{cov}(Lsl2,Usldot2,{higgs}(gaugeA1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))*{br}(Usldot1,Usldot3)"
                 form += f" -({mi}*{g2}/2)*{sl2Ceps}(Usl4,Usl2)*{sl2Ceps}(Lsldot1,Lsldot2)*{sl2Ceps}(Lsldot3,Lsldot4)"
-                form += f"*{cov}(Lsl2,Usldot2,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))*{wr}(gauge1,{gauge3},Usldot1,Usldot3)*{su2eps}({gauge3},{gauge4})"
+                form += f"*{cov}(Lsl2,Usldot2,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))*{wr}(gaugeA1,{gauge3},Usldot1,Usldot3)*{su2eps}({gauge3},{gauge4})"
 
                 form += f" +({mi}*{g1}/2)*{sl2Ceps}(Usl1,Usl2)*{sl2Ceps}(Usl3,Usl4)*{sl2Ceps}(Lsldot1,Lsldot4)"
-                form += f"*{cov}(Lsl1,Usldot1,{bl}(Lsl2,Lsl3))*{higgs}(gauge1)*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))"
+                form += f"*{cov}(Lsl1,Usldot1,{bl}(Lsl2,Lsl3))*{higgs}(gaugeA1)*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))"
                 form += f" +({mi}*{g2}/2)*{sl2Ceps}(Usl1,Usl2)*{sl2Ceps}(Usl3,Usl4)*{sl2Ceps}(Lsldot1,Lsldot4)"
-                form += f"*{cov}(Lsl1,Usldot1,{wl}(gauge1,{gauge3},Lsl2,Lsl3))*{su2eps}({gauge3},{gauge4})*{higgs}({gauge4})*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))"
+                form += f"*{cov}(Lsl1,Usldot1,{wl}(gaugeA1,{gauge3},Lsl2,Lsl3))*{su2eps}({gauge3},{gauge4})*{higgs}({gauge4})*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))"
 
                 form += f" +({mi}*{g1}/2)*{sl2Ceps}(Usl1,Usl2)*{sl2Ceps}(Usl3,Usl4)*{sl2Ceps}(Lsldot1,Lsldot4)"
-                form += f"*{bl}(Lsl2,Lsl3)*{cov}(Lsl1,Usldot1,{higgs}(gauge1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))"
+                form += f"*{bl}(Lsl2,Lsl3)*{cov}(Lsl1,Usldot1,{higgs}(gaugeA1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))"
                 form += f" +({mi}*{g2}/2)*{sl2Ceps}(Usl1,Usl2)*{sl2Ceps}(Usl3,Usl4)*{sl2Ceps}(Lsldot1,Lsldot4)"
-                form += f"*{wl}(gauge1,{gauge3},Lsl2,Lsl3)*{su2eps}({gauge3},{gauge4})*{cov}(Lsl1,Usldot1,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))"
+                form += f"*{wl}(gaugeA1,{gauge3},Lsl2,Lsl3)*{su2eps}({gauge3},{gauge4})*{cov}(Lsl1,Usldot1,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))"
 
                 form += f" -({mi}*{g1}/2)*{sl2Ceps}(Usl1,Usl4)*{sl2Ceps}(Lsldot1,Lsldot2)*{sl2Ceps}(Lsldot3,Lsldot4)"
-                form += f"*{higgs}(gauge1)*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))*{cov}(Lsl1,Usldot1,{br}(Usldot2,Usldot3))"
+                form += f"*{higgs}(gaugeA1)*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))*{cov}(Lsl1,Usldot1,{br}(Usldot2,Usldot3))"
                 form += f" -({mi}*{g2}/2)*{sl2Ceps}(Usl1,Usl4)*{sl2Ceps}(Lsldot1,Lsldot2)*{sl2Ceps}(Lsldot3,Lsldot4)"
-                form += f"*{higgs}({gauge4})*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))*{cov}(Lsl1,Usldot1,{wr}(gauge1,{gauge3},Usldot2,Usldot3))*{su2eps}({gauge3},{gauge4})"
+                form += f"*{higgs}({gauge4})*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))*{cov}(Lsl1,Usldot1,{wr}(gaugeA1,{gauge3},Usldot2,Usldot3))*{su2eps}({gauge3},{gauge4})"
 
                 form += f" -({mi}*{g1}/2)*{sl2Ceps}(Usl1,Usl4)*{sl2Ceps}(Lsldot1,Lsldot2)*{sl2Ceps}(Lsldot3,Lsldot4)"
-                form += f"*{cov}(Lsl1,Usldot1,{higgs}(gauge1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))*{br}(Usldot2,Usldot3)"
+                form += f"*{cov}(Lsl1,Usldot1,{higgs}(gaugeA1))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))*{br}(Usldot2,Usldot3)"
                 form += f" -({mi}*{g2}/2)*{sl2Ceps}(Usl1,Usl4)*{sl2Ceps}(Lsldot1,Lsldot2)*{sl2Ceps}(Lsldot3,Lsldot4)"
-                form += f"*{cov}(Lsl1,Usldot1,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gauge2))*{wr}(gauge1,{gauge3},Usldot2,Usldot3)*{su2eps}({gauge3},{gauge4})"
+                form += f"*{cov}(Lsl1,Usldot1,{higgs}({gauge4}))*{cov}(Lsl4,Usldot4,{higgs_dagger}(gaugeA2))*{wr}(gaugeA1,{gauge3},Usldot2,Usldot3)*{su2eps}({gauge3},{gauge4})"
 
                 form += ");\n"
             # form += "endrepeat;\n"
@@ -515,7 +511,7 @@ def rearrange_derivatives(single_terms):
         summand.name = "".join([f"{name}{nD}" for name, nD in summand.fieldstructure])
 
         # Write SL2C and set FORM-file:
-        form_SL2C = declaration_SL2C_sets(summand.possible_indices)
+        form_SL2C = declaration_SL2C_sets(summand.possible_indices, nDer)
         with open(TERM_PATH / "declaration_SL2C.h", "w") as file:
             file.write(form_SL2C)
 
@@ -567,7 +563,11 @@ def rearrange_derivatives(single_terms):
 
         run_form(fp_cwd=TERM_PATH, filename=f"higgs_commute_derivatives.frm", fp_p=FORM_GENERAL_PATH)
 
-        terms = get_terms(TERM_PATH / "commute_derivatives.h", as_one=False)
+        with open(TERM_PATH / "commute_derivatives.h", "r") as file:
+            expression = file.read()
+
+        terms = get_terms(expression)
+
         term_list.append(terms)
 
     term_list = [term for short_list in term_list for term in short_list]
@@ -708,10 +708,12 @@ def replace_eoms(single_terms, nDer):
 
                 run_form(fp_cwd=TERM_PATH, filename=f"{name_form}eom.frm", fp_p=FORM_GENERAL_PATH)
 
-                terms = get_terms(TERM_PATH / "term_with_less_eom.h", as_one=False)
+                with open(TERM_PATH / "term_with_less_eom.h", "r") as file:
+                    expression = file.read()
+
+                terms = get_terms(expression)
+
                 term_list.append(terms)
-                # op = op_config
-                print("---------------")
 
     term_list = [term for short_list in term_list for term in short_list]
     single_terms = get_type(term_list)

@@ -129,7 +129,7 @@ def main(input_file, max_dim = 6, debug=None):
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
 
     # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
-    single_terms = rearrange_derivatives(single_terms)
+    single_terms = rearrange_derivatives(single_terms, nDer)
 
     single_terms = replace_eoms(single_terms, nDer)  # (D^2H) * (D^2H+) -> ... + ~ H+ * H * H * (D^2H+) + ... => need to replace eom again.
     single_terms = replace_eoms(single_terms, nDer)
@@ -188,7 +188,7 @@ def main(input_file, max_dim = 6, debug=None):
     if args.tex:
         tex_sorted_terms_before_sun(inputfilename, single_terms)
 
-    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
+    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_before_sun.p", "rb"))
 
     single_terms = rfr_sun(single_terms)

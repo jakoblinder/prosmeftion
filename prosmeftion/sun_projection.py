@@ -653,7 +653,11 @@ def replace_sun_tensors_by_projected_ones(single_terms):
 
                     run_form(fp_cwd=TERM_PATH, filename=f"{name_form}.frm", fp_p=FORM_GENERAL_PATH)
 
-                    terms = get_terms(TERM_PATH / "substituted_T-SUN_tensors.h", as_one=True, name=name_form)
+                    with open(TERM_PATH / "substituted_T-SUN_tensors.h", "r") as file:
+                        expression = file.read()
+
+                    terms = get_terms(expression, name=name_form)
+
                     merged_terms.append(terms)
                 else:
                     # IF there isn't a projection matrix for this group and operator there - continue.

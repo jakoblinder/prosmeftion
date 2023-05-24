@@ -159,7 +159,13 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         """
         Mass dimension of operator.
         """
-        return self.coeff.mdim
+        mdim = 0
+        mdims = {name: field for name, field in {**op_config["bosonfields"], **op_config["fermionfields"]}.items()}
+        for field in self.fields:
+            mdim += mdims[field.non_conj_name]["d"] + field.nD
+
+        return mdim
+        # return self.coeff.mdim
 
     @property
     def fieldcounter(self):

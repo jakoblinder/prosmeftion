@@ -237,6 +237,13 @@ def update_opname_and_modelfile(op_dict):
         if type(field["index_structure"][0]) != list:
             field["index_structure"] = [field["index_structure"]]
 
+    # Deduce massdimension of field from its helicity if helicity is defined: d = 1 + abs(helicity)
+    for name, field in {**op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
+        if "helicity" not in field.keys():
+            continue
+        else:
+            field["d"] = 1 + abs(field["helicity"])
+
     return op_dict
 
 op_config = update_opname_and_modelfile(op_config)

@@ -356,6 +356,7 @@ bosonfields:
       description: "Fieldstrength tensor of SU3."
       tex: G
       ac: False
+      d: 2
       mathematica:
         G: G
       autoeft:
@@ -370,6 +371,7 @@ bosonfields:
       description: "Fieldstrength tensor of SU2."
       tex: W
       ac: False
+      d: 2
       mathematica:
         V: W
       autoeft:
@@ -383,6 +385,7 @@ bosonfields:
       description: "Fieldstrength tensor of U1."
       tex: B
       ac: False
+      d: 2
       mathematica:
         F: B
       autoeft:

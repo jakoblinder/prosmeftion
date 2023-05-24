@@ -305,7 +305,7 @@ def get_basis(basispath: Path, max_dim: int):
     for dim in range(4, max_dim + 1):
         # load_basis also returns some counters and the Hilbert series, which we don't need here...
         try:
-            basis[dim], _, _ = load_basis(basispath), dim)
+            basis[dim], _, _ = load_basis(basispath, dim)
         except FileNotFoundError:
             logger.error(f"No model with the name {model.name} can be found in {AUTOEFT_PATH / Path('eft/')}.")
             sys.exit("STOP")

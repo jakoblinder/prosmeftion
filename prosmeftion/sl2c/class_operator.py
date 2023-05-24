@@ -43,9 +43,9 @@ class Operator():
         two contracted indices. Note: All indices in a term are always fully contracted.
         Example for indices: [lor1, lor34532, spin34,...].
     fermion : bool
-        Determines whether an operator is an fermion, i.e. a anti-commuting object.
+        Determines whether an operator is a fermion, i.e. an anti-commuting object.
     expression : str
-        Explicit expression of the operator. If manual is true. The expression has to contain an valid FORM expression,
+        Explicit expression of the operator. If manual is true. The expression has to contain a valid FORM expression,
         containing only functions which are defined by the declaration functions.
     manual : str
         default: False.

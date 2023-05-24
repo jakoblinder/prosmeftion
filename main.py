@@ -8,21 +8,22 @@ from pathlib import Path
 from yaml import safe_load
 
 from prosmeftion import CONFIG_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, n_der, get_basis, run_form
-from prosmeftion.general import form_declarations
+from prosmeftion.general import form_declarations, declaration_SL2C_sets
 
 from prosmeftion.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
+from prosmeftion.yProjection.read_write import remove_header_and_spaces, mathematica_to_form, get_terms
 from prosmeftion.converttoSL2C import converttoSL2C
 from prosmeftion.tex import tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms, tex_sorted_terms_before_sun
 from prosmeftion.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
 from prosmeftion.yProjection.tableau import test
 from prosmeftion.yProjection.indices import Possible_Indices
 from prosmeftion.yProjection.rfr import rfr, rfr_sun
-from prosmeftion.general import declaration_SL2C_sets
 
 # configure logger
 timestamp = datetime.now()
 logger_autoeft = logging.getLogger("autoeft")
-logger = logging.getLogger("autoeft.projection")
+logger = logger_autoeft.getChild("projection")
+# logger = logging.getLogger("autoeft.projection")
 with open(CONFIG_PATH / "logger.yml", "r") as file:
     logconfig = safe_load(file)
 
@@ -38,6 +39,13 @@ parser.add_argument(
 )
 parser.add_argument("-d", "--dimension", type=int, default=6, help="maximum mass dimension for the projection")
 parser.add_argument(
+    "-f",
+    "--format",
+    choices=["form", "mathematica"],
+    default="form",
+    help="Specify in which format the input is given.",
+)
+parser.add_argument(
     "-l",
     "--log",
     dest="logLevel",
@@ -49,6 +57,7 @@ args = parser.parse_args()
 
 input_file = args.lagrangian.resolve()  # "exampleOutputBS.m"
 basis_file = args.basis.resolve()
+#  AUTOEFT_PATH / Path(f"{model.path}/"
 
 logconfig['handlers']['console']['level'] = logging.getLevelName(args.logLevel)
 logging.config.dictConfig(logconfig)
@@ -63,15 +72,28 @@ def number_terms(single_terms):
     return nterms
 
 def main(input_file, basis_file, max_dim = 6, debug=None):
+    # Maximum number of derivatives
+    nDer = n_der(max_dim)
+
     # get basis up to max_dim mass dimension
-    basis = get_basis(max_dim)
+    basis = get_basis(basis_file, max_dim)
 
     inputfilename = input_file.stem
 
     with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
-        file.write(form_declarations(n_der))
+        file.write(form_declarations(nDer))
 
-    terms = converttoSL2C(input_file, header=args.skip, pprint=False)
+    expression = remove_header_and_spaces(input_file, header=args.skip)
+
+    if args.format == "mathematica":
+        expression = mathematica_to_form(expression)
+
+    # Extract coefficient and Operator from the output and pack them into the desired object structure:
+    terms = get_terms(expression)
+    del expression
+
+    # Conversion in y-Basis notation:
+    terms = converttoSL2C(terms, nDer)
 
     if args.tex:
         tex_unsorted_terms(inputfilename, terms)
@@ -100,8 +122,8 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
 
     nterms_before = number_terms(single_terms)
 
-    single_terms = replace_eoms(single_terms)
-    single_terms = replace_eoms(single_terms)
+    single_terms = replace_eoms(single_terms, nDer)
+    single_terms = replace_eoms(single_terms, nDer)
 
     nterms_after = number_terms(single_terms)
 
@@ -111,10 +133,10 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
 
     # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
-    single_terms = rearrange_derivatives(single_terms)
+    single_terms = rearrange_derivatives(single_terms, nDer)
 
-    single_terms = replace_eoms(single_terms)  # (D^2H) * (D^2H+) -> ... + ~ H+ * H * H * (D^2H+) + ... => need to replace eom again.
-    single_terms = replace_eoms(single_terms)
+    single_terms = replace_eoms(single_terms, nDer)  # (D^2H) * (D^2H+) -> ... + ~ H+ * H * H * (D^2H+) + ... => need to replace eom again.
+    single_terms = replace_eoms(single_terms, nDer)
 
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
@@ -155,7 +177,7 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
     while True:
         single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim)
         number_iterations += 1
-        single_terms = replace_eoms(single_terms)
+        single_terms = replace_eoms(single_terms, nDer)
         # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_test.p", "wb"))
         # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_test.p", "rb"))
         # Remove double terms:
@@ -170,7 +192,7 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
     if args.tex:
         tex_sorted_terms_before_sun(inputfilename, single_terms)
 
-    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
+    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_before_sun.p", "rb"))
 
     single_terms = rfr_sun(single_terms)

@@ -16,11 +16,13 @@ from pathlib import Path
 from typing import List
 
 from .sl2c.class_term import Term
-from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values
-from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
-from .yProjection.read_write import get_terms
+from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values, n_der
+from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
+from .yProjection.read_write import get_terms, mathematica_to_form, writefile
 from .yProjection.coefficient import Factor
 from .sun_projection import equalize_field_indices
+from .general import declaration_SL2C_sets
+from .pyform.pyformfunction import pyForm
 
 # logger_autoeft = logging.getLogger("autoeft")
 # logger = logging.getLogger("autoeft.projection")
@@ -54,75 +56,6 @@ logger = logger_autoeft.getChild(__name__)
 # Gammamatrices, e.g.: gamma[{lor1}, {spin6497, spin6498}]
 # Dictionary for names in form.
 
-def expression_raw(filename, header):
-    """
-    Return operator expression as one string without whitespaces.
-
-    Parameters
-    ----------
-    filename : str
-        Filepath.
-    header : int
-        Number of line before expression starts.
-
-    Returns
-    -------
-    line : str
-        Operators expression as one string without whitespaces.
-
-    """
-    with open(filename, "r") as file:
-        for i in range(header):
-            file.readline()
-        line = file.read()
-        line = re.sub(r"(\s)*", "", line)  # Replace all whitespaces and newlines: \s = [\t\n\r\f\v]
-        line = line[1:-1]  # remove curly braces around expression
-    return line
-
-def writefile(filename, list_terms, write=True):
-    """
-    Print elements of a list "list_terms" in file "filename" in format:
-
-        0: list_terms[0]
-        ===============================
-        1: list_terms[1]
-        ===============================
-        2: list_terms[1]
-        ===============================
-        .
-        .
-        .
-
-    Parameters
-    ----------
-    filename : str
-        Name of the file the content should be written on..
-    list_terms : [str, str, str, ...]
-        list with string entries that should be printed in file.
-    write : Boolean
-        Decides whether content is written in file or not. If write = False, only the number of terms is returned.
-
-    Returns
-    -------
-    count : int
-        Returns number of nonempty entries. In principle not necessary in this case, because in findOpandCoeff
-        an error occurs when nothing is found. So the program is always determinate before writefile is called
-        if there is an empty element.
-
-    """
-    # delete file content
-    content = ""
-    count = 0
-    for i, term in enumerate(list_terms):
-        if term != "":
-            count += 1
-        if write:
-            content += f"{i:d}: {term:s}\n"
-            content += "===============================\n"
-    if write:
-        with open(filename, "w") as file:
-            file.write(content)
-    return count
 
 def findOpandCoeff(expression):
     """
@@ -715,7 +648,7 @@ def get_termobject(args):
     coeff, coperator, id = args[0], args[1], args[2]
     return Term(coeff, coperator, id)
 
-def convertviaform(term):
+def convertviaform(term, nDer):
     """
     Convert Term via FORM and return converted object.
     Parameters
@@ -726,33 +659,43 @@ def convertviaform(term):
     -------
 
     """
-    # Create FORM files:
-    filename = term.name  # f"term{i:d}"
-    form(term, filename)
-    formoutput = run_form(filename)
-    formoutput_formatted = print_form(filename,
-                                      original=f"{term.cops_original:s}",
-                                      converted=formoutput)
-    ###
-    TERM_PATH = FORM_PATH / filename
-    with open(TERM_PATH / f"{filename}.h", "w") as file:
-        formoutput=re.sub(r"(\s)*", "", formoutput)
-        file.write(formoutput)
-    new_term = get_terms(filepath=TERM_PATH / f"{filename}.h", as_one=True, name=term.name)
-    for summand in new_term:
-        summand.coeff *= Factor(term.coeff.expression)
-    ###
-    return formoutput_formatted, new_term  # Term_form(formoutput, term.coeff, term.name)
+    logger.info("Convert operators into SL2C notation.")
+    # Write SL2C and set FORM-file:
+    assert len(term) == 1
+    summand = term[0]
 
-def converttoSL2C(inputfile, header = 0, pprint=True):
+    # Cconvert Dirac into Weyl spinors
+    sl2c_dirac_to_weyl, label, n_bils = summand.form_convertDirac()
+    # Convert derivatives
+    sl2c_derivative_in_SL2C = summand.form_convertDerivative(nDer)
+    # Convert fieldstrength tensors
+    sl2c_fieldstrength_tensor, n_fsTs = summand.form_convertFieldstrengthTensor()
+    # Substitute sigma2 matrices:
+    sl2c_simplify_sigma2 = summand.form_simplifySigma2(n_bils + n_fsTs)
+    # Convert fundamental gauge group indices into fundamental ones:
+    gauge_antifundamental_indices, label = summand.form_antifundamentalIndices(label)
+    # Convert adjoint gauge group indices:
+    gauge_adjoint_indices = summand.form_adjointIndices()
+
+    form_SL2C = declaration_SL2C_sets(term[0].possible_indices, nDer)
+    send_to_form = [form_SL2C, f"{summand:c}", sl2c_dirac_to_weyl, sl2c_derivative_in_SL2C, sl2c_fieldstrength_tensor, sl2c_simplify_sigma2, gauge_antifundamental_indices, gauge_adjoint_indices]
+    expression = pyForm(FORM_GENERAL_PATH / "converttoSL2C.frm", send_to_form, input_dir=FORM_GENERAL_PATH, prompt= "READY")  # , debug=True, preprocessor_only=True
+    expression = re.sub(r"(\s)*", "", expression)
+
+    new_term = get_terms(expression, name=summand.name)
+
+
+    return new_term
+
+def converttoSL2C(terms, nDer):
     """
     Output Terms of BSUOLEA are read in and formatted in SL2C Notation via FORM.
     Parameters
     ----------
     inputfile: str
         Filename of the inputfile in the input directory.
-    header
-        Number of lines before the term starts.
+    nDer
+        Maximum number of derivatives which occurs in the Lagrangian.
     pprint: bool
         Print formatted terms if True.
 
@@ -760,55 +703,17 @@ def converttoSL2C(inputfile, header = 0, pprint=True):
     -------
     Array of formatted term_form objects.
     """
-    # Extract coefficient and Operator from the output:
-    inputfile = Path(inputfile)
-    if inputfile.is_absolute():
-        # if header:
-        expression = expression_raw(inputfile, header)
-    else:
-        expression = expression_raw(INPUT_PATH / inputfile, header)
-
-    coefficient, coperator = findOpandCoeff(expression)
-
-    # Create the Term objects and extract on the way all Operators:
-    names = [f"term{i:d}" for i in range(len(coefficient))]
-    args = list(map(list, zip(*[coefficient, coperator, names])))  # transpose list
-
-    logger.info("Read in all terms")
-    with mp.Pool() as pool:  # mp.Pool(20) gives 20 parallel processes
-        terms = pool.map(get_termobject, args)
-
-    del coefficient, coperator, expression
-    writefile(PROJECTION_PATH / "terms.txt", terms)
-
-    # Write a file containing all formatted operators written separately in each line to check the identification:
-    # Create the respective directory
-    if not os.path.exists(PROJECTION_PATH / "check_operators"):
-        os.makedirs(PROJECTION_PATH / "check_operators")
-    # Write the file:
-    for i, v in enumerate(terms):
-        writefile(PROJECTION_PATH / f"check_operators/term{i:d}.txt", v.operators)
-
-    # Write formfiles:
-
-    logger.info("Run FORM")
-
     # with mp.Pool() as pool:
     #     terms_after_form = list(map(list, zip(*pool.map(convertviaform, terms))))
-    terms_after_form = list(map(list, zip(*map(convertviaform, terms))))
-    ops = terms_after_form[0]
-    form_terms = terms_after_form[1]
+    terms_after_form = [convertviaform(term, nDer) for term in terms]  # list(map(list, zip(*map(convertviaform, terms))))
 
-    # write a file containing all formatted operators written as a term to check the format:
-    writefile(PROJECTION_PATH / "operators_formatted.txt", ops)
-    del ops
+    # if logger.root.handlers[0].level < 20:
+    for i, terms in enumerate(terms_after_form):
+        logger.info(f"Term {i:d}:")
+        for term in terms.terms:
+            logger.info(f"{term:s}\n")
 
-    if pprint:
-        for i, terms in enumerate(form_terms):
-            print(f"Term {i:d}:")
-            for term in terms.terms:
-                print(f"{term:s}\n")
-    return form_terms
+    return terms_after_form
 
 # TODO: Implement progress bar: https://stackoverflow.com/questions/3160699/python-progress-bar
 # import sys

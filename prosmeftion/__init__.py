@@ -13,22 +13,13 @@ logger = logger_autoeft.getChild(__name__)
 
 PROJECTION_PATH = Path(__file__).parent.parent
 
-# # Include the autoeft package in system path for easier import
+# Include the autoeft package in system path for easier import
 AUTOEFT_PATH = PROJECTION_PATH.parent
-# # sys.path.append(AUTOEFT_PATH/ "autoeft")
-# sys.path.append(str(AUTOEFT_PATH))
-#
-# from autoeft.model import Model
-# from autoeft.io import load_basis
+# sys.path.append(AUTOEFT_PATH/ "autoeft")
+sys.path.append(str(AUTOEFT_PATH))
 
-import autoeft.io.basis as io_basis
-# import autoeft.io as io
-basis_path = AUTOEFT_PATH / Path("efts", "ssm-eft", "6", "basis.eft")
-print(basis_path)
-basis_file = io_basis.BasisFile(basis_path)
-
-basis = basis_file.get_basis()
-model = basis.model
+from autoeft.model import Model
+from autoeft.io import load_basis
 
 CONFIG_PATH = PROJECTION_PATH / "config"
 CONFIG_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
@@ -43,7 +34,7 @@ FORM_GENERAL_PATH.mkdir(parents=True, exist_ok=True)
 
 def configurations(filename):
     filename = Path(filename)
-    assert filename.suffix == ".yml", "The configurations file has to be in yml style."
+    assert filename.suffix == ".yml", "The configuration file has to be written in yaml style."
     with open(CONFIG_PATH / filename, "r") as file:
         config = safe_load(file)
     return config
@@ -147,18 +138,41 @@ def escape_regex(regex):
 ###################
 # FORM refactored #
 ###################
-#Number of maximal occurring derivatives
-n_der = 4
+
+def n_der(mdim: int):
+    """
+    Calculates the maximum number of derivatives possible for a given mass dimension in the Standard Model (SM).
+    At even mass dimensions, the maximum number of derivatives is d-2, since there are at least 2 Higgs bosons, with
+    a mass dimension of 1 each, necessary to build a gauge invariant structure. Similar, there are at least 2 spinors,
+    with a mass dimension of 3/2 necessary to build a gauge invariant structure. For odd mass dimensions, there are,
+    thus, at most d-3 derivatives possible.
+
+    Parameters
+    ----------
+    mdim
+        Maximum mass dimension of the given Lagrangian.
+    Returns
+    -------
+        Maximum number of derivatives for gauge invariant SM operators with mass dimension mdim.
+    """
+    if mdim%2:
+        # Odd mass dimension
+        return mdim - 3
+    else:
+        # Even mass dimension
+        return mdim - 2
+
 op_config = configurations("op_config.yml")
 
 def save_set(dictionary, key, value):
-    """Don't overwrite already set values. """
+    """Don't overwrite already set values."""
     if key not in dictionary.keys():
         dictionary[key] = value
 
 def update_opname_and_modelfile(op_dict):
     """
-    Specify default values in op_config and get helicities of the fields and other information from the model file and insert them into the op_config dictionary.
+    Specify default values in op_config and get helicities of the fields and other information from the model file
+    and insert them into the op_config dictionary.
     Parameters
     ----------
     op_dict
@@ -167,19 +181,20 @@ def update_opname_and_modelfile(op_dict):
     -------
         Updated op_config dictionary.
     """
-    # If autoeft name isn't set, the form name without square brackets is taken.
-    def autoeft_transl(kind, skip = []):
-        """
-        Specify kind of fields (str) and which fields are to skip (List[str]) and give auteft translation if not specified.
-        """
-        for name, field in op_dict[kind].items():
-            if name in skip:
-                continue
-            if "autoeft" not in field.keys():
-                field["autoeft"] = {}
-                field["autoeft"][name] = field["mathematica"][name]
-                if f"conj[{name}]" in field["mathematica"].keys():
-                    field["autoeft"][f"[{name}+]"] = field["mathematica"][f"conj[{name}]"][1:-1]  # "[]" are removed
+    # If autoeft name is not set, the form name without square brackets is taken.
+    # def autoeft_transl(kind, skip = []):
+    #     """
+    #     Specify kind of fields (str) and which fields are to skip (List[str])
+    #     and give autoeft translation if not specified.
+    #     """
+    #     for name, field in op_dict[kind].items():
+    #         if name in skip:
+    #             continue
+    #         if "autoeft" not in field.keys():
+    #             field["autoeft"] = {}
+    #             field["autoeft"][name] = field["mathematica"][name]
+    #             if f"conj[{name}]" in field["mathematica"].keys():
+    #                 field["autoeft"][f"[{name}+]"] = field["mathematica"][f"conj[{name}]"][1:-1]  # "[]" are removed
 
     # namings like [su2eps] instead of su2eps doesn't allow the automatic filling of the autoeft dictionary.
     # autoeft_transl("tensors", ["T", "gamma"])
@@ -187,36 +202,50 @@ def update_opname_and_modelfile(op_dict):
     # autoeft_transl("fermionfields", ["D"])
 
     # get helicities values and so on
-    modelfields = model.fields
+    # modelfields = model.fields
 
-    for model_field in modelfields.values():
-        # write {} around daggers
-        model_field.tex = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex)
+    # for model_field in modelfields.values():
+    #     # write {} around daggers
+    #     model_field.tex = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex)
+    #     try:
+    #         model_field.tex_hc = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex_hc)
+    #     except AttributeError:
+    #         pass
+    #
+    #     if "+" in model_field.name:
+    #         # skip hermitian conjugated fields
+    #         continue
+    #     for name, field in {**op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
+    #         if model_field.name == name:
+    #             save_set(field, "helicity", model_field.helicity)
+    #             save_set(field, "ac", model_field.ac)
+    #             # save_set(field, "conj", model_field.conj)
+    #             save_set(field, "tex", model_field.tex)
+    #             try:
+    #                 save_set(field, "tex_hc", model_field.tex_hc)
+    #             except KeyError:
+    #                 pass
+    for name, field in {**op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
         try:
-            model_field.tex_hc = re.sub(r"\^(?<!\{)(\\)+dagger(?!\})", "^{\\\\dagger}", model_field.tex_hc)
-        except:
-            pass
-
-        if "+" in model_field.name:
-            # skip hermitian conjugated fields
-            continue
-        for name, field in {**op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
-            if model_field.name == name:
-                save_set(field, "helicity", model_field.helicity)
-                save_set(field, "ac", model_field.ac)
-                save_set(field, "conj", model_field.conj)
-                save_set(field, "tex", model_field.tex)
-                try:
-                    save_set(field, "tex_hc", model_field.tex_hc)
-                except:
-                    pass
+                field["helicity"] = Fraction(field["helicity"])
+        except KeyError:
+                pass
+        save_set(field, "tex_hc", field["tex"] + "^{\\\\dagger}")
 
     # write index_structure as list of lists:
     for name, field in {**op_dict["tensors"], **op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
         if type(field["index_structure"][0]) != list:
             field["index_structure"] = [field["index_structure"]]
 
+    # Deduce massdimension of field from its helicity if helicity is defined: d = 1 + abs(helicity)
+    for name, field in {**op_dict["bosonfields"], **op_dict["fermionfields"]}.items():
+        if "helicity" not in field.keys():
+            continue
+        else:
+            field["d"] = 1 + abs(field["helicity"])
+
     return op_dict
+
 op_config = update_opname_and_modelfile(op_config)
 
 
@@ -256,6 +285,8 @@ coeff += [form_field for field in op_config["abbreviation"].values() for form_fi
 bosons = [form_field for field in op_config["bosonfields"].values() for form_field in field["mathematica"].values()]
 bosons_non_conj = [list(field["mathematica"].values())[0] for field in op_config["bosonfields"].values()]
 fermions = [form_field for field in op_config["fermionfields"].values() for form_field in field["mathematica"].values()]
+# the same like fermions, just without the derivative
+fermionfields = [form_field for field in op_config["fermionfields"].values() for form_field in field["mathematica"].values() if "derivative" not in field["description"]]
 fermions_non_conj = [list(field["mathematica"].values())[0] for field in op_config["fermionfields"].values()]
 tensors = [form_field for field in op_config["tensors"].values() for form_field in field["mathematica"].values()]
 
@@ -268,18 +299,26 @@ for name, field in model.fields.items():
     fields_sorted[proj_name] = field
 del transl_autoeft_projection
 
-def get_basis(max_dim: int):
+def get_basis(basispath: Path, max_dim: int):
     """Load basis from autoeft."""
     basis = {}  # dictionary with basis for each mass dimension from 4 to 6.
     for dim in range(4, max_dim + 1):
         # load_basis also returns some counters and the Hilbert series, which we don't need here...
         try:
-            basis[dim], _, _ = load_basis(AUTOEFT_PATH / Path(f"{model.path}/"), dim)
+            basis[dim], _, _ = load_basis(basispath), dim)
         except FileNotFoundError:
             logger.error(f"No model with the name {model.name} can be found in {AUTOEFT_PATH / Path('eft/')}.")
             sys.exit("STOP")
 
     return basis
+
+def get_commuting_op(op):
+    """eC -> eCc, [eC+] -> [eC+c], where eCc and [eC+c] are commuting functions."""
+    if op[0] == "[" and op[-1] == "]":
+        commuting_op = op[:-1] + "c]"
+    else:
+        commuting_op = op + "c"
+    return commuting_op
 
 def get_SUN_name(N):
     """Get Name of SU2_W out of model file."""
@@ -368,4 +407,39 @@ def get_expression_from_FORM_output(output: str):
         logger.error(f"No output term has been found in {output}.")
         sys.exit("STOP")
 
+
+# def retry(tries:int=5):
+#     """
+#     Decorator for running FORM via PIPE. Since the PIPE connection doesn't work always, the process sometimes needs
+#     to be restarted. This is what this decorator establishes when it is used like in the following example:
+#
+#     @retry()
+#     def form():
+#         with PyFORM(form_path, 1, prompt="READY", input_dir=<FORM_Path>) as form
+#
+#             form.write(1, "STUFF")
+#
+#             return form.read_all(1)
+#
+#     res = form()
+#
+#     Parameters
+#     ----------
+#     tries:
+#         Number of times the PIPE connection is started again.
+#
+#     Returns
+#     -------
+#
+#     """
+#     def decorator(func):
+#         def wrapper(*args, **kwargs):
+#             for i in range(tries):
+#                 try:
+#                     print(f"Try {i + 1:d}")
+#                     return func(*args, **kwargs)
+#                 except ConnectionError:
+#                     continue
+#         return wrapper
+#     return decorator
 

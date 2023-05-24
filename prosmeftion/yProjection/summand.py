@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple, Union
 from pathlib import Path
 from copy import copy
 
-from prosmeftion import model, op_config, index_config, get_SUN_name
+from prosmeftion import model, op_config, index_config, get_SUN_name, get_commuting_op
 from prosmeftion.general import create_procedure
 
 from .coefficient import Coefficient, Factor
@@ -46,9 +46,10 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
     @abstractmethod
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""
-        tensor = "*".join(map(str, self.tensors))
+        tensors = "*".join(map(str, self.tensors))
         contractedOp = "*".join(map(str, self.fields))
-        return f"{tensor:s}*{contractedOp:s}"
+
+        return f"{tensors:s}*{contractedOp:s}" if tensors else f"{contractedOp:s}"
 
     def __str__(self):
         """Specify the format for printing with str() or print() statement function: Here the same as the string representation repr() itself."""
@@ -158,7 +159,13 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         """
         Mass dimension of operator.
         """
-        return self.coeff.mdim
+        mdim = 0
+        mdims = {name: field for name, field in {**op_config["bosonfields"], **op_config["fermionfields"]}.items()}
+        for field in self.fields:
+            mdim += mdims[field.non_conj_name]["d"] + field.nD
+
+        return mdim
+        # return self.coeff.mdim
 
     @property
     def fieldcounter(self):
@@ -179,8 +186,9 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
                         fieldcount[counted_field] += 1
                         break
             except KeyError:
-                logger.error(f"Field {field.name:s} doesn't have an autoeft translation.")
-                sys.exit("STOP")
+                logger.warning(f"Field {field.name:s} doesn't have an autoeft translation.")
+                return
+                # sys.exit("STOP")
 
         return fieldcount
 
@@ -210,11 +218,12 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         fieldstructure = []
         for field in self.fields:
             try:
-                structure = (projection_to_autoeft[field.name] , field.nD)
+                structure = (projection_to_autoeft[field.name], field.nD)
                 fieldstructure.append(structure)
             except KeyError:
-                logger.error(f"Field {field.name:s} doesn't have an autoeft translation.")
-                sys.exit("STOP")
+                logger.warning(f"Field {field.name:s} doesn't have an autoeft translation.")
+                return
+                # sys.exit("STOP")
 
         return tuple(fieldstructure)
 
@@ -252,7 +261,8 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         -------
 
         """
-        self._possible_indices += Possible_Indices([index for index in list(self.indices).copy() if not isinstance(index, Dummy_Index)])
+        indices_of_summand = Possible_Indices([index for index in list(self.indices).copy() if not isinstance(index, Dummy_Index)])
+        self._possible_indices += indices_of_summand
         return self._possible_indices
 
     @possible_indices.setter
@@ -339,6 +349,521 @@ class Summand(Summand_Model):
         summand.gaugeTensorsSUN = {su2: summand.tensors[su2], su3: summand.tensors[su3]}
 
         return summand
+
+    #######################
+    ### SL2C Conversion ###
+    #######################
+
+    def form_convertDirac(self):
+        """
+        Convert Dirac spinors into Weyl spinors
+        #call convertDirac(leftspinor, rightspinor)
+        Do replacements in general way, but replace xi, [xi+], chi, [chi+] by the stuff written in the diracspinor op_config entry,
+         like [0, "[e_C+]"] -> xi = 0 and [chi+] = [e_C+] for the electron.
+        convertDirac then has to be called for every combination of spinors (not two charge conjugated ones).
+        in convertDirac is written.
+
+        Returns
+        -------
+
+        """
+        # Spinors
+        all_spinors = {name: field for name, field in op_config["fermionfields"].items() if
+                       "diracspinor" in field.keys()}
+        all_spinors = {name: weyl for field in all_spinors.values() for name, weyl in field["diracspinor"].items()}
+        all_spinors = {name: [get_commuting_op(entry) if entry else 0 for entry in weyl] for name, weyl in all_spinors.items()}
+        # CFunction xi1, [xi1+], chi1, [chi1+], xi2, [xi2+], chi2, [chi2+]
+        # Tensors
+        sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]
+        gamma = op_config["tensors"]["gamma"]["mathematica"]["gamma"]
+        sigma2lor = op_config["tensors"]["sigma2lor"]["mathematica"]["sigma2lor"]
+        sigma = op_config["tensors"]["sigma"]["mathematica"]["sigma"]
+        sigmabar = op_config["tensors"]["sigmabar"]["mathematica"]["sigmabar"]
+        sigma2 = op_config["tensors"]["sigma2"]["mathematica"]["sigma2"]
+        sigmabar2 = op_config["tensors"]["sigmabar2"]["mathematica"]["sigmabar2"]
+        # Indices
+        gen_index_sl = self.possible_indices.generate_index("Lsl")  # next(gen_index_sl) will generate new Lsl and new Usl index
+        gen_index_sldot = self.possible_indices.generate_index("Lsldot")
+
+        def for_unique_spinorpair(lsbar, rs, indices, repetition):
+            lsl1, usl2, lsl2, usl2, lsldot1, usldot1, lsldot2, usldot2 = indices
+            id_statements = []
+
+            if lsbar[-3:] == "bar" and rs[-1:] != "C":
+                ######################
+                ### psibar*...*psi ###
+                ######################
+                chi1, xi1_dagger = all_spinors[lsbar]
+                xi2, chi2_dagger = all_spinors[rs]
+                lsbar = get_commuting_op(lsbar)
+                rs = get_commuting_op(rs)
+                # psibar*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{rs}(op2?op,spin1?spin,?b) = "
+                if chi1 == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{sl2Ceps}({usl1},{usl2})*{chi1}(op1,{lsl2},?a)*{xi2}(op2,{lsl1},?b)"
+                id += " + "
+                if xi1_dagger == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{sl2Ceps}({lsldot1},{lsldot2})*{xi1_dagger}(op1,{usldot2},?a)*{chi2_dagger}(op2,{usldot1},?b)"
+                id_statements.append(id)
+
+                # psibar*gamma*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{gamma}(lor1?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if chi1 == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"- {chi1}(op1,{lsl1},?a)*{sigma}(lor1,{usl1},{lsldot1})*{chi2_dagger}(op2,{usldot1},?b)"
+                id += " - "
+                if xi1_dagger == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1_dagger}(op1,{usldot1},?a)*{sigmabar}(lor1,{lsldot1},{usl1})*{xi2}(op2,{lsl1},?b)"
+                id_statements.append(id)
+
+                # psibar*simga2lor*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{sigma2lor}(lor1?lor,lor2?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if chi1 == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"- {chi1}(op1,{lsl1},?a)*{sigma2}(lor1,lor2,{usl1},{usl2})*{xi2}(op2,{lsl2},?b)"
+                id += " - "
+                if xi1_dagger == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1_dagger}(op1,{usldot1},?a)*{sigmabar2}(lor1,lor2,{lsldot1},{lsldot2})*{chi2_dagger}(op2,{usldot2},?b)"
+                id_statements.append(id)
+
+            elif lsbar[-4:] == "barC" and rs[-1:] != "C":
+                ######################
+                ### psibarC*...*psi ###
+                ######################
+                xi1, chi1_dagger = all_spinors[lsbar]
+                xi2, chi2_dagger = all_spinors[rs]
+                lsbar = get_commuting_op(lsbar)
+                rs = get_commuting_op(rs)
+
+                # psibar*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{rs}(op2?op,spin1?spin,?b) = "
+                if xi1 == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{sl2Ceps}({usl1},{usl2})*{xi1}(op1,{lsl2},?a)*{xi2}(op2,{lsl1},?b)"
+                id += " + "
+                if chi1_dagger == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{sl2Ceps}({lsldot1},{lsldot2})*{chi1_dagger}(op1,{usldot2},?a)*{chi2_dagger}(op2,{usldot1},?b)"
+                id_statements.append(id)
+
+                # psibar*gamma*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{gamma}(lor1?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if xi1 == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"- {xi1}(op1,{lsl1},?a)*{sigma}(lor1,{usl1},{lsldot1})*{chi2_dagger}(op2,{usldot1},?b)"
+                id += " - "
+                if chi1_dagger == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1_dagger}(op1,{usldot1},?a)*{sigmabar}(lor1,{lsldot1},{usl1})*{xi2}(op2,{lsl1},?b)"
+                id_statements.append(id)
+
+                # psibar*simga2lor*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{sigma2lor}(lor1?lor,lor2?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if xi1 == 0 or xi2 == 0:
+                    id += "0"
+                else:
+                    id += f"- {xi1}(op1,{lsl1},?a)*{sigma2}(lor1,lor2,{usl1},{usl2})*{xi2}(op2,{lsl2},?b)"
+                id += " - "
+                if chi1_dagger == 0 or chi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{chi1_dagger}(op1,{usldot1},?a)*{sigmabar2}(lor1,lor2,{lsldot1},{lsldot2})*{chi2_dagger}(op2,{usldot2},?b)"
+                id_statements.append(id)
+
+            elif lsbar[-3:] == "bar" and rs[-1:] == "C":
+                ######################
+                ### psibar*...*psiC ###
+                ######################
+                lsbar = leftspinor
+                rs = rightspinor + "C"
+                chi1, xi1_dagger = all_spinors[lsbar]
+                chi2, xi2_dagger = all_spinors[rs]
+                lsbar = get_commuting_op(lsbar)
+                rs = get_commuting_op(rs)
+
+                # psibar*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{rs}(op2?op,spin1?spin,?b) = "
+                if chi1 == 0 or chi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{sl2Ceps}({usl1},{usl2})*{chi1}(op1,{lsl2},?a)*{chi2}(op2,{lsl1},?b)"
+                id += " + "
+                if xi1_dagger == 0 or xi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{sl2Ceps}({lsldot1},{lsldot2})*{xi1_dagger}(op1,{usldot2},?a)*{xi2_dagger}(op2,{usldot1},?b)"
+                id_statements.append(id)
+
+                # psibar*gamma*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{gamma}(lor1?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if chi1 == 0 or xi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"- {chi1}(op1,{lsl1},?a)*{sigma}(lor1,{usl1},{lsldot1})*{xi2_dagger}(op2,{usldot1},?b)"
+                id += " - "
+                if xi1_dagger == 0 or chi2 == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1_dagger}(op1,{usldot1},?a)*{sigmabar}(lor1,{lsldot1},{usl1})*{chi2}(op2,{lsl1},?b)"
+                id_statements.append(id)
+
+                # psibar*simga2lor*psi
+                id = ""
+                id += f"{lsbar}(op1?op,spin1?spin,?a)*{sigma2lor}(lor1?lor,lor2?lor,spin1?spin,spin2?spin)*{rs}(op2?op,spin2?spin,?b) = "
+                if chi1 == 0 or chi2 == 0:
+                    id += "0"
+                else:
+                    id += f"- {chi1}(op1,{lsl1},?a)*{sigma2}(lor1,lor2,{usl1},{usl2})*{chi2}(op2,{lsl2},?b)"
+                id += " - "
+                if xi1_dagger == 0 or xi2_dagger == 0:
+                    id += "0"
+                else:
+                    id += f"{xi1_dagger}(op1,{usldot1},?a)*{sigmabar2}(lor1,lor2,{lsldot1},{lsldot2})*{xi2_dagger}(op2,{usldot2},?b)"
+                id_statements.append(id)
+
+            form = ""
+            for id in id_statements:
+                form += f"id once ifmatch->{repetition} {id};\n"
+
+            return form
+
+        barfields = []
+        fields = []
+        for field in self.fields:
+            if field.non_conj_name in op_config["fermionfields"].keys():
+                if "bar" in field.name:
+                    barfields.append(field.name)
+                else:
+                    fields.append(field.name)
+
+
+        n_bilinears = (len(fields) + len(barfields)) // 2
+
+        # Group the occurring fermions into pair in which they could have occurred in the summand.
+        possible_bilinears = []
+        for barfield in barfields:
+            for field in fields:
+                if barfield[-4:] == "barC" and field[-1:] == "C":
+                    continue
+                possible_bilinears.append((barfield, field))
+
+        possible_bilinears = list(set(possible_bilinears))
+
+        form = []
+        for i in range(1, n_bilinears + 1):
+            lsl1, usl1 = next(gen_index_sl)
+            lsl2, usl2 = next(gen_index_sl)
+            lsldot1, usldot1 = next(gen_index_sldot)
+            lsldot2, usldot2 = next(gen_index_sldot)
+            indices = [lsl1, usl2, lsl2, usl2, lsldot1, usldot1, lsldot2, usldot2]
+            for leftspinor, rightspinor in possible_bilinears:
+                    form.append(for_unique_spinorpair(leftspinor, rightspinor, indices, i))
+            form.append(f"\nlabel {i};\n\n")
+
+        return "".join(form), n_bilinears, n_bilinears
+
+    def form_convertDerivative(self, n_der:int=4):
+        sigma = op_config["tensors"]["sigma"]["mathematica"]["sigma"]
+        D = op_config["fermionfields"]["D"]["mathematica"]["cov"]
+        # Indices
+        gen_index_sl = self.possible_indices.generate_index("Lsl")  # next(gen_index_sl) will generate new Lsl and new Usl index
+        gen_index_sldot = self.possible_indices.generate_index("Lsldot")
+
+        def derivatives(nD:int, name:str):
+            left = ""
+            right_derivatives = ""
+            right_sigmas = f"((-1/2)^{nD})*"
+
+            for i in range(1, nD + 1):
+                left += f"{D}(lor{i}?lor,"
+                lsl, usl = next(gen_index_sl)
+                lsldot, usldot = next(gen_index_sldot)
+                right_derivatives += f"{D}({lsl},{usldot},"
+                right_sigmas += f"{sigma}(lor{i},{usl},{lsldot})*"
+
+            left += f"{name}(op1?op)"
+            left += nD*")"
+
+            right_derivatives += f"{name}(op1)"
+            right_derivatives += nD*")"
+            right = right_sigmas + right_derivatives
+
+            return f"{left} = {right}"
+
+
+        id_statements = []
+        for field in self.fields:
+            if field.nD:
+                id_statements.append(derivatives(field.nD, field.name))
+
+        form = ""
+        for id in id_statements:
+            form += f"id once {id};\n"
+
+        return form
+
+    def form_convertFieldstrengthTensor(self):
+        fieldstrength_tensors = {name: field for name, field in op_config["bosonfields"].items() if "helicity" not in field.keys()}
+        fieldstrength_tensors_names = [list(fsT["mathematica"].values())[0] for fsT in fieldstrength_tensors.values()]
+        handed_fsTs = {list(fsT["mathematica"].values())[0]: op_config["bosonfields"][list(fsT["autoeft"].keys())[0]]["mathematica"] for fsT in fieldstrength_tensors.values()}
+        fLs = {name: list(mathematica.values())[0] for name, mathematica in handed_fsTs.items()}
+        fRs = {name: list(mathematica.values())[1] for name, mathematica in handed_fsTs.items()}
+
+        # Tensors
+        sigma2 = op_config["tensors"]["sigma2"]["mathematica"]["sigma2"]
+        sigmabar2 = op_config["tensors"]["sigmabar2"]["mathematica"]["sigmabar2"]
+        # imaginary unit
+        im = op_config["coefficients"]["I"]["mathematica"]["I"]
+
+        fsTs = []
+        for field in self.fields:
+            if field.name in fieldstrength_tensors_names:
+                fsTs.append(field.name)
+
+        # Indices
+        if fsTs:
+            gen_index_sl = self.possible_indices.generate_index("Lsl")  # next(gen_index_sl) will generate new Lsl and new Usl index
+            gen_index_sldot = self.possible_indices.generate_index("Lsldot")
+
+        form = ""
+        for fsT in fsTs:
+            fL = get_commuting_op(fLs[fsT])
+            fR = get_commuting_op(fRs[fsT])
+            fsT = get_commuting_op(fsT)
+
+            lsl1, usl1 = next(gen_index_sl)
+            lsl2, usl2 = next(gen_index_sl)
+            lsldot1, usldot1 = next(gen_index_sldot)
+            lsldot2, usldot2 = next(gen_index_sldot)
+
+            # ordinary fieldstrength tensor
+            id = f"{fsT}(op1?op,?a,lor1?lor,lor2?lor,?b)"
+            id += " = "
+            id += f"(+ {im}/4)*({fR}(op1,?a,?b,{usldot1},{usldot2})*{sigmabar2}(lor1,lor2,{lsldot1},{lsldot2}) - {fL}(op1,?a,?b,{lsl1},{lsl2})*{sigma2}(lor1,lor2,{usl1},{usl2}))"
+            form += f"id once {id};\n"
+
+            # For dual fieldstrength tensors, i.e. eps(lor1,lor2,lor3,lor4)*F(lor3,lor4), substitute F(lor1,lor2) and
+            # simplify the sigma2 matrices with '#call lorepsandSigma2'.
+
+        return form, len(fsTs)
+
+    def form_simplifySigma2(self, n_sigma2):
+        """
+
+        Parameters
+        ----------
+        n_sigma2
+            Number of possible sigma2 and sigma2bar matrices: Since they (can) only occur due to fieldstrength tensors
+            and Dirac bilinears, the number of the maximum possible ones is given by the number of bilinears plus
+            the number of fieldstrenght tensors.
+
+        Returns
+        -------
+
+        """
+        # Tensors
+        sl2Ceps = op_config["tensors"]["[sl2Ceps]"]["mathematica"]["sl2Ceps"]
+        sigma = op_config["tensors"]["sigma"]["mathematica"]["sigma"]
+        sigmabar = op_config["tensors"]["sigmabar"]["mathematica"]["sigmabar"]
+        sigma2 = op_config["tensors"]["sigma2"]["mathematica"]["sigma2"]
+        sigmabar2 = op_config["tensors"]["sigmabar2"]["mathematica"]["sigmabar2"]
+        # imaginary unit
+        im = op_config["coefficients"]["I"]["mathematica"]["I"]
+
+        # Indices
+        if n_sigma2:
+            gen_index_sl = self.possible_indices.generate_index("Lsl")  # next(gen_index_sl) will generate new Lsl and new Usl index
+            gen_index_sldot = self.possible_indices.generate_index("Lsldot")
+
+        id_statements = []
+        for i in range(n_sigma2):
+            lsl3, usl3 = next(gen_index_sl)
+            lsldot3, usldot3 = next(gen_index_sldot)
+            id = f"{sigma2}(lor1?lor,lor2?lor,UslA1?Usl,UslA2?Usl)"
+            id += " = "
+            id += f"({im}/2)*{sl2Ceps}(UslA1,{usl3})*("
+            id += f"{sigma}(lor1,{lsl3},{lsldot3})*{sigmabar}(lor2,{usldot3},UslA2)"
+            id += " - "
+            id += f"{sigma}(lor2,{lsl3},{lsldot3})*{sigmabar}(lor1,{usldot3},UslA2)"
+            id += ")"
+            id_statements.append(id)
+
+            lsl4, usl4 = next(gen_index_sl)
+            lsldot4, usldot4 = next(gen_index_sldot)
+            id = f"{sigmabar2}(lor1?lor,lor2?lor,LsldotA1?Lsldot,LsldotA2?Lsldot)"
+            id += " = "
+            id += f"({im}/2)*{sl2Ceps}(LsldotA1,{lsldot4})*("
+            id += f"{sigmabar}(lor1,{usldot4},{usl4})*{sigma}(lor2,{lsl4},LsldotA2)"
+            id += " - "
+            id += f"{sigmabar}(lor2,{usldot4},{usl4})*{sigma}(lor1,{lsl4},LsldotA2)"
+            id += ")"
+            id_statements.append(id)
+
+
+        form = ""
+        for id in id_statements:
+            form += f"id once {id};\n"
+
+        return form
+
+    ########################
+    ### Gauge Conversion ###
+    ########################
+
+    def form_antifundamentalIndices(self, used_label):
+        # Tensors
+        su2eps = op_config["tensors"]["[su2eps]"]["mathematica"]["su2eps"]
+        su3eps = op_config["tensors"]["[su3eps]"]["mathematica"]["su3eps"]
+        gen = op_config["tensors"]["T"]["mathematica"]["TT"]
+        # Fields
+        # Fixme: Decide somehow automatically which fields transform originally in the antifundamental representation
+        su2anti = [list(op_config["bosonfields"]["H"]["mathematica"].values())[1],
+                   list(op_config["fermionfields"]["L"]["mathematica"].values())[1],
+                   list(op_config["fermionfields"]["Q"]["mathematica"].values())[1]]
+        su3anti = [list(op_config["fermionfields"]["Q"]["mathematica"].values())[1],
+                   list(op_config["fermionfields"]["[u_C]"]["mathematica"].values())[0],
+                   list(op_config["fermionfields"]["[d_C]"]["mathematica"].values())[0]]
+
+        # Translation
+        spinors_dirac_weyl = {name: field for name, field in op_config["fermionfields"].items() if "diracspinor" in field.keys()}
+        spinors_dirac_weyl = {dirac: weyl[0] if weyl[0] else weyl[1]  for field in spinors_dirac_weyl.values() for dirac, weyl in field["diracspinor"].items()}
+        # Indices
+        gen_index_gauge = self.possible_indices.generate_index("gauge")
+        gen_index_colf = self.possible_indices.generate_index("colf")
+
+        form = ".sort\n"
+        form += "CFunction f1;\n"
+
+        id_statements = {}
+        for field in self.fields:
+            if field.name == list(op_config["bosonfields"]["H"]["mathematica"].values())[1]:
+                # Higgs
+                name = field.name
+            else:
+                if field.name not in spinors_dirac_weyl.keys(): continue
+                name = spinors_dirac_weyl[field.name]
+            if name in su2anti:
+                cname = get_commuting_op(name)
+                gauge2 = next(gen_index_gauge)
+
+                used_label += 1
+                label1 = used_label
+                id_statements[label1] = []
+
+                id = f"f1?AllcconFields(op1?op,?a,gaugeA1?gauge,?b)*"
+                id += f"{cname}(op2?op,?c,gaugeA1?gauge,?d)"
+                id += " = "
+                id += f"f1(op1,?a,gaugeA1,?b)*"
+                id += f"{cname}(op2,?c,{gauge2},?d)*{su2eps}({gauge2},gaugeA1)"
+                id_statements[label1].append(id)
+
+                id = f"{gen}(gaugeadjA1?gaugeadj,gaugeA1?gauge,gaugeA2?gauge)*"
+                id += f"{cname}(op2?op,?c,gaugeA1?gauge,?d)"
+                id += " = "
+                id += f"{gen}(gaugeadjA1,gaugeA1,gaugeA2)*"
+                id += f"{cname}(op2,?c,{gauge2},?d)*{su2eps}({gauge2},gaugeA1)"
+                id_statements[label1].append(id)
+
+            if name in su3anti:
+                cname = get_commuting_op(name)
+                colf2 = next(gen_index_colf)
+                colf3 = next(gen_index_colf)
+
+                used_label += 1
+                label2 = used_label
+                id_statements[label2] = []
+
+                id = f"f1?AllcconFields(op1?op,?a,colfA1?colf,?b)*"
+                id += f"{cname}(op2?op,?c,colfA1?colf,?d)"
+                id += " = "
+                id += f"f1(op1,?a,colfA1,?b)*"
+                id += f"(1/2)*{su3eps}(colfA1,{colf2},{colf3})*{cname}(op2,?c,{colf2},{colf3},?d)"
+                id_statements[label2].append(id)
+
+                id = f"{gen}(colaA1?cola,colfA1?colf,colfA2?colf)*"
+                id += f"{cname}(op2?op,?c,colfA1?colf,?d)"
+                id += " = "
+                id += f"{gen}(colaA1,colfA1,colfA2)*"
+                id += f"(1/2)*{su3eps}(colfA1,{colf2},{colf3})*{cname}(op2,?c,{colf2},{colf3},?d)"
+                id_statements[label2].append(id)
+
+        for label in id_statements.keys():
+            for id in id_statements[label]:
+                form += f"id once ifmatch->{label} {id};\n"
+            form += f"\nlabel {label};\n\n"
+
+        return form, used_label
+
+    def form_adjointIndices(self):
+        # Tensors
+        su2eps = op_config["tensors"]["[su2eps]"]["mathematica"]["su2eps"]
+        su3eps = op_config["tensors"]["[su3eps]"]["mathematica"]["su3eps"]
+        gen = op_config["tensors"]["T"]["mathematica"]["TT"]
+        # Fields
+        # Fixme: Decide somehow automatically which fields transform originally in the adjoint representation
+        su2adj = {field: op_config["bosonfields"]["WL"]["non_singlet"] for field in op_config["bosonfields"]["WL"]["mathematica"].values()}
+        su3adj = {field: op_config["bosonfields"]["GL"]["non_singlet"] for field in op_config["bosonfields"]["GL"]["mathematica"].values()}
+
+        # Indices
+        gen_index_gauge = self.possible_indices.generate_index("gauge")
+        gen_index_colf = self.possible_indices.generate_index("colf")
+
+        form = ".sort\n"
+        form += "CFunction f1, f2;\n"
+
+        id_statements = []
+        for field in self.fields:
+            if field.name in su2adj.values():
+                gauge1 = next(gen_index_gauge)
+                gauge2 = next(gen_index_gauge)
+                gauge3 = next(gen_index_gauge)
+                for cname in [get_commuting_op(field) for field in su2adj.keys()]:
+                    id = f"{cname}(op1?op,?a,gaugeadj1?gaugeadj,?b)"
+                    id += " = "
+                    id += f"{gen}(gaugeadj1,{gauge3},{gauge1})*{cname}(op1,?a,{gauge1},{gauge2},?b)"
+                    id += f"*{su2eps}({gauge2},{gauge3})"
+                    id_statements.append(id)
+            elif field.name in su3adj.values():
+                for cname in [get_commuting_op(field) for field in su3adj.keys()]:
+                    colf1 = next(gen_index_colf)
+                    colf2 = next(gen_index_colf)
+                    colf3 = next(gen_index_colf)
+                    colf4 = next(gen_index_colf)
+                    id = f"{cname}(op1?op,?a,cola1?cola,?b)"
+                    id += " = "
+                    id += f"(1/2)*{gen}(cola1,{colf4},{colf2})*{su3eps}({colf1},{colf3},{colf4})"
+                    id += f"*{cname}(op1,?a,{colf1},{colf2},{colf3},?b)"
+                    id_statements.append(id)
+            else:
+                continue
+
+        for id in id_statements:
+            form += f"id once {id};\n"
+
+        return form
+
 
     #########################
     ### EOM Substitutions ###

@@ -7,7 +7,7 @@ formatters:
 handlers:
   console:
     class: logging.StreamHandler
-    level: INFO  # Should be set afterwards to user inut
+    level: INFO  # Should be set afterwards to user input
     formatter: console_formatter
     stream: ext://sys.stdout
   file:

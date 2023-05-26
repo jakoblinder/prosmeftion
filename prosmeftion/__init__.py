@@ -16,7 +16,19 @@ PROJECTION_PATH = Path(__file__).parent.parent
 # Include the autoeft package in system path for easier import
 AUTOEFT_PATH = PROJECTION_PATH.parent
 # sys.path.append(AUTOEFT_PATH/ "autoeft")
-sys.path.append(str(AUTOEFT_PATH))
+# sys.path.append(str(AUTOEFT_PATH))
+
+import autoeft.io.basis as io_basis
+
+basis_path = AUTOEFT_PATH / Path("efts", "ssm-eft", "6", "basis")
+basis_file = io_basis.BasisFile(basis_path)
+
+basis = basis_file.get_basis()
+model = basis.model
+operator = basis[{"Q": 3, "L": 1}]
+# print(model)
+# print(operator)
+
 
 from autoeft.model import Model
 from autoeft.io import load_basis
@@ -49,8 +61,8 @@ def get_values(yml_dict):
     return list(values)
 
 # Read in model file:
-with open(AUTOEFT_PATH / "models/ssm.yml", "r") as infile:
-    model = Model(**safe_load(infile))
+# with open(AUTOEFT_PATH / "models/ssm.yml", "r") as infile:
+#     model = Model(**safe_load(infile))
 
 def sort_model_fields(fields):
     """
@@ -301,11 +313,17 @@ del transl_autoeft_projection
 
 def get_basis(basispath: Path, max_dim: int):
     """Load basis from autoeft."""
-    basis = {}  # dictionary with basis for each mass dimension from 4 to 6.
+    basispath = basispath.resolve()
+
+    basis = {}  # dictionary with basis for each mass dimension from 4 to max_dim.
     for dim in range(4, max_dim + 1):
         # load_basis also returns some counters and the Hilbert series, which we don't need here...
         try:
-            basis[dim], _, _ = load_basis(basispath, dim)
+            # basis[dim], _, _ = load_basis(basispath, dim)
+            # basispath = AUTOEFT_PATH / Path("efts", "ssm-eft", "6", "basis")
+            basispath = basispath / Path(f"{dim}", "basis")
+            basisfile = io_basis.BasisFile(basispath)
+            basis[dim] = basisfile.get_basis()
         except FileNotFoundError:
             logger.error(f"No model with the name {model.name} can be found in {AUTOEFT_PATH / Path('eft/')}.")
             sys.exit("STOP")

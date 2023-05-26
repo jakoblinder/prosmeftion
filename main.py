@@ -71,6 +71,17 @@ def number_terms(single_terms):
             nterms += len(terms_n)
     return nterms
 
+
+import autoeft.io.basis as io_basis
+
+basis_path = AUTOEFT_PATH / Path("efts", "ssm-eft", "6", "basis")
+basis_file = io_basis.BasisFile(basis_path)
+
+basis = basis_file.get_basis()
+model = basis.model
+operator = basis[{"Q": 3, "L": 1}]
+
+
 def main(input_file, basis_file, max_dim = 6, debug=None):
     # Maximum number of derivatives
     nDer = n_der(max_dim)

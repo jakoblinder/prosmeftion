@@ -1,0 +1,535 @@
+{
+  "name": "SMEFT",
+  "description": "Standard Model Effective Field Theory",
+  "conjugation": "+",
+  "symmetries": {
+    "lorentz_group": {
+      "name": "Lorentz",
+      "tex": "\\mathtt{Lorentz}",
+      "indices": [
+        "\\alpha",
+        "\\beta",
+        "\\gamma",
+        "\\delta",
+        "\\varepsilon",
+        "\\zeta",
+        "\\eta",
+        "\\theta",
+        "\\iota",
+        "\\kappa",
+        "\\lambda"
+      ]
+    },
+    "sun_groups": {
+      "SU3_C": {
+        "name": "SU3_C",
+        "tex": "\\mathrm{SU}_C(3)",
+        "N": 3,
+        "indices": [
+          "a",
+          "b",
+          "c",
+          "d",
+          "e",
+          "f",
+          "g",
+          "h"
+        ]
+      },
+      "SU2_W": {
+        "name": "SU2_W",
+        "tex": "\\mathrm{SU}_W(2)",
+        "N": 2,
+        "indices": [
+          "i",
+          "j",
+          "k",
+          "l",
+          "m",
+          "n",
+          "p",
+          "q"
+        ]
+      }
+    },
+    "u1_groups": {
+      "U1_Y": {
+        "name": "U1_Y",
+        "tex": "\\mathrm{U}_Y(1)",
+        "violation": 0,
+        "offset": 0
+      }
+    }
+  },
+  "fields": {
+    "GL": {
+      "name": "GL",
+      "conjugate": true,
+      "generations": 1,
+      "tex": "G_{\\mathrm{L}}",
+      "tex_hc": "G_{\\mathrm{R}}",
+      "representations": {
+        "Lorentz": {
+          "helicity": -1
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": [
+            2,
+            1
+          ]
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": []
+        },
+        "U1_Y": {
+          "charge": 0
+        }
+      },
+      "anticommute": false
+    },
+    "GL+": {
+      "name": "GL+",
+      "conjugate": true,
+      "generations": 1,
+      "tex": "G_{\\mathrm{R}}",
+      "tex_hc": "G_{\\mathrm{L}}",
+      "representations": {
+        "Lorentz": {
+          "helicity": 1
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": [
+            2,
+            1
+          ]
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": []
+        },
+        "U1_Y": {
+          "charge": 0
+        }
+      },
+      "anticommute": false
+    },
+    "WL": {
+      "name": "WL",
+      "conjugate": true,
+      "generations": 1,
+      "tex": "W_{\\mathrm{L}}",
+      "tex_hc": "W_{\\mathrm{R}}",
+      "representations": {
+        "Lorentz": {
+          "helicity": -1
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": []
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": [
+            2
+          ]
+        },
+        "U1_Y": {
+          "charge": 0
+        }
+      },
+      "anticommute": false
+    },
+    "WL+": {
+      "name": "WL+",
+      "conjugate": true,
+      "generations": 1,
+      "tex": "W_{\\mathrm{R}}",
+      "tex_hc": "W_{\\mathrm{L}}",
+      "representations": {
+        "Lorentz": {
+          "helicity": 1
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": []
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": [
+            2
+          ]
+        },
+        "U1_Y": {
+          "charge": 0
+        }
+      },
+      "anticommute": false
+    },
+    "BL": {
+      "name": "BL",
+      "conjugate": true,
+      "generations": 1,
+      "tex": "B_{\\mathrm{L}}",
+      "tex_hc": "B_{\\mathrm{R}}",
+      "representations": {
+        "Lorentz": {
+          "helicity": -1
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": []
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": []
+        },
+        "U1_Y": {
+          "charge": 0
+        }
+      },
+      "anticommute": false
+    },
+    "BL+": {
+      "name": "BL+",
+      "conjugate": true,
+      "generations": 1,
+      "tex": "B_{\\mathrm{R}}",
+      "tex_hc": "B_{\\mathrm{L}}",
+      "representations": {
+        "Lorentz": {
+          "helicity": 1
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": []
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": []
+        },
+        "U1_Y": {
+          "charge": 0
+        }
+      },
+      "anticommute": false
+    },
+    "Q": {
+      "name": "Q",
+      "conjugate": true,
+      "generations": 3,
+      "tex": "Q",
+      "tex_hc": "{Q}^\\dagger",
+      "representations": {
+        "Lorentz": {
+          "helicity": "-1/2"
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": [
+            1
+          ]
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": [
+            1
+          ]
+        },
+        "U1_Y": {
+          "charge": "1/6"
+        }
+      },
+      "anticommute": true
+    },
+    "Q+": {
+      "name": "Q+",
+      "conjugate": true,
+      "generations": 3,
+      "tex": "{Q}^\\dagger",
+      "tex_hc": "Q",
+      "representations": {
+        "Lorentz": {
+          "helicity": "1/2"
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": [
+            1,
+            1
+          ]
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": [
+            1
+          ]
+        },
+        "U1_Y": {
+          "charge": "-1/6"
+        }
+      },
+      "anticommute": true
+    },
+    "uC": {
+      "name": "uC",
+      "conjugate": true,
+      "generations": 3,
+      "tex": "u_{\\mathbb{C}}",
+      "tex_hc": "{u_{\\mathbb{C}}}^\\dagger",
+      "representations": {
+        "Lorentz": {
+          "helicity": "-1/2"
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": [
+            1,
+            1
+          ]
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": []
+        },
+        "U1_Y": {
+          "charge": "-2/3"
+        }
+      },
+      "anticommute": true
+    },
+    "uC+": {
+      "name": "uC+",
+      "conjugate": true,
+      "generations": 3,
+      "tex": "{u_{\\mathbb{C}}}^\\dagger",
+      "tex_hc": "u_{\\mathbb{C}}",
+      "representations": {
+        "Lorentz": {
+          "helicity": "1/2"
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": [
+            1
+          ]
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": []
+        },
+        "U1_Y": {
+          "charge": "2/3"
+        }
+      },
+      "anticommute": true
+    },
+    "dC": {
+      "name": "dC",
+      "conjugate": true,
+      "generations": 3,
+      "tex": "d_{\\mathbb{C}}",
+      "tex_hc": "{d_{\\mathbb{C}}}^\\dagger",
+      "representations": {
+        "Lorentz": {
+          "helicity": "-1/2"
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": [
+            1,
+            1
+          ]
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": []
+        },
+        "U1_Y": {
+          "charge": "1/3"
+        }
+      },
+      "anticommute": true
+    },
+    "dC+": {
+      "name": "dC+",
+      "conjugate": true,
+      "generations": 3,
+      "tex": "{d_{\\mathbb{C}}}^\\dagger",
+      "tex_hc": "d_{\\mathbb{C}}",
+      "representations": {
+        "Lorentz": {
+          "helicity": "1/2"
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": [
+            1
+          ]
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": []
+        },
+        "U1_Y": {
+          "charge": "-1/3"
+        }
+      },
+      "anticommute": true
+    },
+    "L": {
+      "name": "L",
+      "conjugate": true,
+      "generations": 3,
+      "tex": "L",
+      "tex_hc": "{L}^\\dagger",
+      "representations": {
+        "Lorentz": {
+          "helicity": "-1/2"
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": []
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": [
+            1
+          ]
+        },
+        "U1_Y": {
+          "charge": "-1/2"
+        }
+      },
+      "anticommute": true
+    },
+    "L+": {
+      "name": "L+",
+      "conjugate": true,
+      "generations": 3,
+      "tex": "{L}^\\dagger",
+      "tex_hc": "L",
+      "representations": {
+        "Lorentz": {
+          "helicity": "1/2"
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": []
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": [
+            1
+          ]
+        },
+        "U1_Y": {
+          "charge": "1/2"
+        }
+      },
+      "anticommute": true
+    },
+    "eC": {
+      "name": "eC",
+      "conjugate": true,
+      "generations": 3,
+      "tex": "e_{\\mathbb{C}}",
+      "tex_hc": "{e_{\\mathbb{C}}}^\\dagger",
+      "representations": {
+        "Lorentz": {
+          "helicity": "-1/2"
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": []
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": []
+        },
+        "U1_Y": {
+          "charge": 1
+        }
+      },
+      "anticommute": true
+    },
+    "eC+": {
+      "name": "eC+",
+      "conjugate": true,
+      "generations": 3,
+      "tex": "{e_{\\mathbb{C}}}^\\dagger",
+      "tex_hc": "e_{\\mathbb{C}}",
+      "representations": {
+        "Lorentz": {
+          "helicity": "1/2"
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": []
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": []
+        },
+        "U1_Y": {
+          "charge": -1
+        }
+      },
+      "anticommute": true
+    },
+    "H": {
+      "name": "H",
+      "conjugate": true,
+      "generations": 1,
+      "tex": "H",
+      "tex_hc": "{H}^\\dagger",
+      "representations": {
+        "Lorentz": {
+          "helicity": 0
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": []
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": [
+            1
+          ]
+        },
+        "U1_Y": {
+          "charge": "1/2"
+        }
+      },
+      "anticommute": false
+    },
+    "H+": {
+      "name": "H+",
+      "conjugate": true,
+      "generations": 1,
+      "tex": "{H}^\\dagger",
+      "tex_hc": "H",
+      "representations": {
+        "Lorentz": {
+          "helicity": 0
+        },
+        "SU3_C": {
+          "N": 3,
+          "partition": []
+        },
+        "SU2_W": {
+          "N": 2,
+          "partition": [
+            1
+          ]
+        },
+        "U1_Y": {
+          "charge": "-1/2"
+        }
+      },
+      "anticommute": false
+    }
+  }
+}

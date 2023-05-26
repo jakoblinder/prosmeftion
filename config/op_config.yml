@@ -135,7 +135,7 @@ tensors:
         - flav
         - flav
     T:
-      description: "Generator of SU(2)-group."
+      description: "Generator of SU(2)- and SU(3)-group."
       tex: \mathrm{T}
       mathematica:
         TT: T
@@ -264,7 +264,7 @@ tensors:
         - spin
         - spin
     TSU2:
-      description: "Symmetrized SU2-Basistensor."
+      description: "Symmetrized SU2-yBasistensor."
       tex: T_{SU2}
       mathematica:
         TSU2: TSU2
@@ -300,7 +300,7 @@ tensors:
           - gauge
           - gauge
     TSU3:
-      description: "Symmetrized SU3-Basistensor."
+      description: "Symmetrized SU3-yBasistensor."
       tex: T_{SU3}
       mathematica:
         TSU3: TSU3

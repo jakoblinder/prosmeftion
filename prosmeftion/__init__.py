@@ -8,125 +8,25 @@ from typing import List, Dict
 
 from yaml import safe_load
 
+import autoeft.io.basis as io_basis
+
+# from .config import update_opname_and_modelfile
+
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
 PROJECTION_PATH = Path(__file__).parent.parent
-
-# Include the autoeft package in system path for easier import
 AUTOEFT_PATH = PROJECTION_PATH.parent
-# sys.path.append(AUTOEFT_PATH/ "autoeft")
-# sys.path.append(str(AUTOEFT_PATH))
-
-import autoeft.io.basis as io_basis
-
-basis_path = AUTOEFT_PATH / Path("efts", "ssm-eft", "6", "basis")
-basis_file = io_basis.BasisFile(basis_path)
-
-basis = basis_file.get_basis()
-model = basis.model
-operator = basis[{"Q": 3, "L": 1}]
-# print(model)
-# print(operator)
-
-
-from autoeft.model import Model
-from autoeft.io import load_basis
 
 CONFIG_PATH = PROJECTION_PATH / "config"
 CONFIG_PATH.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist.
 FORM_PATH = PROJECTION_PATH / "form_files"
 FORM_PATH.mkdir(parents=True, exist_ok=True)
-INPUT_PATH = PROJECTION_PATH / "BS"
-INPUT_PATH.mkdir(parents=True, exist_ok=True)
 LATEX_PATH = PROJECTION_PATH / "Latex"
 LATEX_PATH.mkdir(parents=True, exist_ok=True)
 FORM_GENERAL_PATH = FORM_PATH / "general"
 FORM_GENERAL_PATH.mkdir(parents=True, exist_ok=True)
 
-def configurations(filename):
-    filename = Path(filename)
-    assert filename.suffix == ".yml", "The configuration file has to be written in yaml style."
-    with open(CONFIG_PATH / filename, "r") as file:
-        config = safe_load(file)
-    return config
-
-def get_values(yml_dict):
-    """
-    Get the all values of the nested dictionaries.
-    """
-    values = []
-    for i in yml_dict.values():
-        values += i.values()
-    return list(values)
-
-# Read in model file:
-# with open(AUTOEFT_PATH / "models/ssm.yml", "r") as infile:
-#     model = Model(**safe_load(infile))
-
-def sort_model_fields(fields):
-    """
-    Extract order from the helicity of the fields. Fields with identical helicity are ordered by their alphabetical order.
-    Parameters
-    ----------
-    fields
-        Dictionary containing fields.
-    Returns
-    -------
-    Dict (ordered since Python 3.6) with the fields in the demanded order.
-    """
-    fields = list(fields.values())
-    n = len(fields)
-    for i in range(n - 1):
-        for j in range(0, (n - 1) - i):
-            if fields[j].helicity > fields[j + 1].helicity:
-                fields[j], fields[j + 1] = fields[j + 1], fields[j]
-            elif fields[j].helicity == fields[j + 1].helicity:
-                # Note that due to the ASCII standard the letter 'A' stands before 'a' and so on
-                if fields[j].name > fields[j + 1].name:
-                    fields[j], fields[j + 1] = fields[j + 1], fields[j]
-    field_dict = {}
-    for field in fields:
-        field_dict[field.name] = field
-
-    return field_dict
-
-model.fields = sort_model_fields(model.fields)
-
-opname_sorted = configurations("opname.yml")
-opname = {key: value for d in opname_sorted.values() for key, value in d.items()}
-opvalues = get_values(opname_sorted)  # list(opname.values())
-
-opnameSL2C_all = configurations("opnameSL2C.yml")
-opnameSL2C = opnameSL2C_all["ordinary"]
-opSL2Cvalues = list(opnameSL2C.values())
-# Auxiliary commuting Weyl spinors:
-spinorsSL2C_c = opnameSL2C_all["auxiliary"]
-spSL2C_c_values = list(spinorsSL2C_c.values())
-
-field_config = configurations("fields.yml")
-coeff_config = configurations("coefficients.yml")
-
-for field in field_config.keys():
-    if field != "D":
-        field_config[field]["helicity"] = str(field_config[field]["helicity"]).split(" | ")
-        field_config[field]["helicity"] = list(map(float, map(Fraction, field_config[field]["helicity"])))
-for field in field_config.keys():
-    field_config[field]["tex"] = field_config[field]["tex"].split(" | ")
-for field in field_config.keys():
-    if field != "D":
-        field_config[field]["autoeft"] = field_config[field]["autoeft"].split(" | ")
-
-# one_dict = {key:item for i in coeff_config.values() for key,item in i.items()}
-for dict_key, dict in coeff_config.items():
-    for key in dict.keys():
-        coeff_config[dict_key][key]["tex"] = coeff_config[dict_key][key]["tex"].split(" | ")
-
-coeffname = coeff_config["constant"]
-coeffvalues = [constant["FORM"] for key, constant in coeffname.items() if key != "I"]  # list of all FORM expressions that should be declared.
-coeffvalues.append(coeff_config["abbreviation"]["lg"]["FORM"])
-abbreviation = coeff_config["abbreviation"]
-# coeffkeys = get_keys(coeffname)
 
 def escape_regex(regex):
     """
@@ -147,9 +47,18 @@ def escape_regex(regex):
             modyfied_regex += a
     return modyfied_regex
 
+def configurations(filename):
+    filename = Path(filename)
+    assert filename.suffix == ".yml", "The configuration file has to be written in yaml style."
+    with open(CONFIG_PATH / filename, "r") as file:
+        config = safe_load(file)
+    return config
+
 ###################
 # FORM refactored #
 ###################
+
+# def get_model(basis)
 
 def n_der(mdim: int):
     """
@@ -174,7 +83,6 @@ def n_der(mdim: int):
         # Even mass dimension
         return mdim - 2
 
-op_config = configurations("op_config.yml")
 
 def save_set(dictionary, key, value):
     """Don't overwrite already set values."""
@@ -258,24 +166,32 @@ def update_opname_and_modelfile(op_dict):
 
     return op_dict
 
+
+
+op_config = configurations("op_config.yml")
 op_config = update_opname_and_modelfile(op_config)
 
 
+
 mathematica = {name_typ: {key: value for fac in typ.values() for key, value in fac["mathematica"].items()} for name_typ, typ in op_config.items()}
+
+
+
 
 # mathematica = {key: value for typ in op_config.values() for fac in typ.values() for key, value in fac["mathematica"].items()}
 
 index_config = configurations("index.yml")
 # If not explicitly given update SUN indices of index_config which are written in model file:
-for name, index in index_config.items():
-    if name == "gauge":
-        ind = model.sun_groups["SU2_W"].indices
-        save_set(index, "tex_indices", ind)
-        save_set(index_config["gaugeadj"], "tex_indices", list(map(str.upper, ind)))
-    elif name == "colf":
-        ind = model.sun_groups["SU3_C"].indices
-        save_set(index, "tex_indices", ind)
-        save_set(index_config["cola"], "tex_indices", list(map(str.upper, ind)))
+# FIXME
+# for name, index in index_config.items():
+#     if name == "gauge":
+        # FIXME: ind = model.symmetries.sun_groups["SU2_W"].indices
+        # save_set(index, "tex_indices", ind)
+        # save_set(index_config["gaugeadj"], "tex_indices", list(map(str.upper, ind)))
+    # elif name == "colf":
+        # FIXME: ind = model.symmetries.sun_groups["SU3_C"].indices
+        # save_set(index, "tex_indices", ind)
+        # save_set(index_config["cola"], "tex_indices", list(map(str.upper, ind)))
 
 op_pattern = r"[a-zA-Z0-9,\(\)\[\]\+\_\?]+"
 op_name_pattern = r"[a-zA-Z0-9\[\]\+\_]+"
@@ -303,32 +219,26 @@ fermions_non_conj = [list(field["mathematica"].values())[0] for field in op_conf
 tensors = [form_field for field in op_config["tensors"].values() for form_field in field["mathematica"].values()]
 
 
-fields_sorted = {}
-transl_autoeft_projection = {autoeft: proj for name, field in {**op_config["bosonfields"], **op_config["fermionfields"]}.items() if name != "D" for proj, autoeft in field["autoeft"].items()}
-for name, field in model.fields.items():
-    proj_name = transl_autoeft_projection[name]
-    field.form_name = proj_name
-    fields_sorted[proj_name] = field
-del transl_autoeft_projection
-
 def get_basis(basispath: Path, max_dim: int):
     """Load basis from autoeft."""
-    basispath = basispath.resolve()
-
     basis = {}  # dictionary with basis for each mass dimension from 4 to max_dim.
-    for dim in range(4, max_dim + 1):
+    min_dim = 4
+    for dim in range(min_dim, max_dim + 1):
         # load_basis also returns some counters and the Hilbert series, which we don't need here...
         try:
             # basis[dim], _, _ = load_basis(basispath, dim)
             # basispath = AUTOEFT_PATH / Path("efts", "ssm-eft", "6", "basis")
-            basispath = basispath / Path(f"{dim}", "basis")
-            basisfile = io_basis.BasisFile(basispath)
+            basispathdim = basispath / Path(f"{dim}", "basis")
+            basisfile = io_basis.BasisFile(basispathdim)
             basis[dim] = basisfile.get_basis()
+            # basis = basis_file.get_basis()
+            # model = basis.model
+            # operator = basis[{"Q": 3, "L": 1}]
         except FileNotFoundError:
-            logger.error(f"No model with the name {model.name} can be found in {AUTOEFT_PATH / Path('eft/')}.")
+            logger.error(f"No basis can be found in {AUTOEFT_PATH / Path('eft/')}.")
             sys.exit("STOP")
 
-    return basis
+    return basis[min_dim].model, basis
 
 def get_commuting_op(op):
     """eC -> eCc, [eC+] -> [eC+c], where eCc and [eC+c] are commuting functions."""
@@ -338,9 +248,9 @@ def get_commuting_op(op):
         commuting_op = op + "c"
     return commuting_op
 
-def get_SUN_name(N):
+def get_SUN_name(N, model):
     """Get Name of SU2_W out of model file."""
-    for group_name, group_properties in model.sun_groups.items():
+    for group_name, group_properties in model.symmetries.sun_groups.items():
         if group_properties.N == N:
             return group_name
 

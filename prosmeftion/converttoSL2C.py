@@ -15,12 +15,10 @@ from itertools import chain
 from pathlib import Path
 from typing import List
 
-from .sl2c.class_term import Term
-from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values, n_der
-from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
+from . import n_der
+from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, LATEX_PATH, AUTOEFT_PATH
 from .yProjection.read_write import get_terms, mathematica_to_form, writefile
 from .yProjection.coefficient import Factor
-from .sun_projection import equalize_field_indices
 from .general import declaration_SL2C_sets
 from .pyform.pyformfunction import pyForm
 
@@ -648,7 +646,7 @@ def get_termobject(args):
     coeff, coperator, id = args[0], args[1], args[2]
     return Term(coeff, coperator, id)
 
-def convertviaform(term, nDer):
+def convertviaform(term, nDer, model):
     """
     Convert Term via FORM and return converted object.
     Parameters
@@ -682,12 +680,12 @@ def convertviaform(term, nDer):
     expression = pyForm(FORM_GENERAL_PATH / "converttoSL2C.frm", send_to_form, input_dir=FORM_GENERAL_PATH, prompt= "READY")  # , debug=True, preprocessor_only=True
     expression = re.sub(r"(\s)*", "", expression)
 
-    new_term = get_terms(expression, name=summand.name)
+    new_term = get_terms(expression, model, name=summand.name)
 
 
     return new_term
 
-def converttoSL2C(terms, nDer):
+def converttoSL2C(terms, nDer, model):
     """
     Output Terms of BSUOLEA are read in and formatted in SL2C Notation via FORM.
     Parameters
@@ -705,7 +703,7 @@ def converttoSL2C(terms, nDer):
     """
     # with mp.Pool() as pool:
     #     terms_after_form = list(map(list, zip(*pool.map(convertviaform, terms))))
-    terms_after_form = [convertviaform(term, nDer) for term in terms]  # list(map(list, zip(*map(convertviaform, terms))))
+    terms_after_form = [convertviaform(term, nDer, model) for term in terms]  # list(map(list, zip(*map(convertviaform, terms))))
 
     # if logger.root.handlers[0].level < 20:
     for i, terms in enumerate(terms_after_form):

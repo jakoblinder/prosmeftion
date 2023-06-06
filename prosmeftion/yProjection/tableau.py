@@ -7,12 +7,12 @@ from typing import Iterator, List, Tuple, Dict, Union
 from sage.combinat.permutation import Permutation
 from sage.combinat.skew_tableau import SkewTableau
 
-from prosmeftion import n_der, op_config, model
+from prosmeftion import n_der, op_config  # FIXME: , model
 from .index import Index, LP_Index
 
 # from autoeft.combinat import Tableau
 # from autoeft.invariants import LorentzTableau
-from autoeft.combinat import Partition
+from autoeft.combinatorics.young import Partition  # TODO: changed autoeft.combinat to autoeft.combinatorics.young -> check
 # from autoeft.invariants import OpClass
 
 logger_autoeft = logging.getLogger("autoeft.projection")

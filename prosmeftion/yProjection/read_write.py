@@ -6,14 +6,15 @@ from pathlib import Path
 from yaml import safe_load
 from typing import Dict, List, Tuple
 
-from prosmeftion import CONFIG_PATH, PROJECTION_PATH, FORM_GENERAL_PATH, FORM_PATH, op_config, mathematica, escape_regex\
+from .. import CONFIG_PATH, PROJECTION_PATH, FORM_GENERAL_PATH, FORM_PATH, op_config, mathematica, escape_regex\
 #, retry
-from prosmeftion import bosons, fermions, tensors, run_form, op_pattern, index_number_pattern, LATEX_PATH
+from .. import bosons, fermions, tensors, run_form, op_pattern, index_number_pattern, LATEX_PATH
 
-from prosmeftion.pyform.pyformfunction import pyForm
+from ..pyform.pyformfunction import pyForm
 
-from .term import Term
-from prosmeftion import index_number_pattern as inp
+from .term import Term, TermType
+
+from .. import index_number_pattern as inp
 INPUT_PATH = PROJECTION_PATH / "BS"
 
 logger_autoeft = logging.getLogger("autoeft.projection")
@@ -231,7 +232,7 @@ def get_ops(expr: str, groupOps: List[List[str]]):
     return op_group
 
 
-def get_terms(expression: str, name:str=""):
+def get_terms(expression: str, model, name:str=""):
     """
     The terms of the form output are extracted and written in individual Term and Summand objects. Since Terms may
     consist of multiple summands, each summand is stored as a Summand object and the coefficients are separated for each
@@ -282,12 +283,12 @@ def get_terms(expression: str, name:str=""):
 
     if name:
         # write all written terms as one Term object.
-        terms = Term(sorted_terms, name)
+        terms = Term(sorted_terms, name, model)
     else:
         # terms = [Term([term], f"term{i:d}") for i, term in enumerate(sorted_terms)]
         terms = []
         for i, term in enumerate(sorted_terms):
-            terms.append(Term([term], f"term{i:d}"))
+            terms.append(Term([term], f"term{i:d}", model))
         # terms = list(map(Term, [[term] for term in sorted_terms], [f"term{i:d}" for i in range(len(sorted_terms))]))
 
     # del coefficient, coperator, expression
@@ -297,5 +298,35 @@ def get_terms(expression: str, name:str=""):
     return terms
 
 
+def get_type(terms, model):
+    """
+    Summands are sorted by their "type", i.e. field content and derivative.
+    Parameters
+    ----------
+    terms
+        List of Term objects, where each Term object contains one or more Summands.
+    Returns
+    -------
+        Sorted terms.
+    """
+    logger.info("Sort fields by type, indicated by a tuple filled with integers. They specify the "
+                "number of fields in the single summand in the following order: "
+                f"{' '.join([field.name for field in model.fields.values()])}")
+    single_terms = {}  # Ordered terms (by "type") with just a single term in it.
+    for term in terms:
+        if repr(term) == "0":
+            continue
+        for summand in term:
+            typ = tuple(summand.fieldcounter.values())
+            try:
+                type(single_terms[typ])
+                try:
+                    single_terms[typ][summand.nD].append(summand)
+                except KeyError:
+                    single_terms[typ][summand.nD] = TermType(summand, summand.fieldcounter_stripped)
+            except KeyError:
+                single_terms[typ] = {summand.nD: TermType(summand, summand.fieldcounter_stripped)}
+
+    return single_terms
 
 

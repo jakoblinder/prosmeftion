@@ -7,7 +7,7 @@ from fractions import Fraction
 from typing import Dict, List, Tuple
 from collections.abc import MutableMapping
 
-from prosmeftion import model, op_config, bosons_non_conj, fermions_non_conj, index_config, get_SUN_name
+from prosmeftion import op_config, bosons_non_conj, fermions_non_conj, index_config, get_SUN_name
 from .operator import Tensor, Field, Operator_Model
 from .coefficient import Coefficient
 from .indices import Indices_Summand, Indices_Operator
@@ -76,7 +76,7 @@ class Operators_Model(MutableMapping):
         elif isinstance(key, slice):
             return type(self)(self.operators[key])
         elif isinstance(key, str):
-            op_SUN_typ = {get_SUN_name(group): index_name for group, index_name in zip([2,3], ["gauge", "colf"])} ##[indextyp for indextyp in index_config.keys()]
+            op_SUN_typ = {get_SUN_name(group, self.model): index_name for group, index_name in zip([2,3], ["gauge", "colf"])} ##[indextyp for indextyp in index_config.keys()]
             op_SUN_typ_check = list(op_SUN_typ.keys())  # Fields which have SUN, i.e. SU2-, or SU3-indices
             op_other_typ = ["sl2C", "sl", "sldot", "yukawa"]  # Fields which have SL2C-, only undotted SL2C-, only dotted SL2C- or Yukawa-indices
             field_type = bosons_non_conj + fermions_non_conj  # Fields of specific kind, i.e. "H" would return ALL Higgs fields, also the conjugate (H+) ones.

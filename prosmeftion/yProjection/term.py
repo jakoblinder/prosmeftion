@@ -6,7 +6,6 @@ from typing import Dict, List
 import sage.all
 import sage.matrix as mx
 from sage.rings.rational_field import QQ
-from prosmeftion import model
 from .basisTensors import SymBasisTensors
 
 from .indices import Indices_Term, Indices_Summand
@@ -21,9 +20,9 @@ class Term_Model():  # Summand
     name: str
     # indices: Indices
     @abstractmethod
-    def __init__(self, terms: List[Dict[str, List[str]]], name: str):
+    def __init__(self, terms: List[Dict[str, List[str]]], name: str, model):
         """Load in fields, tensors and the coefficient."""
-        self.terms = [Summand(term["tensors"], term["fields"], term["coefficient"], name) for term in terms]
+        self.terms = [Summand(term["tensors"], term["fields"], term["coefficient"], name, model) for term in terms]
         self.name = name
         # self.indices
 
@@ -144,9 +143,9 @@ class Term(Term_Model):
     name: str
     terms: List[Summand]
     # indices: Indices
-    def __init__(self,  terms: List[Dict[str, List[str]]], name: str):
+    def __init__(self,  terms: List[Dict[str, List[str]]], name: str, model={}):
         if all(isinstance(term, dict) for term in terms):
-            super().__init__(terms, name)
+            super().__init__(terms, name, model)
         elif all(isinstance(term, Summand) for term in terms):
             self.terms = terms
             self.name = name
@@ -178,7 +177,7 @@ class TermType(Term_Model):
 
         # SUN-projection:
         self.sun_projection_tensors = None
-        self.sun_projection_matrix = {key: mx.constructor.matrix(QQ, 0, 0, []) for key in model.sun_groups.keys()}
+        # FIXME: Model not defined here: self.sun_projection_matrix = {key: mx.constructor.matrix(QQ, 0, 0, []) for key in model.sun_groups.keys()}
 
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""

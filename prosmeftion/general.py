@@ -7,8 +7,8 @@ from itertools import permutations
 from fractions import Fraction
 
 from . import op_config, bosons, fermions, fermionfields, tensors, coeff, index_config, n_der
-from . import get_antisymEps, fields_sorted, get_commuting_op
-from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
+from . import get_antisymEps, get_commuting_op
+from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, FORM_GENERAL_PATH, LATEX_PATH, AUTOEFT_PATH
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
@@ -580,7 +580,7 @@ def form_antisymDerivative(n_der: int):
 
 @create_procedure(FORM_GENERAL_PATH)
 def form_spinorEOMidentification(n_der: int):
-    """
+    r"""
     Replace derivatives acting on spinors, where one SL2C index of the derivative and one of the spinor
     are contracted by an epsilon tensor, e.g.
     eps^{a,b}*D^{adot}_{a}*L_b
@@ -1531,20 +1531,21 @@ def form_sortfields(order: Dict):
     """
     form = ""
     form += "repeat;\n"
-    ordered_fields = list(order.values())[::-1]  # Reversed list
+    ordered_fields = list(order.keys())[::-1]  # Reversed list
     for i in range(len(ordered_fields)):
         for j in range(len(ordered_fields)):
             if j > i:
-                if ordered_fields[i].ac and ordered_fields[j].ac:
+                # order[ordered_fields[i]] is True if the field is anticommuting and False when it is commuting
+                if order[ordered_fields[i]] and order[ordered_fields[j]]:
                     sign = "-"
                 else:
                     sign = "+"
-                form += f"\tid {ordered_fields[i].form_name}(?a)*{ordered_fields[j].form_name}(?b) = {sign}{ordered_fields[j].form_name}(?b)*{ordered_fields[i].form_name}(?a);\n"
+                form += f"\tid {ordered_fields[i]}(?a)*{ordered_fields[j]}(?b) = {sign}{ordered_fields[j]}(?b)*{ordered_fields[i]}(?a);\n"
         form += "\n"
     form += "endrepeat;"
     return form
 
-def form_declarations(n_der: int):
+def form_declarations(n_der: int, fields_sorted_ac: Dict):
     """
     Contains all general declarations valid for any term, i.e. for example the declaration of all fields and indices.
     Creates also all other prewritten FORM files.
@@ -1789,7 +1790,7 @@ def form_declarations(n_der: int):
     form_indexasDerivative(n_der)
 
     # TODO: Create sorted field new from own model file.
-    form_sortfields(fields_sorted)
+    form_sortfields(fields_sorted_ac)
 
 
     return form

@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
 from copy import copy
 
-from prosmeftion import CONFIG_PATH, op_config, escape_regex, model, index_config, op_pattern, index_pattern, dummy_index_pattern, op_name_pattern, get_commuting_op
+from prosmeftion import CONFIG_PATH, op_config, escape_regex, index_config, op_pattern, index_pattern, dummy_index_pattern, op_name_pattern, get_commuting_op
 from .index import Index, Dummy_Index, LP_Index
 from .indices import Indices_Operator
 from prosmeftion import index_number_pattern as inp

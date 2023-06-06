@@ -10,12 +10,11 @@ from itertools import chain
 from pathlib import Path
 from typing import List
 
-from prosmeftion.sl2c.class_term import Term
-from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values
-from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, INPUT_PATH, LATEX_PATH, AUTOEFT_PATH
+# from . import coeffvalues, opname_sorted, opname, opnameSL2C, opvalues, opSL2Cvalues, spinorsSL2C_c, spSL2C_c_values
+from . import PROJECTION_PATH, CONFIG_PATH, FORM_PATH, LATEX_PATH, AUTOEFT_PATH
 from .yProjection.read_write import get_terms
 from .yProjection.coefficient import Factor
-from .sun_projection import equalize_field_indices
+from .yProjection.utils import equalize_field_indices
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)

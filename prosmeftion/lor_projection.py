@@ -15,15 +15,12 @@ from .yProjection.operator import Tensor, Field
 from .yProjection.operators import Tensors
 from .yProjection.indices import Indices_Operator, Possible_Indices
 from .yProjection.index import Index, LP_Index
-from .yProjection.read_write import get_terms
-from .sun_projection import get_type
+from .yProjection.read_write import get_terms, get_type
 from .general import create_procedure
 from .yProjection.tableau import get_op_class, Young_Tableau
 from .yProjection.lorentz import LR_Tableaux
 
-from autoeft.io import load_basis
-from autoeft.sun_projection import tensor_projection
-from . import AUTOEFT_PATH, FORM_PATH, FORM_GENERAL_PATH, PROJECTION_PATH,model, get_antisymEps, op_config, bosons, fermions, tensors, bosons_non_conj, fermions_non_conj, run_form, get_SUN_name
+from . import AUTOEFT_PATH, FORM_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, get_antisymEps, op_config, bosons, fermions, tensors, bosons_non_conj, fermions_non_conj, run_form
 from .general import declaration_SL2C_sets
 
 logger_autoeft = logging.getLogger("autoeft.projection")
@@ -163,7 +160,7 @@ def form_sortDerivativesIBP():
     # form += "endrepeat;\n"
     return form
 
-def rearrange_derivatives(single_terms, nDer):
+def rearrange_derivatives(single_terms, nDer, model):
     """
     In order to avoid that derivatives act on multiple fields and the only place where this occurs for the BS-input is
     the type nD: 4 & {"H": 1, "H+": 1}, the derivatives on these types are rearranged such that they look like
@@ -391,7 +388,7 @@ def rearrange_derivatives(single_terms, nDer):
     with open(TERM_PATH / "higgs_sorted.h", "r") as file:
         expression = file.read()
 
-    terms = get_terms(expression)
+    terms = get_terms(expression, model)
 
     terms = [summand for term in terms for summand in term.terms]
     h3Hdagger1 = TermType(terms,terms[0].fieldcounter_stripped)
@@ -566,7 +563,7 @@ def rearrange_derivatives(single_terms, nDer):
         with open(TERM_PATH / "commute_derivatives.h", "r") as file:
             expression = file.read()
 
-        terms = get_terms(expression)
+        terms = get_terms(expression, model)
 
         term_list.append(terms)
 
@@ -581,11 +578,11 @@ def rearrange_derivatives(single_terms, nDer):
                 for summand in term_mass_dim:
                     term_list.append(Term([summand], name=summand.name))
 
-    single_terms = get_type(term_list)
+    single_terms = get_type(term_list, model)
 
     return single_terms
 
-def replace_eoms(single_terms, nDer):
+def replace_eoms(single_terms, nDer, model):
     """
     Replace equation of motions first by a placeholder and then for the dimension 6 operators by the equation of motion
     of the SM-Lagrangian.
@@ -711,16 +708,16 @@ def replace_eoms(single_terms, nDer):
                 with open(TERM_PATH / "term_with_less_eom.h", "r") as file:
                     expression = file.read()
 
-                terms = get_terms(expression)
+                terms = get_terms(expression, model)
 
                 term_list.append(terms)
 
     term_list = [term for short_list in term_list for term in short_list]
-    single_terms = get_type(term_list)
+    single_terms = get_type(term_list, model)
 
     return single_terms
 
-def ibp_and_schouten_ids(single_terms, max_dim: int):
+def ibp_and_schouten_ids(single_terms, max_dim: int, model):
     """
     Apply the integration by parts and Schouten identities to the lorentz structure.
     Parameters
@@ -832,6 +829,6 @@ def ibp_and_schouten_ids(single_terms, max_dim: int):
                 # print("=> Old term stays the same!")
 
     term_list_Term = [Term([term], term.name) for term in term_list]
-    single_terms = get_type(term_list_Term)
+    single_terms = get_type(term_list_Term, model)
 
     return single_terms, all(term_check)

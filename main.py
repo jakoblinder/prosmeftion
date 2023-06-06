@@ -4,18 +4,19 @@ import timeit
 from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
-
 from yaml import safe_load
+import autoeft.io.basis as io_basis
 
-from prosmeftion import CONFIG_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, n_der, get_basis, run_form
+from prosmeftion import CONFIG_PATH, FORM_GENERAL_PATH, PROJECTION_PATH, AUTOEFT_PATH, n_der, get_basis, run_form, op_config
 from prosmeftion.general import form_declarations, declaration_SL2C_sets
-
+from prosmeftion.config import sort_model_fields
 from prosmeftion.lor_projection import ibp_and_schouten_ids, replace_eoms, rearrange_derivatives
-from prosmeftion.yProjection.read_write import remove_header_and_spaces, mathematica_to_form, get_terms
+from prosmeftion.yProjection.read_write import remove_header_and_spaces, mathematica_to_form, get_terms, get_type
+from prosmeftion.yProjection.utils import equalize_field_indices, remove_doubles
 from prosmeftion.converttoSL2C import converttoSL2C
 from prosmeftion.tex import tex_unsorted_terms, tex_sorted_terms, tex_sorted_terms_wo_doubles, tex_terms_sorted_sun_projection, tex_sorted_terms_wo_eoms, tex_sorted_terms_before_sun
-from prosmeftion.sun_projection import get_type, remove_doubles, sun_projection, replace_sun_tensors_by_projected_ones
-from prosmeftion.yProjection.tableau import test
+# FIXME: from prosmeftion.sun_projection import sun_projection, replace_sun_tensors_by_projected_ones
+# from prosmeftion.yProjection.tableau import test
 from prosmeftion.yProjection.indices import Possible_Indices
 from prosmeftion.yProjection.rfr import rfr, rfr_sun
 
@@ -56,7 +57,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 input_file = args.lagrangian.resolve()  # "exampleOutputBS.m"
-basis_file = args.basis.resolve()
+basis_path = args.basis.resolve()
 #  AUTOEFT_PATH / Path(f"{model.path}/"
 
 logconfig['handlers']['console']['level'] = logging.getLevelName(args.logLevel)
@@ -71,28 +72,22 @@ def number_terms(single_terms):
             nterms += len(terms_n)
     return nterms
 
-
-import autoeft.io.basis as io_basis
-
-basis_path = AUTOEFT_PATH / Path("efts", "ssm-eft", "6", "basis")
-basis_file = io_basis.BasisFile(basis_path)
-
-basis = basis_file.get_basis()
-model = basis.model
-operator = basis[{"Q": 3, "L": 1}]
+# basis_path = AUTOEFT_PATH / Path("efts", "ssm-eft")  # "6", "basis"
 
 
-def main(input_file, basis_file, max_dim = 6, debug=None):
+def main(input_file, basis_path, max_dim = 6, debug=None):
     # Maximum number of derivatives
     nDer = n_der(max_dim)
 
     # get basis up to max_dim mass dimension
-    basis = get_basis(basis_file, max_dim)
+    model, basis = get_basis(basis_path, max_dim)
+
+    fields_sorted_ac, model = sort_model_fields(model)
 
     inputfilename = input_file.stem
 
     with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
-        file.write(form_declarations(nDer))
+        file.write(form_declarations(nDer, fields_sorted_ac))
 
     expression = remove_header_and_spaces(input_file, header=args.skip)
 
@@ -100,17 +95,17 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
         expression = mathematica_to_form(expression)
 
     # Extract coefficient and Operator from the output and pack them into the desired object structure:
-    terms = get_terms(expression)
+    terms = get_terms(expression, model)
     del expression
 
     # Conversion in y-Basis notation:
-    terms = converttoSL2C(terms, nDer)
+    terms = converttoSL2C(terms, nDer, model)
 
     if args.tex:
         tex_unsorted_terms(inputfilename, terms)
 
     # Sort terms by type for the projection:
-    single_terms = get_type(terms)
+    single_terms = get_type(terms, model)
     del terms
 
     if args.tex:
@@ -118,7 +113,7 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
 
     nterms_before = number_terms(single_terms)
     # Remove double terms:
-    single_terms = remove_doubles(single_terms)
+    single_terms = remove_doubles(single_terms, model)
 
     nterms_after = number_terms(single_terms)
 
@@ -133,8 +128,8 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
 
     nterms_before = number_terms(single_terms)
 
-    single_terms = replace_eoms(single_terms, nDer)
-    single_terms = replace_eoms(single_terms, nDer)
+    single_terms = replace_eoms(single_terms, nDer, model)
+    single_terms = replace_eoms(single_terms, nDer, model)
 
     nterms_after = number_terms(single_terms)
 
@@ -144,17 +139,17 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
 
     # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
-    single_terms = rearrange_derivatives(single_terms, nDer)
+    single_terms = rearrange_derivatives(single_terms, nDer, model)
 
-    single_terms = replace_eoms(single_terms, nDer)  # (D^2H) * (D^2H+) -> ... + ~ H+ * H * H * (D^2H+) + ... => need to replace eom again.
-    single_terms = replace_eoms(single_terms, nDer)
+    single_terms = replace_eoms(single_terms, nDer, model)  # (D^2H) * (D^2H+) -> ... + ~ H+ * H * H * (D^2H+) + ... => need to replace eom again.
+    single_terms = replace_eoms(single_terms, nDer, model)
 
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
     nterms_before = number_terms(single_terms)
     # Remove double terms:
-    single_terms = remove_doubles(single_terms)
+    single_terms = remove_doubles(single_terms, model)
 
     nterms_after = number_terms(single_terms)
 
@@ -167,10 +162,10 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
     logger.info("Symmetries terms.")
-    single_terms = rfr(single_terms)
+    single_terms = rfr(single_terms, model, fields_sorted_ac)
 
     nterms_before = number_terms(single_terms)
-    single_terms = remove_doubles(single_terms)
+    single_terms = remove_doubles(single_terms, model)
     nterms_after = number_terms(single_terms)
     logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
     pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_without_rfr.p", "wb"))
@@ -186,13 +181,13 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
     number_iterations = 0
 
     while True:
-        single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim)
+        single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim, model)
         number_iterations += 1
-        single_terms = replace_eoms(single_terms, nDer)
+        single_terms = replace_eoms(single_terms, nDer, model)
         # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_test.p", "wb"))
         # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_test.p", "rb"))
         # Remove double terms:
-        single_terms = remove_doubles(single_terms)
+        single_terms = remove_doubles(single_terms, model)
         nterms_after = number_terms(single_terms)
         logger.info(f"#Terms after {number_iterations}. ibp iteration {nterms_after:d}.")
         if ssyt:
@@ -206,13 +201,13 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
     pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_before_sun.p", "rb"))
 
-    single_terms = rfr_sun(single_terms)
-    # single_terms = remove_doubles(single_terms)
+    single_terms = rfr_sun(single_terms, model)
+    # single_terms = remove_doubles(single_terms, model)
 
-    # SUN_Projection of terms without doubles:
-    single_terms = sun_projection(single_terms, basis, max_dim)
-
-    single_terms = replace_sun_tensors_by_projected_ones(single_terms)
+    # # SUN_Projection of terms without doubles:
+    # single_terms = sun_projection(single_terms, basis, max_dim, model)
+    #
+    # single_terms = replace_sun_tensors_by_projected_ones(single_terms, model)
 
     nterms_after_sun_projection = number_terms(single_terms)
 
@@ -230,7 +225,7 @@ def main(input_file, basis_file, max_dim = 6, debug=None):
 
 start_time = timeit.default_timer()
 
-terms = main(input_file, basis_file, args.dimension)
+terms = main(input_file, basis_path, args.dimension)
 # fieldstructure = tuple(map(int,list("0100000110000000")))
 # terms = main(args.dimension, debug=fieldstructure)
 

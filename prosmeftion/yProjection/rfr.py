@@ -6,12 +6,12 @@ from copy import copy
 from fractions import Fraction
 from math import factorial
 from typing import Iterator, List, Tuple, Dict, Union
-from prosmeftion import model, op_config
+from prosmeftion import op_config
 from .term import Term
 from .summand import Summand
 from .coefficient import Factor
 from .operators import Fields
-from prosmeftion.sun_projection import get_type
+from .read_write import get_type
 
 
 logger_autoeft = logging.getLogger("autoeft.projection")
@@ -126,7 +126,7 @@ def symmetrize(input_list:List, sym_structures:List[Tuple[List]]) -> List[Tuple]
 
     return permuted_list[0]
 
-def shift_fields(term:Summand, field_indices:Tuple[List]):
+def shift_fields(term:Summand, field_indices:Tuple[List], model):
     """
     A term with e.g. 5 field has field position indices [1,2,3,4,5]. The field_indices declare to which position each
     field will be shifted. For example field_indices = ('-1/2', [2,1,3,4,5])
@@ -157,10 +157,10 @@ def shift_fields(term:Summand, field_indices:Tuple[List]):
         field_cp.gaugeIndicesforProjection()
         new_fields[new_order[i] - 1] = field_cp
 
-    return Summand(tensors=term.tensors.copy(), fields=Fields(new_fields), coeff=new_coeff, fp_name=term.name)
+    return Summand(tensors=term.tensors.copy(), fields=Fields(new_fields), coeff=new_coeff, fp_name=term.name, model=model)
 
 
-def rfr(single_terms):
+def rfr(single_terms, model, fields_sorted_ac):
     terms = []
     for term_type in single_terms.values():
         for term_mass_dim in term_type.values():
@@ -175,7 +175,7 @@ def rfr(single_terms):
                     n = 1
                     for field_name, n_field in term.fieldcounter_stripped.items():
                         if n_field > 1:
-                            if model.fields[field_name].ac:
+                            if model.fields[field_name].anticommute:
                                 sym_antisym = "A"
                             else:
                                 sym_antisym = "S"
@@ -183,7 +183,7 @@ def rfr(single_terms):
                         n += n_field
                     sym_field_indices = symmetrize(field_indices, symmetrizations)
                     for field_indices in sym_field_indices:
-                        symmetrized_terms.append(shift_fields(term, field_indices))
+                        symmetrized_terms.append(shift_fields(term, field_indices, model))
 
 
                     for term_sym in symmetrized_terms:
@@ -197,11 +197,11 @@ def rfr(single_terms):
                     name_form = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])
                     terms.append(Term([term], name_form))
 
-    single_terms = get_type(terms)
+    single_terms = get_type(terms, model)
 
     return single_terms
 
-def rfr_sun(single_terms):
+def rfr_sun(single_terms, model):
     terms = []
     for term_type in single_terms.values():
         for term_mass_dim in term_type.values():
@@ -241,7 +241,7 @@ def rfr_sun(single_terms):
                         continue
                     sym_field_indices = symmetrize(field_indices, symmetrizations)
                     for field_indices in sym_field_indices:
-                        symmetrized_terms.append(shift_fields(term, field_indices))
+                        symmetrized_terms.append(shift_fields(term, field_indices, model))
 
 
                     for term_sym in symmetrized_terms:
@@ -255,11 +255,11 @@ def rfr_sun(single_terms):
                     name_form = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])
                     terms.append(Term([term], name_form))
 
-    single_terms = get_type(terms)
+    single_terms = get_type(terms, model)
 
     return single_terms
 
-# def rfr_sun(single_terms):
+# def rfr_sun(single_terms, model):
 #     """
 #     Symmetrize fields in the same way as rfr(), but keep only the gauge group tensors from the expressions so that
 #     indices in gauge group tensors are symmetrized but building block order stays the same.
@@ -315,7 +315,7 @@ def rfr_sun(single_terms):
 #
 #                     sym_field_indices = symmetrize(field_indices, symmetrizations)
 #                     for field_indices in sym_field_indices:
-#                         symmetrized_terms.append(shift_fields(term, field_indices))
+#                         symmetrized_terms.append(shift_fields(term, field_indices, model))
 #
 #                     term.replace_SUN_indices_by_projection_indices()
 #                     for term_sym in symmetrized_terms:
@@ -335,7 +335,7 @@ def rfr_sun(single_terms):
 #                     name_form = "".join([f"{name}{nD}" for name, nD in term.fieldstructure])
 #                     terms.append(Term([term], name_form))
 #
-#     single_terms = get_type(terms)
+#     single_terms = get_type(terms, model)
 #
 #     return single_terms
 

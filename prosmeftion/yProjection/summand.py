@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple, Union
 from pathlib import Path
 from copy import copy
 
-from prosmeftion import model, op_config, index_config, get_SUN_name, get_commuting_op
+from prosmeftion import op_config, index_config, get_SUN_name, get_commuting_op
 from prosmeftion.general import create_procedure
 
 from .coefficient import Coefficient, Factor
@@ -30,11 +30,13 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
     nD: int  # number of derivatives in the summand
 
     @abstractmethod
-    def __init__(self, tensors: List[str], fields: Tuple[str], coeff: str, fp_name: str):
+    def __init__(self, tensors: List[str], fields: Tuple[str], coeff: str, fp_name: str, model):
         """Load in fields, tensors and the coefficient."""
         self.name = fp_name
         self.tensors = tensors
         self.fields = fields
+        self.fields.model = model
+        self.tensors.model = model
         self.coeff = coeff
         self.nD
         self.fieldcounter
@@ -177,7 +179,7 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         Returns
         -------
         """
-        fieldcount = {key.name: 0 for key in model.fields.values()}
+        fieldcount = {key.name: 0 for key in self.fields.model.fields.values()}
         autoeft_to_projection = {autoeft: projection for field_name, field in {**op_config["bosonfields"], **op_config["fermionfields"]}.items() if field_name != "D" for projection, autoeft in field["autoeft"].items()}
         for field in self.fields:
             try:
@@ -298,14 +300,14 @@ class Summand(Summand_Model):
     """Single term consisting of an overall coefficient and a product of operators."""
     fieldcounter: Dict[str, int]
 
-    def __init__(self, tensors: List[Union[str,Tensor]], fields: List[Union[str,Field]], coeff: Union[str,Coefficient], fp_name: str):
-        super().__init__(tensors, fields, coeff, fp_name)
+    def __init__(self, tensors: List[Union[str,Tensor]], fields: List[Union[str,Field]], coeff: Union[str,Coefficient], fp_name: str, model):
+        super().__init__(tensors, fields, coeff, fp_name, model)
 
         # Gauge fields contain special projection index of the form idxF2I1, which is transmitted to the contracted tensors:
         self.gaugeIndicesforProjection_tensors()
 
-        su2 = get_SUN_name(2)
-        su3 = get_SUN_name(3)
+        su2 = get_SUN_name(2, self.fields.model)
+        su3 = get_SUN_name(3, self.fields.model)
         self.gaugeTensorsSUN = {su2: self.tensors[su2], su3: self.tensors[su3]}
 
     def __repr__(self):
@@ -344,8 +346,8 @@ class Summand(Summand_Model):
 
     def copy(self):
         summand = super().copy()
-        su2 = get_SUN_name(2)
-        su3 = get_SUN_name(3)
+        su2 = get_SUN_name(2, self.fields.model)
+        su3 = get_SUN_name(3, self.fields.model)
         summand.gaugeTensorsSUN = {su2: summand.tensors[su2], su3: summand.tensors[su3]}
 
         return summand

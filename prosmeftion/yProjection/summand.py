@@ -277,7 +277,7 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         -------
 
         """
-        return type(self)(self.tensors.copy(), self.fields.copy(), self.coeff.copy(), self.name)
+        return type(self)(self.tensors.copy(), self.fields.copy(), self.coeff.copy(), self.name, self.fields.model)
 
     def replace_SUN_indices_by_projection_indices(self):
         """
@@ -342,7 +342,7 @@ class Summand(Summand_Model):
     @property
     def op_class(self):
         """Operator class of the operator."""
-        return get_op_class(self.fieldcounter_stripped, self.nD, self.d)
+        return get_op_class(self.fieldcounter_stripped, self.nD, self.d, self.fields.model)
 
     def copy(self):
         summand = super().copy()

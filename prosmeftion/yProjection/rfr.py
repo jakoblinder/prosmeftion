@@ -202,6 +202,20 @@ def rfr(single_terms, model, fields_sorted_ac):
     return single_terms
 
 def rfr_sun(single_terms, model):
+    """
+    Symmetrize fields in the same way as rfr(), but keep only the gauge group tensors from the expressions so that
+    indices in gauge group tensors are symmetrized but building block order stays the same.
+
+    Otherwise, the derivative order from the ibp algorithm would be destroyed.
+
+    Parameters
+    ----------
+    single_terms
+
+    Returns
+    -------
+
+    """
     terms = []
     for term_type in single_terms.values():
         for term_mass_dim in term_type.values():
@@ -225,7 +239,7 @@ def rfr_sun(single_terms, model):
                             n += n_field
                             continue
                         if n_field > 1:
-                            if model.fields[field_name].ac:
+                            if model.fields[field_name].anticommute:
                                 sym_antisym = "A"
                             else:
                                 sym_antisym = "S"

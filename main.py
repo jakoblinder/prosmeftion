@@ -86,120 +86,119 @@ def main(input_file, basis_path, max_dim = 6, debug=None):
 
     inputfilename = input_file.stem
 
-    with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
-        file.write(form_declarations(nDer, fields_sorted_ac))
-
-    expression = remove_header_and_spaces(input_file, header=args.skip)
-
-    if args.format == "mathematica":
-        expression = mathematica_to_form(expression)
-
-    # Extract coefficient and Operator from the output and pack them into the desired object structure:
-    terms = get_terms(expression, model)
-    del expression
-
-    # Conversion in y-Basis notation:
-    terms = converttoSL2C(terms, nDer, model)
-
-    if args.tex:
-        tex_unsorted_terms(inputfilename, terms)
-
-    # Sort terms by type for the projection:
-    single_terms = get_type(terms, model)
-    del terms
-
-    if args.tex:
-        tex_sorted_terms(inputfilename, single_terms)
-
-    nterms_before = number_terms(single_terms)
-    # Remove double terms:
-    single_terms = remove_doubles(single_terms, model)
-
-    nterms_after = number_terms(single_terms)
-
-    logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-
-    # print terms
-    if args.tex:
-        tex_sorted_terms_wo_doubles(inputfilename, single_terms)
-
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
-
-    nterms_before = number_terms(single_terms)
-
-    single_terms = replace_eoms(single_terms, nDer, model)
-    single_terms = replace_eoms(single_terms, nDer, model)
-
-    nterms_after = number_terms(single_terms)
-
-    logger.info(f"#Terms with EOMs: {nterms_before:d} <-> #Terms with less EOMs: {nterms_after:d}")
-
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
-
-    # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
-    single_terms = rearrange_derivatives(single_terms, nDer, model)
-
-    single_terms = replace_eoms(single_terms, nDer, model)  # (D^2H) * (D^2H+) -> ... + ~ H+ * H * H * (D^2H+) + ... => need to replace eom again.
-    single_terms = replace_eoms(single_terms, nDer, model)
-
+    # with open(FORM_GENERAL_PATH / "declarations_general.h", "w") as file:
+    #     file.write(form_declarations(nDer, fields_sorted_ac))
+    #
+    # expression = remove_header_and_spaces(input_file, header=args.skip)
+    #
+    # if args.format == "mathematica":
+    #     expression = mathematica_to_form(expression)
+    #
+    # # Extract coefficient and Operator from the output and pack them into the desired object structure:
+    # terms = get_terms(expression, model)
+    # del expression
+    #
+    # # Conversion in y-Basis notation:
+    # terms = converttoSL2C(terms, nDer, model)
+    #
+    # if args.tex:
+    #     tex_unsorted_terms(inputfilename, terms)
+    #
+    # # Sort terms by type for the projection:
+    # single_terms = get_type(terms, model)
+    # del terms
+    #
+    # if args.tex:
+    #     tex_sorted_terms(inputfilename, single_terms)
+    #
+    # nterms_before = number_terms(single_terms)
+    # # Remove double terms:
+    # single_terms = remove_doubles(single_terms, model)
+    #
+    # nterms_after = number_terms(single_terms)
+    #
+    # logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+    #
+    # # print terms
+    # if args.tex:
+    #     tex_sorted_terms_wo_doubles(inputfilename, single_terms)
+    #
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
+    # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
+    #
+    # nterms_before = number_terms(single_terms)
+    #
+    # single_terms = replace_eoms(single_terms, nDer, model)
+    # single_terms = replace_eoms(single_terms, nDer, model)
+    #
+    # nterms_after = number_terms(single_terms)
+    #
+    # logger.info(f"#Terms with EOMs: {nterms_before:d} <-> #Terms with less EOMs: {nterms_after:d}")
+    #
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
+    # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
+    #
+    # # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
+    # single_terms = rearrange_derivatives(single_terms, nDer, model)
+    #
+    # single_terms = replace_eoms(single_terms, nDer, model)  # (D^2H) * (D^2H+) -> ... + ~ H+ * H * H * (D^2H+) + ... => need to replace eom again.
+    # single_terms = replace_eoms(single_terms, nDer, model)
+    #
+    # # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
+    # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
+    #
+    # nterms_before = number_terms(single_terms)
+    # # Remove double terms:
+    # single_terms = remove_doubles(single_terms, model)
+    #
+    # nterms_after = number_terms(single_terms)
+    #
+    # logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+    #
+    # if args.tex:
+    #     tex_sorted_terms_wo_eoms(inputfilename, single_terms)
+    #
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
-
-    nterms_before = number_terms(single_terms)
-    # Remove double terms:
-    single_terms = remove_doubles(single_terms, model)
-
-    nterms_after = number_terms(single_terms)
-
-    logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-
-    if args.tex:
-        tex_sorted_terms_wo_eoms(inputfilename, single_terms)
-
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
-
-    logger.info("Symmetries terms.")
-    single_terms = rfr(single_terms, model, fields_sorted_ac)
-
-    nterms_before = number_terms(single_terms)
-    single_terms = remove_doubles(single_terms, model)
-    nterms_after = number_terms(single_terms)
-    logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_without_rfr.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_without_rfr.p", "rb"))
-
-    # test()
-    # Apply ibp and schouten ids up to the point where all tableaux, are SSYT:
-    # Note due to the replacement of contracted derivative on the second and third field,
-    # this has to be done iteratively while removing always the EOMs before the next iteration
-    if debug:
-        single_terms = {debug: single_terms[debug]}
-
-    number_iterations = 0
-
-    while True:
-        single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim, model)
-        number_iterations += 1
-        single_terms = replace_eoms(single_terms, nDer, model)
-        # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_test.p", "wb"))
-        # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_test.p", "rb"))
-        # Remove double terms:
-        single_terms = remove_doubles(single_terms, model)
-        nterms_after = number_terms(single_terms)
-        logger.info(f"#Terms after {number_iterations}. ibp iteration {nterms_after:d}.")
-        if ssyt:
-            break
-
-    logger.info(f"After {number_iterations:d} iterations of the ibp algorithm all ibp relations and Schouten identities are applied.")
-
-    if args.tex:
-        tex_sorted_terms_before_sun(inputfilename, single_terms)
-
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
-    # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_before_sun.p", "rb"))
+    # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
+    #
+    # logger.info("Symmetries terms.")
+    # single_terms = rfr(single_terms, model, fields_sorted_ac)
+    #
+    # nterms_before = number_terms(single_terms)
+    # single_terms = remove_doubles(single_terms, model)
+    # nterms_after = number_terms(single_terms)
+    # logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_without_rfr.p", "wb"))
+    # # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_without_rfr.p", "rb"))
+    #
+    # # Apply ibp and schouten ids up to the point where all tableaux, are SSYT:
+    # # Note due to the replacement of contracted derivative on the second and third field,
+    # # this has to be done iteratively while removing always the EOMs before the next iteration
+    # if debug:
+    #     single_terms = {debug: single_terms[debug]}
+    #
+    # number_iterations = 0
+    #
+    # while True:
+    #     single_terms, ssyt = ibp_and_schouten_ids(single_terms, max_dim, model)
+    #     number_iterations += 1
+    #     single_terms = replace_eoms(single_terms, nDer, model)
+    #     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_test.p", "wb"))
+    #     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_test.p", "rb"))
+    #     # Remove double terms:
+    #     single_terms = remove_doubles(single_terms, model)
+    #     nterms_after = number_terms(single_terms)
+    #     logger.info(f"#Terms after {number_iterations}. ibp iteration {nterms_after:d}.")
+    #     if ssyt:
+    #         break
+    #
+    # logger.info(f"After {number_iterations:d} iterations of the ibp algorithm all ibp relations and Schouten identities are applied.")
+    #
+    # if args.tex:
+    #     tex_sorted_terms_before_sun(inputfilename, single_terms)
+    #
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
+    single_terms = pickle.load(open(CONFIG_PATH / "single_terms_before_sun.p", "rb"))
 
     single_terms = rfr_sun(single_terms, model)
     # single_terms = remove_doubles(single_terms, model)

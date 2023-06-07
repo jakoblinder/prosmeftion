@@ -877,7 +877,7 @@ class Lorentz_Tableau(LorentzTableau):
 
         return Young_Tableau(l_tab.tableau), Young_Tableau(r_tab.tableau), sign
 
-def get_op_class(field_content: Dict[str,int], derivatives: int, mass_dim: int):
+def get_op_class(field_content: Dict[str,int], derivatives: int, mass_dim: int, model):
     """
     Returns the operator class object OpClass for given:
     ----------

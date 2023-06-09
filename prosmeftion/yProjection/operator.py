@@ -531,54 +531,8 @@ class Field(Operator_Model):
             for index in self.indices:
                 if index.typ == indtype:
                     index.projection = f"{pre:s}{self.field_pos:d}_{counter[indtype]:d}"
-                    #FIXME
+                    # Note that this kind of index is not directly form compatible anymore, due to the AutoEFT
+                    # requirements. The previous version used the following compatible index naming:
                     # index.projection = f"{pre:s}{indtype:s}F{self.field_pos:d}I{counter[indtype]:d}"
                     counter[indtype] += 1
-
-    # def reset_derIndex(self):
-    #     """
-    #     Recalculate the number of derivatives 'derIndex', which stand on every index.
-    #     This is important if hte number of derivatives on a field suddenly changes due to for example
-    #     integration by parts.
-    #     Returns
-    #     -------
-    #
-    #     """
-    #     nD = 1
-    #     # Note: Each derIndex consisting of only a digit should be rewritten in terms of an object() in order to
-    #     # avoid ambiguities.
-    #     for derIndexLsl in self.indices['Lsl']:
-    #         if derIndexLsl.derIndex and type(derIndexLsl.derIndex) is int:
-    #             lsl_nD = derIndexLsl.derIndex
-    #             new_nD = object()
-    #             derIndexLsl.derIndex = new_nD
-    #             derIndexLsl.lp = LP_Index(self.field_pos, new_nD)
-    #             found = 1
-    #             # Find dual index with the same derIndex.
-    #             for derIndexUsldot in self.indices['Usldot']:
-    #                 if derIndexUsldot.derIndex == lsl_nD:
-    #                     derIndexUsldot.derIndex = new_nD
-    #                     derIndexUsldot.lp = LP_Index(self.field_pos, new_nD)
-    #                     found += 1
-    #             assert found == 2
-    #
-    #     # old_max = max([index.derIndex for index in self.indices])  # old maximum number of derivatives
-    #     der_indices = list(set([index.derIndex for index in self.indices if index.derIndex]))
-    #     # found = {i: 0 for i in range(1, old_max + 1)}
-    #     found = {i: 0 for i in der_indices}
-    #     # Note about the naming order:  The index nearest to the field should be 1.
-    #     for i in list(found.keys())[::-1]:
-    #         for derIndexLsl in self.indices['Lsl']:
-    #             if derIndexLsl.derIndex == i:
-    #                 derIndexLsl.derIndex = nD
-    #                 derIndexLsl.lp = LP_Index(self.field_pos, nD)
-    #                 found[i] += 1
-    #         for derIndexUsldot in self.indices['Usldot']:
-    #             if derIndexUsldot.derIndex == i:
-    #                 derIndexUsldot.derIndex = nD
-    #                 derIndexUsldot.lp = LP_Index(self.field_pos, nD)
-    #                 found[i] += 1
-    #         if found[i] == 2: nD += 1
-    #
-    #     assert all([i in (0, 2) for i in found.values()]), "Something went wrong in the replacement of derIndex of the derivative indices."
 

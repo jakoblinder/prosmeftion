@@ -19,13 +19,10 @@ from .yProjection.summand import Summand
 # from .get_FORM.form_read_in import Term_Model, Term_s
 from .yProjection.term import Term, TermType
 
-from autoeft.base.tensors import SUNTableau, SUNTensor  # TODO: Check autoeft.invariants -> autoeft.base.tensors
+from autoeft.base.tensors import SUNTableau, SUNTensor
 from autoeft.utils import Vector
-# , field_projection_operator, symmetrize_tensors
-# FIXME: field_projection_operator, symmetrize_tensors not defined in new AutoEFT
-# from autoeft.model import SUNGroup
-# from autoeft.sun_projection import tensor_projection
 from . import AUTOEFT_PATH, FORM_PATH, FORM_GENERAL_PATH, get_antisymEps, op_config, bosons, fermions, tensors, run_form, get_basis
+
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
@@ -138,28 +135,6 @@ def replace_sun_tensors_by_projected_ones(single_terms, model):
 
     """
     group_name_index = {"SU3_C": "colf", "SU2_W": "gauge"}
-
-    # for type in single_terms.values():
-    #     for term_mass_dim in type.values():
-    #         for summand in term_mass_dim:
-    #             if not summand.sun_projection:
-    #                 continue
-    #             for sun, proj_tensor in summand.sun_projection.items():
-
-
-            # for sun_group, projection_mix in term_mass_dim.sun_projection_matrix.items():
-            #     if projection_matrix:
-            #         # projection_matrix exists
-            #         sun_basis_tensors = term_mass_dim.sun_projection_tensors[sun_group]["sun_tensor"]
-            #         basis_dim = len(sun_basis_tensors)
-            #         assert len(term_mass_dim.terms) == projection_matrix.nrows(), "Projection matrix has the wrong shape."
-            #         assert basis_dim == projection_matrix.ncols(), "Projection matrix has the wrong shape."
-            #         for i, term in enumerate(term_mass_dim.terms):
-            #             try:
-            #                 term.projected_tensors[sun_group] = [Fraction(str(projection_matrix[i][j])) for j in range(basis_dim)]
-            #             except AttributeError:
-            #                 term.projected_tensors = {sun_group: [Fraction(str(projection_matrix[i][j])) for j in range(basis_dim)]}
-
 
     # Combine terms in FORM:
     merged_terms = []

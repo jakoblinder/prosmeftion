@@ -123,7 +123,7 @@ def main(input_file, basis_path, max_dim = 6, debug=None):
     if args.tex:
         tex_sorted_terms_wo_doubles(inputfilename, single_terms)
 
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_eoms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_eoms.p", "rb"))
 
     nterms_before = number_terms(single_terms)
@@ -135,7 +135,7 @@ def main(input_file, basis_path, max_dim = 6, debug=None):
 
     logger.info(f"#Terms with EOMs: {nterms_before:d} <-> #Terms with less EOMs: {nterms_after:d}")
 
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_with_less_eoms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_with_less_eoms.p", "rb"))
 
     # rearrange derivative on term of type: nD: 4 & {"H": 1, "H+": 1}
@@ -158,7 +158,7 @@ def main(input_file, basis_path, max_dim = 6, debug=None):
     if args.tex:
         tex_sorted_terms_wo_eoms(inputfilename, single_terms)
 
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
 
     logger.info("Symmetries terms.")
@@ -168,7 +168,8 @@ def main(input_file, basis_path, max_dim = 6, debug=None):
     single_terms = remove_doubles(single_terms, model)
     nterms_after = number_terms(single_terms)
     logger.info(f"#Terms with doubles: {nterms_before:d} <-> #Terms without doubles: {nterms_after:d}")
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_without_rfr.p", "wb"))
+
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_without_rfr.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_without_rfr.p", "rb"))
 
     # Apply ibp and schouten ids up to the point where all tableaux, are SSYT:
@@ -197,20 +198,19 @@ def main(input_file, basis_path, max_dim = 6, debug=None):
     if args.tex:
         tex_sorted_terms_before_sun(inputfilename, single_terms)
 
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_before_sun.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_before_sun.p", "rb"))
 
     single_terms = rfr_sun(single_terms, model)
     single_terms = remove_doubles(single_terms, model)
 
     pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_after_rfr_sun.p", "wb"))
-    # TODO:
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_after_rfr_sun.p", "rb"))
 
     # SUN_Projection of terms without doubles:
     single_terms = sun_projection(single_terms, basis, max_dim)
 
-    pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_middle_sun.p", "wb"))
+    # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms_middle_sun.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms_middle_sun.p", "rb"))
 
     n = number_terms(single_terms)
@@ -226,7 +226,6 @@ def main(input_file, basis_path, max_dim = 6, debug=None):
 
     # pickle.dump(single_terms, open(CONFIG_PATH / "single_terms.p", "wb"))
     # single_terms = pickle.load(open(CONFIG_PATH / "single_terms.p", "rb"))
-
 
     return single_terms
 

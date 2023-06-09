@@ -164,8 +164,9 @@ class TermType(Term_Model):
     nD: int  # Number of derivatives in the term.
     field_content: Dict
     d: int  # mass dimension
+    # FIXME: Remove the following two attributes.
     sun_projection_tensors: Dict[str,Dict[str,SymBasisTensors]]  # Sun_projection tensors
-    sun_projection_matrix: Dict[str, sage.matrix.matrix_rational_dense.Matrix_rational_dense]
+
     def __init__(self, summand : Summand, field_content: Dict):
         if isinstance(summand, list):
             self.terms = summand
@@ -176,8 +177,7 @@ class TermType(Term_Model):
         self.field_content = field_content
 
         # SUN-projection:
-        self.sun_projection_tensors = None
-        # FIXME: Model not defined here: self.sun_projection_matrix = {key: mx.constructor.matrix(QQ, 0, 0, []) for key in model.sun_groups.keys()}
+        self.sun_projection_tensors = {}
 
     def __repr__(self):
         """Specify the format the general string representation and for printing with repr()."""

@@ -17,10 +17,26 @@ logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
 
 class MonBasisTensor():
-    def __init__(self, group: str, field_content: Dict, tensors: Tensors, coeff: Factor):
-        self.group = group
-        self.fieldcontent = field_content
-        self.tensors = tensors
+    def __init__(self, group, tableau, coeff: Factor):
+        self.group = group.name
+        self.tableau = tableau
+
+        if group.N == 2:
+            ind_prefix = "gauge"
+        elif group.N == 3:
+            ind_prefix = "colf"
+        else:
+            logger.error("No index prefix defined for this group.")
+            sys.exit("STOP")
+
+        tensors = [Tensor(f"[su{group.N:d}eps](" + ",".join(f"{ind_prefix}F{index[0]}I{index[1]}" for index in column) + ")")
+                     for column in self.tableau.transposed()
+                  ]
+        for tensor in tensors:
+            for index in tensor.indices:
+                index.projection = index.expr
+        self.tensors = Tensors(tensors)
+
         self.coeff = Factor(coeff)
 
     def __repr__(self):

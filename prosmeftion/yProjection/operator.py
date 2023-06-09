@@ -530,7 +530,9 @@ class Field(Operator_Model):
         for indtype in ["gauge", "colf"]:
             for index in self.indices:
                 if index.typ == indtype:
-                    index.projection = f"{pre:s}{indtype:s}F{self.field_pos:d}I{counter[indtype]:d}"
+                    index.projection = f"{pre:s}{self.field_pos:d}_{counter[indtype]:d}"
+                    #FIXME
+                    # index.projection = f"{pre:s}{indtype:s}F{self.field_pos:d}I{counter[indtype]:d}"
                     counter[indtype] += 1
 
     # def reset_derIndex(self):

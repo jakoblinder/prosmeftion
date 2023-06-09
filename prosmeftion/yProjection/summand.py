@@ -1,5 +1,6 @@
 import logging.config
 import sys
+import re
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Union
 from pathlib import Path
@@ -15,6 +16,7 @@ from .operator import Tensor, Field
 from .operators import Tensors, Fields
 from .tableau import get_op_class, Young_Tableau
 from .lorentz import LR_Tableaux
+from autoeft.base.tensors import SUNTensor
 
 logger_autoeft = logging.getLogger("autoeft.projection")
 logger = logger_autoeft.getChild(__name__)
@@ -28,6 +30,7 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
     d: int  # massdimension of operator
     indices: Indices_Summand
     nD: int  # number of derivatives in the summand
+    sun_projection: SUNTensor
 
     @abstractmethod
     def __init__(self, tensors: List[str], fields: Tuple[str], coeff: str, fp_name: str, model):
@@ -290,10 +293,18 @@ class Summand_Model(ABC):  # Tensor, Field, Coefficient
         for sun_group in ["gauge", "colf"]:
             for tensor in self.tensors:
                 for index in tensor.indices[sun_group]:
-                    index.expr = index.projection
+                    if match := re.match(r"^(?P<nfield>\d+)_(?P<nindex>\d+)$", index.projection):
+                        nfield, nindex = int(match.group("nfield")), int(match.group("nindex"))
+                        index.expr = f"{sun_group}F{nfield}I{nindex}"
+                    else:
+                        index.expr = index.projection
             for field in self.fields:
                 for index in field.indices[sun_group]:
-                    index.expr = index.projection
+                    if match := re.match(r"^(?P<nfield>\d+)_(?P<nindex>\d+)$", index.projection):
+                        nfield, nindex = int(match.group("nfield")), int(match.group("nindex"))
+                        index.expr = f"{sun_group}F{nfield}I{nindex}"
+                    else:
+                        index.expr = index.projection
 
 
 class Summand(Summand_Model):

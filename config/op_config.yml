@@ -39,7 +39,7 @@ tensors:
       mathematica:
         su2eps: "[su2eps]"
       autoeft:
-        "[su2eps]": "e_"
+        "[su2eps]": "eps"
       index_structure:
         - gauge
         - gauge
@@ -49,7 +49,7 @@ tensors:
       mathematica:
         su3eps: "[su3eps]"
       autoeft:
-        "[su3eps]": "e_"
+        "[su3eps]": "eps"
       index_structure:
         - colf
         - colf
@@ -60,7 +60,7 @@ tensors:
       mathematica:
         sl2Ceps: "[sl2Ceps]"
       autoeft:
-        "[sl2Ceps]": "e_"
+        "[sl2Ceps]": "eps"
       index_structure:
         -
           - Usl

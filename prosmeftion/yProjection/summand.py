@@ -507,8 +507,6 @@ class Summand(Summand_Model):
                 ######################
                 ### psibar*...*psiC ###
                 ######################
-                lsbar = leftspinor
-                rs = rightspinor + "C"
                 chi1, xi1_dagger = all_spinors[lsbar]
                 chi2, xi2_dagger = all_spinors[rs]
                 lsbar = get_commuting_op(lsbar)
@@ -676,7 +674,6 @@ class Summand(Summand_Model):
             id += " = "
             id += f"(+ {im}/4)*({fR}(op1,?a,?b,{usldot1},{usldot2})*{sigmabar2}(lor1,lor2,{lsldot1},{lsldot2}) - {fL}(op1,?a,?b,{lsl1},{lsl2})*{sigma2}(lor1,lor2,{usl1},{usl2}))"
             form += f"id once {id};\n"
-
             # For dual fieldstrength tensors, i.e. eps(lor1,lor2,lor3,lor4)*F(lor3,lor4), substitute F(lor1,lor2) and
             # simplify the sigma2 matrices with '#call lorepsandSigma2'.
 

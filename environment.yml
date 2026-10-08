@@ -1,0 +1,16 @@
+name: prosmeftion
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - sagelib=10.8  # Sage 10.9 returns Permutation.signature() as Integer, which breaks AutoEFT (Integer * Fraction)
+  - pydantic=1.10.19  # AutoEFT 1.0.2 requires pydantic<1.10.20
+  - semver>=3
+  - rich
+  - pyyaml
+  - scipy
+  - numpy
+  - packaging
+  - pip
+  - pip:
+      - autoeft @ git+https://gitlab.com/auto_eft/autoeft.git@1.0.2

@@ -1,0 +1,30 @@
+__pycache__/
+.DS_Store
+.idea/
+desktop.ini
+
+# Output of main.py (log, debug pickles, FORM scratch files, results, -t PDFs)
+*.log
+*.p
+*.str
+*.sor
+/*_yBasis_*.h
+/terms.txt
+/*.pdf
+/form_files/*
+!/form_files/general/
+/Latex/*
+!/Latex/terms.tex
+
+# LaTeX build files (notation/)
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.dvi
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.glg
+*.glstex

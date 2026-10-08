@@ -79,7 +79,7 @@ Examples:
 ```bash
 python main.py 'Examples/BWHH+/BWHH+.m' efts/ssm-eft -f mathematica           # 2 terms, ~10 s
 python main.py 'Examples/QDHH+Q+/QDHH+Q+.m' efts/ssm-eft -f mathematica       # 5 terms, ~10 s
-python main.py BS/exampleOutputBS.m efts/ssm-eft -f mathematica -s 22         # 85 terms, ~15 min (2023)
+python main.py BS/exampleOutputBS.m efts/ssm-eft -f mathematica -s 22         # 85 terms, ~2 min
 ```
 
 The other inputs in `Examples/` (`ScalarToy/`, `4Higgs_*`, ...) are test cases from the thesis.

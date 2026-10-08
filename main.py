@@ -32,7 +32,7 @@ parser = ArgumentParser(
     description="Project BSUOLEA output onto AUTOEFT-basis.",
 )
 parser.add_argument("lagrangian", type=Path, help="path to file with matched lagrangian")
-parser.add_argument("basis", type=Path, help="path to file a tar containin the corresponding autoeft basis")
+parser.add_argument("basis", type=Path, help="path to the autoeft output of the model, containing <dim>/basis for dim = 4, ..., DIMENSION (e.g. efts/ssm-eft)")
 
 parser.add_argument("-s", "--skip", type=int, default=0, help="number of lines to skip in the matched file")
 parser.add_argument(

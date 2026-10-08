@@ -235,7 +235,7 @@ def get_basis(basispath: Path, max_dim: int):
             # model = basis.model
             # operator = basis[{"Q": 3, "L": 1}]
         except FileNotFoundError:
-            logger.error(f"No basis can be found in {AUTOEFT_PATH / Path('eft/')}.")
+            logger.error(f"No basis can be found in {basispathdim}.")
             sys.exit("STOP")
 
     return basis[min_dim].model, basis

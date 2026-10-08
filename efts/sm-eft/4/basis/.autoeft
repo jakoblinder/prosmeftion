@@ -1,0 +1,26 @@
+- timestamp: '2026-10-09T00:57:09'
+  eft_name: sm-eft
+  dimension: 4
+  args:
+    model: models/sm.yml
+    dimension: 4
+    threads: 8
+    output: /Users/linder/prosmeftion/efts
+    select: null
+    ignore: null
+    generators: /Users/linder/prosmeftion/gens
+    overwrite: false
+    no_hc: false
+- timestamp: '2026-10-09T00:58:57'
+  eft_name: sm-eft
+  dimension: 4
+  args:
+    model: models/sm.yml
+    dimension: 4
+    threads: 8
+    output: /Users/linder/prosmeftion/efts
+    select: null
+    ignore: null
+    generators: /Users/linder/prosmeftion/gens
+    overwrite: true
+    no_hc: false

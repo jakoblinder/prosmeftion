@@ -11,8 +11,7 @@ desktop.ini
 /*_yBasis_*.h
 /terms.txt
 /*.pdf
-/form_files/*
-!/form_files/general/
+/form_files/
 /Latex/*
 !/Latex/terms.tex
 
